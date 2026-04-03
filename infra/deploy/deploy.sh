@@ -96,13 +96,27 @@ ensure_docker_access() {
 set_env_var() {
   local key="$1"
   local value="$2"
-  local escaped_value=""
-
-  escaped_value="$(printf '%s' "${value}" | sed 's/[&|\\]/\\&/g')"
+  local tmp_file=""
+  local found="false"
+  tmp_file="$(mktemp)"
 
   if grep -q "^${key}=" .env; then
-    sed -i "s|^${key}=.*|${key}=${escaped_value}|" .env
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+      if [[ "${line%%=*}" == "${key}" ]]; then
+        printf '%s=%s\n' "${key}" "${value}" >> "${tmp_file}"
+        found="true"
+      else
+        printf '%s\n' "${line}" >> "${tmp_file}"
+      fi
+    done < .env
+
+    if [[ "${found}" != "true" ]]; then
+      printf '%s=%s\n' "${key}" "${value}" >> "${tmp_file}"
+    fi
+
+    mv "${tmp_file}" .env
   else
+    rm -f "${tmp_file}"
     printf '%s=%s\n' "${key}" "${value}" >> .env
   fi
 }
