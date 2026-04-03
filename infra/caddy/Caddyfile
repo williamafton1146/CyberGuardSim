@@ -1,0 +1,43 @@
+{$CADDY_HOST:localhost} {
+  encode gzip
+
+  handle /auth/* {
+    reverse_proxy api:8000
+  }
+
+  handle /users/* {
+    reverse_proxy api:8000
+  }
+
+  handle /scenarios* {
+    reverse_proxy api:8000
+  }
+
+  handle /sessions* {
+    reverse_proxy api:8000
+  }
+
+  handle /leaderboard* {
+    reverse_proxy api:8000
+  }
+
+  handle /api/* {
+    reverse_proxy api:8000
+  }
+
+  handle /docs* {
+    reverse_proxy api:8000
+  }
+
+  handle /openapi.json {
+    reverse_proxy api:8000
+  }
+
+  handle /ws/* {
+    reverse_proxy api:8000
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+}

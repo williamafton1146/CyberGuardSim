@@ -1,0 +1,48 @@
+# VCS / local tooling
+.git
+.gitignore
+.codex
+.idea
+.vscode
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Next.js artifacts
+node_modules
+apps/*/node_modules
+.next
+apps/*/.next
+dist
+build
+coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python / FastAPI artifacts
+.venv
+venv
+apps/api/.venv
+.pytest_cache
+apps/*/.pytest_cache
+__pycache__
+apps/**/__pycache__
+*.pyc
+*.pyo
+*.py[cod]
+
+# Local databases / caches / temp files
+*.db
+*.sqlite
+*.sqlite3
+.cache
+tmp
+
+# Repo files not needed inside build context
+README.md
+TZ.txt
+docs

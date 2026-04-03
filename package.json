@@ -1,0 +1,13 @@
+{
+  "name": "cyber-sim-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @cyber-sim/web",
+    "build:web": "npm run build --workspace @cyber-sim/web"
+  }
+}
+

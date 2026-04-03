@@ -1,0 +1,49 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.codex
+TZ.txt
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+apps/*/node_modules/
+.next/
+apps/*/.next/
+dist/
+build/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python / FastAPI
+.venv/
+venv/
+apps/api/.venv/
+.pytest_cache/
+apps/*/.pytest_cache/
+__pycache__/
+apps/**/__pycache__/
+*.py[cod]
+*.pyo
+.python-version
+
+# Local databases / runtime files
+*.db
+*.sqlite
+*.sqlite3
+apps/api/cybersec.db
+apps/api/test_cybersim.db
+
+# Docker / local tooling
+.docker/
+.cache/
+tmp/
