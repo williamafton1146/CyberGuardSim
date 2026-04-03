@@ -408,21 +408,10 @@ ensure_letsencrypt_dirs() {
   ensure_path_writable "infra/letsencrypt/www"
 }
 
-ensure_bootstrap_certificate() {
-  local domain="$1"
-  local live_dir="infra/letsencrypt/conf/live/${domain}"
-
-  if [[ -f "${live_dir}/fullchain.pem" && -f "${live_dir}/privkey.pem" ]]; then
-    return
-  fi
-
-  log "Creating temporary self-signed certificate for nginx bootstrap"
-  mkdir -p "${live_dir}"
-  openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-    -keyout "${live_dir}/privkey.pem" \
-    -out "${live_dir}/fullchain.pem" \
-    -subj "/CN=${domain}" >/dev/null 2>&1
-  touch "${live_dir}/.bootstrap"
+print_compose_diagnostics() {
+  log "Collecting docker-compose diagnostics"
+  compose ps || true
+  compose logs --tail=120 db api web nginx nginx_bootstrap certbot || true
 }
 
 ensure_certificate() {
@@ -435,22 +424,28 @@ ensure_certificate() {
     return
   fi
 
-  ensure_bootstrap_certificate "${domain}"
-
-  log "Starting nginx for ACME challenge"
-  compose up -d nginx
+  log "Starting bootstrap nginx for ACME challenge"
+  if ! compose up -d --no-deps nginx_bootstrap; then
+    print_compose_diagnostics
+    echo "Failed to start bootstrap nginx for certificate issuance."
+    exit 1
+  fi
 
   log "Requesting Let's Encrypt certificate for ${domain}"
-  ./infra/deploy/init-letsencrypt.sh
-
-  if [[ -f "${live_dir}/.bootstrap" ]]; then
-    rm -f "${live_dir}/.bootstrap"
+  if ! ./infra/deploy/init-letsencrypt.sh; then
+    print_compose_diagnostics
+    echo "Let's Encrypt bootstrap failed."
+    exit 1
   fi
 }
 
 deploy_stack() {
   log "Starting production stack"
-  compose up --build -d
+  if ! compose up --build -d; then
+    print_compose_diagnostics
+    echo "Production stack failed to start."
+    exit 1
+  fi
 }
 
 verify_deploy() {
@@ -471,6 +466,7 @@ verify_deploy() {
 
   echo "Deployment verification failed: https://${domain}/api/health did not become ready in time."
   echo "Check logs with: docker-compose -f docker-compose.prod.yml logs --tail=200 nginx api web"
+  print_compose_diagnostics
   exit 1
 }
 

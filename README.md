@@ -84,6 +84,7 @@ docker-compose up --build
 
 - [docker-compose.prod.yml](/home/Flany/hack/docker-compose.prod.yml)
 - [app.conf.template](/home/Flany/hack/infra/nginx/app.conf.template)
+- [bootstrap.conf.template](/home/Flany/hack/infra/nginx/bootstrap.conf.template)
 - [deploy.sh](/home/Flany/hack/infra/deploy/deploy.sh)
 - [init-letsencrypt.sh](/home/Flany/hack/infra/deploy/init-letsencrypt.sh)
 
@@ -113,8 +114,8 @@ chmod +x infra/deploy/deploy.sh
 - создает `.env`, если его еще нет
 - интерактивно спрашивает `DOMAIN`, `LETSENCRYPT_EMAIL`, `SECRET_KEY`, `POSTGRES_PASSWORD`
 - при наличии старого `postgres` volume предлагает либо переиспользовать текущую БД с ее старым паролем, либо сбросить volume для чистого деплоя
-- создает временный self-signed сертификат для первого старта `nginx`
-- получает боевой сертификат Let's Encrypt через `certbot`
+- поднимает отдельный `nginx_bootstrap` только для ACME challenge на `:80`
+- получает боевой сертификат Let's Encrypt через `certbot`, не завися от состояния `api/db`
 - поднимает production-стек
 - проверяет `https://your-domain.com/api/health`
 - пытается открыть сайт в браузере, если на машине доступен `xdg-open`
@@ -199,6 +200,7 @@ pytest
 - Если `deploy.sh` находит существующий volume `cyberguardsim_postgres_data`, это значит, что на сервере уже есть старая БД.
 - Если эту БД нужно сохранить, вводите старый `POSTGRES_PASSWORD`.
 - Если данные не нужны, выбирайте сброс volume и чистый деплой.
+- Выпуск сертификата больше не зависит от того, поднялись ли `api` и `db`: challenge обслуживает отдельный `nginx_bootstrap`.
 - Если `api` уходит в `unhealthy`, сначала проверьте:
 
 ```bash

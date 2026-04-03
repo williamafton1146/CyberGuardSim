@@ -92,6 +92,17 @@ services:
       retries: 12
       start_period: 10s
 
+  nginx_bootstrap:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/nginx/bootstrap.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./infra/letsencrypt/www:/var/www/certbot
+    environment:
+      DOMAIN: ${DOMAIN}
+
   certbot:
     image: certbot/certbot:latest
     volumes:
