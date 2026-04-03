@@ -1,0 +1,13 @@
+.git
+.gitignore
+.codex
+node_modules
+apps/web/.next
+apps/api/.venv
+apps/api/.pytest_cache
+apps/api/__pycache__
+apps/api/app/__pycache__
+apps/api/tests/__pycache__
+apps/api/cybersec.db
+apps/api/test_cybersim.db
+*.pyc
