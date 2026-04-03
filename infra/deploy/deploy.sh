@@ -9,8 +9,22 @@ log() {
   printf '\n[deploy] %s\n' "$1"
 }
 
+log_stderr() {
+  printf '\n[deploy] %s\n' "$1" >&2
+}
+
 require_command() {
   command -v "$1" >/dev/null 2>&1
+}
+
+is_valid_domain() {
+  local domain="$1"
+  [[ "${domain}" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "${domain}" == *.* ]] && [[ "${domain}" != .* ]] && [[ "${domain}" != *. ]]
+}
+
+is_valid_email() {
+  local email="$1"
+  [[ "${email}" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]
 }
 
 run_root() {
@@ -132,7 +146,7 @@ prompt_value() {
     printf '\n'
     if [[ -z "${input}" ]]; then
       input="$(openssl rand -hex 24)"
-      printf '[deploy] generated secure value\n'
+      log_stderr "generated secure value for ${prompt}"
     fi
   else
     read -r -p "${prompt} [${default_value}]: " input
@@ -142,6 +156,31 @@ prompt_value() {
   fi
 
   printf '%s' "${input}"
+}
+
+validate_env_file() {
+  local line_number=0
+  local line=""
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line_number=$((line_number + 1))
+
+    if [[ -z "${line}" ]]; then
+      continue
+    fi
+
+    if [[ "${line}" != *=* ]]; then
+      echo "Invalid .env line ${line_number}: expected KEY=value format"
+      echo "Line content: ${line}"
+      exit 1
+    fi
+
+    if [[ "${line%%=*}" =~ [[:space:]] ]]; then
+      echo "Invalid .env line ${line_number}: key cannot contain spaces"
+      echo "Line content: ${line}"
+      exit 1
+    fi
+  done < .env
 }
 
 ensure_env_file() {
@@ -157,6 +196,16 @@ ensure_env_file() {
 
   domain="$(prompt_value 'Domain for production deploy' "${current_domain:-example.com}")"
   email="$(prompt_value "Email for Let's Encrypt notices" "${current_email:-admin@${domain}}")"
+
+  if ! is_valid_domain "${domain}"; then
+    echo "Invalid domain: ${domain}"
+    exit 1
+  fi
+
+  if ! is_valid_email "${email}"; then
+    echo "Invalid email: ${email}"
+    exit 1
+  fi
 
   if [[ -z "${current_secret}" || "${current_secret}" == "change-me" ]]; then
     secret="$(prompt_value 'SECRET_KEY' '' true)"
@@ -179,6 +228,12 @@ ensure_env_file() {
   set_env_var FRONTEND_ORIGIN "https://${domain}"
   set_env_var NEXT_PUBLIC_API_URL "https://${domain}"
   set_env_var NEXT_PUBLIC_WS_URL "wss://${domain}"
+  validate_env_file
+}
+
+preflight_compose() {
+  log "Validating docker-compose.prod.yml with current .env"
+  compose config >/dev/null
 }
 
 ensure_letsencrypt_dirs() {
@@ -257,6 +312,7 @@ main() {
   ensure_docker_access
   ensure_env_file
   ensure_letsencrypt_dirs
+  preflight_compose
 
   local domain
   domain="$(grep '^DOMAIN=' .env | cut -d '=' -f2-)"
