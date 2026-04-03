@@ -9,7 +9,7 @@
 - `apps/web` — desktop-first интерфейс симулятора, личный кабинет, лидерборд
 - `apps/api` — FastAPI API, аутентификация, игровая логика, статистика, Swagger
 - `packages/shared` — общие TS-типы и каталог сюжетных веток
-- `infra` — Dockerfile и `Caddy` reverse proxy
+- `infra` — Dockerfile, `Caddy` для локального reverse proxy и `nginx + certbot` для production
 - `docs` — ER-диаграмма, API summary и описание геймплея
 
 ## Реализованный минимальный пример
@@ -112,6 +112,7 @@ chmod +x infra/deploy/deploy.sh
 - включает и запускает `docker`
 - создает `.env`, если его еще нет
 - интерактивно спрашивает `DOMAIN`, `LETSENCRYPT_EMAIL`, `SECRET_KEY`, `POSTGRES_PASSWORD`
+- при наличии старого `postgres` volume предлагает либо переиспользовать текущую БД с ее старым паролем, либо сбросить volume для чистого деплоя
 - создает временный self-signed сертификат для первого старта `nginx`
 - получает боевой сертификат Let's Encrypt через `certbot`
 - поднимает production-стек
@@ -192,3 +193,16 @@ pytest
 - Ветки `home` и `public-wifi` представлены как архитектурные заготовки.
 - Полноценный TLS 1.2+ для production не проверялся в этом окружении, но структура под reverse proxy подготовлена.
 - Контейнерный запуск проверен через `docker-compose`, но `docker compose` plugin на машине может отсутствовать, если установлен только отдельный пакет `docker-compose`.
+
+## Troubleshooting Deploy
+
+- Если `deploy.sh` находит существующий volume `cyberguardsim_postgres_data`, это значит, что на сервере уже есть старая БД.
+- Если эту БД нужно сохранить, вводите старый `POSTGRES_PASSWORD`.
+- Если данные не нужны, выбирайте сброс volume и чистый деплой.
+- Если `api` уходит в `unhealthy`, сначала проверьте:
+
+```bash
+docker-compose -f docker-compose.prod.yml logs --tail=200 api
+docker-compose -f docker-compose.prod.yml logs --tail=200 nginx
+docker-compose -f docker-compose.prod.yml ps
+```

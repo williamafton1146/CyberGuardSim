@@ -18,6 +18,26 @@ require_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
+prompt_yes_no() {
+  local prompt="$1"
+  local default_answer="${2:-y}"
+  local suffix="[Y/n]"
+  local input=""
+
+  if [[ "${default_answer}" == "n" ]]; then
+    suffix="[y/N]"
+  fi
+
+  read -r -p "${prompt} ${suffix}: " input
+  input="${input,,}"
+
+  if [[ -z "${input}" ]]; then
+    input="${default_answer}"
+  fi
+
+  [[ "${input}" == "y" || "${input}" == "yes" ]]
+}
+
 is_valid_domain() {
   local domain="$1"
   [[ "${domain}" =~ ^[A-Za-z0-9.-]+$ ]] && [[ "${domain}" == *.* ]] && [[ "${domain}" != .* ]] && [[ "${domain}" != *. ]]
@@ -48,6 +68,16 @@ postgres_volume_exists() {
   fi
 
   "${DOCKER_PREFIX[@]}" docker volume inspect "${volume_name}" >/dev/null 2>&1
+}
+
+reset_postgres_volume() {
+  local volume_name="${PROJECT_NAME}_postgres_data"
+
+  log "Stopping running stack before PostgreSQL reset"
+  compose down --remove-orphans >/dev/null 2>&1 || true
+
+  log "Removing PostgreSQL volume ${volume_name}"
+  "${DOCKER_PREFIX[@]}" docker volume rm -f "${volume_name}" >/dev/null
 }
 
 compose() {
@@ -234,15 +264,27 @@ ensure_env_file() {
   if [[ -z "${current_db_password}" || "${current_db_password}" == "change-me-db-password" ]]; then
     if [[ "${require_existing_db_password}" == "true" ]]; then
       echo "Detected existing PostgreSQL volume (${PROJECT_NAME}_postgres_data)."
-      echo "Enter the current POSTGRES_PASSWORD for that database, or remove the volume before continuing."
-      read -r -s -p "POSTGRES_PASSWORD for existing database: " db_password
-      printf '\n' >&2
-      if [[ -z "${db_password}" ]]; then
-        echo "POSTGRES_PASSWORD is required when reusing an existing PostgreSQL volume."
-        if [[ "${env_created}" == "true" ]]; then
-          rm -f .env
+      if prompt_yes_no "Reuse existing database data and enter its current password?" "y"; then
+        read -r -s -p "POSTGRES_PASSWORD for existing database: " db_password
+        printf '\n' >&2
+        if [[ -z "${db_password}" ]]; then
+          echo "POSTGRES_PASSWORD is required when reusing an existing PostgreSQL volume."
+          if [[ "${env_created}" == "true" ]]; then
+            rm -f .env
+          fi
+          exit 1
         fi
-        exit 1
+      else
+        if ! prompt_yes_no "Reset PostgreSQL volume and lose existing database data?" "n"; then
+          echo "Deployment cancelled to avoid accidental data loss."
+          if [[ "${env_created}" == "true" ]]; then
+            rm -f .env
+          fi
+          exit 1
+        fi
+
+        reset_postgres_volume
+        db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
       fi
     else
       db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
