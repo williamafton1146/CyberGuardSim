@@ -41,7 +41,7 @@ if ! docker_ok && run_root docker info >/dev/null 2>&1; then
   DOCKER_PREFIX=(sudo)
 fi
 
-compose up -d --no-deps nginx_bootstrap
+compose --profile bootstrap up -d --no-deps nginx_bootstrap
 compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
   -w /var/www/certbot \
@@ -58,5 +58,5 @@ if [[ -d "${ARCHIVE_DIR}" && ! -f "infra/letsencrypt/conf/renewal/${DOMAIN}.conf
   rm -rf "${ARCHIVE_DIR}"
 fi
 
-compose stop nginx_bootstrap >/dev/null 2>&1 || true
-compose rm -sf nginx_bootstrap >/dev/null 2>&1 || true
+compose --profile bootstrap stop nginx_bootstrap >/dev/null 2>&1 || true
+compose --profile bootstrap rm -sf nginx_bootstrap >/dev/null 2>&1 || true

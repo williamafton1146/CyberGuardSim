@@ -426,7 +426,7 @@ ensure_certificate() {
   fi
 
   log "Starting bootstrap nginx for ACME challenge"
-  if ! compose up -d --no-deps nginx_bootstrap; then
+  if ! compose --profile bootstrap up -d --no-deps nginx_bootstrap; then
     print_compose_diagnostics
     echo "Failed to start bootstrap nginx for certificate issuance."
     exit 1

@@ -95,6 +95,8 @@ services:
   nginx_bootstrap:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    profiles:
+      - bootstrap
     ports:
       - "80:80"
     volumes:
