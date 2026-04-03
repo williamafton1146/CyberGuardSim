@@ -4,9 +4,8 @@
 Thumbs.db
 .idea/
 .vscode/
-.codex
+.codex/
 TZ.txt
-
 # Environment files
 .env
 .env.*
