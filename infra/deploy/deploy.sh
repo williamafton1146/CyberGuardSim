@@ -18,6 +18,20 @@ require_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
+read_from_tty() {
+  local __var_name="$1"
+  shift
+  local input=""
+
+  if [[ ! -r /dev/tty ]]; then
+    echo "Interactive input requires a TTY." >&2
+    exit 1
+  fi
+
+  read "$@" input < /dev/tty
+  printf -v "${__var_name}" '%s' "${input}"
+}
+
 prompt_yes_no() {
   local prompt="$1"
   local default_answer="${2:-y}"
@@ -28,7 +42,7 @@ prompt_yes_no() {
     suffix="[y/N]"
   fi
 
-  read -r -p "${prompt} ${suffix}: " input
+  read_from_tty input -r -p "${prompt} ${suffix}: "
   input="${input,,}"
 
   if [[ -z "${input}" ]]; then
@@ -183,14 +197,14 @@ prompt_value() {
   local input=""
 
   if [[ "${secret}" == "true" ]]; then
-    read -r -s -p "${prompt} [leave empty to use generated value]: " input
+    read_from_tty input -r -s -p "${prompt} [leave empty to use generated value]: "
     printf '\n' >&2
     if [[ -z "${input}" ]]; then
       input="$(openssl rand -hex 24)"
       log_stderr "generated secure value for ${prompt}"
     fi
   else
-    read -r -p "${prompt} [${default_value}]: " input
+    read_from_tty input -r -p "${prompt} [${default_value}]: "
     if [[ -z "${input}" ]]; then
       input="${default_value}"
     fi
@@ -265,7 +279,7 @@ ensure_env_file() {
     if [[ "${require_existing_db_password}" == "true" ]]; then
       echo "Detected existing PostgreSQL volume (${PROJECT_NAME}_postgres_data)."
       if prompt_yes_no "Reuse existing database data and enter its current password?" "y"; then
-        read -r -s -p "POSTGRES_PASSWORD for existing database: " db_password
+        read_from_tty db_password -r -s -p "POSTGRES_PASSWORD for existing database: "
         printf '\n' >&2
         if [[ -z "${db_password}" ]]; then
           echo "POSTGRES_PASSWORD is required when reusing an existing PostgreSQL volume."
@@ -349,14 +363,12 @@ ensure_certificate() {
   log "Starting nginx for ACME challenge"
   compose up -d nginx
 
-  if [[ -f "${live_dir}/.bootstrap" ]]; then
-    rm -rf "${live_dir}"
-    rm -rf "infra/letsencrypt/conf/archive/${domain}"
-    rm -f "${renewal_file}"
-  fi
-
   log "Requesting Let's Encrypt certificate for ${domain}"
   ./infra/deploy/init-letsencrypt.sh
+
+  if [[ -f "${live_dir}/.bootstrap" ]]; then
+    rm -f "${live_dir}/.bootstrap"
+  fi
 }
 
 deploy_stack() {

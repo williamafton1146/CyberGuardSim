@@ -29,6 +29,8 @@ fi
 
 DOMAIN="$(grep '^DOMAIN=' .env | cut -d '=' -f2-)"
 EMAIL="$(grep '^LETSENCRYPT_EMAIL=' .env | cut -d '=' -f2-)"
+BOOTSTRAP_MARKER="infra/letsencrypt/conf/live/${DOMAIN}/.bootstrap"
+ARCHIVE_DIR="infra/letsencrypt/conf/archive/${DOMAIN}"
 
 if [[ -z "${DOMAIN}" || -z "${EMAIL}" ]]; then
   echo "DOMAIN or LETSENCRYPT_EMAIL is empty in .env"
@@ -47,5 +49,13 @@ compose run --rm --entrypoint certbot certbot certonly \
   --email "${EMAIL}" \
   --agree-tos \
   --no-eff-email
+
+if [[ -f "${BOOTSTRAP_MARKER}" ]]; then
+  rm -f "${BOOTSTRAP_MARKER}"
+fi
+
+if [[ -d "${ARCHIVE_DIR}" && ! -f "infra/letsencrypt/conf/renewal/${DOMAIN}.conf" ]]; then
+  rm -rf "${ARCHIVE_DIR}"
+fi
 
 compose restart nginx
