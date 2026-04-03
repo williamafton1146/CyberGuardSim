@@ -40,7 +40,7 @@ if ! docker_ok && run_root docker info >/dev/null 2>&1; then
 fi
 
 compose up -d nginx
-compose run --rm certbot certonly \
+compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
   -w /var/www/certbot \
   -d "${DOMAIN}" \
