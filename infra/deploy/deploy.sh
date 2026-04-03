@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT_DIR}"
 DOCKER_PREFIX=()
 PROJECT_NAME="$(basename "${ROOT_DIR}" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
+DEPLOY_STATE_FILE=".deploy.production.ready"
+LOCAL_OWNER="${SUDO_USER:-${USER}}"
 
 log() {
   printf '\n[deploy] %s\n' "$1"
@@ -74,6 +76,46 @@ docker_ok() {
   "${DOCKER_PREFIX[@]}" docker info >/dev/null 2>&1
 }
 
+ensure_path_writable() {
+  local target_path="$1"
+
+  mkdir -p "${target_path}" 2>/dev/null || true
+
+  if [[ -w "${target_path}" ]]; then
+    return
+  fi
+
+  if [[ "${EUID}" -eq 0 ]]; then
+    return
+  fi
+
+  run_root mkdir -p "${target_path}"
+  run_root chown -R "${LOCAL_OWNER}:${LOCAL_OWNER}" "${target_path}"
+}
+
+ensure_file_writable() {
+  local target_file="$1"
+  local target_dir
+  target_dir="$(dirname "${target_file}")"
+
+  ensure_path_writable "${target_dir}"
+
+  if [[ -f "${target_file}" ]]; then
+    if [[ -w "${target_file}" ]]; then
+      return
+    fi
+    if [[ "${EUID}" -ne 0 ]]; then
+      run_root chown "${LOCAL_OWNER}:${LOCAL_OWNER}" "${target_file}"
+    fi
+    return
+  fi
+
+  : > "${target_file}" 2>/dev/null || run_root touch "${target_file}"
+  if [[ "${EUID}" -ne 0 ]]; then
+    run_root chown "${LOCAL_OWNER}:${LOCAL_OWNER}" "${target_file}"
+  fi
+}
+
 postgres_volume_exists() {
   local volume_name="${PROJECT_NAME}_postgres_data"
 
@@ -92,6 +134,7 @@ reset_postgres_volume() {
 
   log "Removing PostgreSQL volume ${volume_name}"
   "${DOCKER_PREFIX[@]}" docker volume rm -f "${volume_name}" >/dev/null
+  rm -f "${DEPLOY_STATE_FILE}"
 }
 
 compose() {
@@ -240,14 +283,22 @@ validate_env_file() {
 
 ensure_env_file() {
   local env_created="false"
-  local require_existing_db_password="false"
+  local postgres_volume_present="false"
+  local require_db_reconciliation="false"
 
-  if [[ ! -f .env ]]; then
-    if postgres_volume_exists; then
-      require_existing_db_password="true"
-    fi
+  ensure_file_writable ".env"
+
+  if postgres_volume_exists; then
+    postgres_volume_present="true"
+  fi
+
+  if [[ ! -s .env ]]; then
     cp .env.example .env
     env_created="true"
+  fi
+
+  if [[ "${postgres_volume_present}" == "true" && ! -f "${DEPLOY_STATE_FILE}" ]]; then
+    require_db_reconciliation="true"
   fi
 
   local domain current_domain email current_email secret current_secret db_password current_db_password
@@ -275,10 +326,13 @@ ensure_env_file() {
     secret="${current_secret}"
   fi
 
-  if [[ -z "${current_db_password}" || "${current_db_password}" == "change-me-db-password" ]]; then
-    if [[ "${require_existing_db_password}" == "true" ]]; then
-      echo "Detected existing PostgreSQL volume (${PROJECT_NAME}_postgres_data)."
-      if prompt_yes_no "Reuse existing database data and enter its current password?" "y"; then
+  if [[ "${postgres_volume_present}" == "true" && "${require_db_reconciliation}" == "true" ]]; then
+    echo "Detected existing PostgreSQL volume (${PROJECT_NAME}_postgres_data)."
+
+    if [[ -n "${current_db_password}" && "${current_db_password}" != "change-me-db-password" ]]; then
+      if prompt_yes_no "Use POSTGRES_PASSWORD from current .env for the existing database?" "n"; then
+        db_password="${current_db_password}"
+      elif prompt_yes_no "Enter the current POSTGRES_PASSWORD for the existing database manually?" "y"; then
         read_from_tty db_password -r -s -p "POSTGRES_PASSWORD for existing database: "
         printf '\n' >&2
         if [[ -z "${db_password}" ]]; then
@@ -301,8 +355,31 @@ ensure_env_file() {
         db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
       fi
     else
-      db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
+      if prompt_yes_no "Enter the current POSTGRES_PASSWORD for the existing database manually?" "y"; then
+        read_from_tty db_password -r -s -p "POSTGRES_PASSWORD for existing database: "
+        printf '\n' >&2
+        if [[ -z "${db_password}" ]]; then
+          echo "POSTGRES_PASSWORD is required when reusing an existing PostgreSQL volume."
+          if [[ "${env_created}" == "true" ]]; then
+            rm -f .env
+          fi
+          exit 1
+        fi
+      else
+        if ! prompt_yes_no "Reset PostgreSQL volume and lose existing database data?" "n"; then
+          echo "Deployment cancelled to avoid accidental data loss."
+          if [[ "${env_created}" == "true" ]]; then
+            rm -f .env
+          fi
+          exit 1
+        fi
+
+        reset_postgres_volume
+        db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
+      fi
     fi
+  elif [[ -z "${current_db_password}" || "${current_db_password}" == "change-me-db-password" ]]; then
+    db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
   else
     db_password="${current_db_password}"
   fi
@@ -325,10 +402,10 @@ preflight_compose() {
 }
 
 ensure_letsencrypt_dirs() {
-  mkdir -p infra/letsencrypt/conf/live
-  mkdir -p infra/letsencrypt/conf/archive
-  mkdir -p infra/letsencrypt/conf/renewal
-  mkdir -p infra/letsencrypt/www
+  ensure_path_writable "infra/letsencrypt/conf/live"
+  ensure_path_writable "infra/letsencrypt/conf/archive"
+  ensure_path_writable "infra/letsencrypt/conf/renewal"
+  ensure_path_writable "infra/letsencrypt/www"
 }
 
 ensure_bootstrap_certificate() {
@@ -400,6 +477,12 @@ verify_deploy() {
 open_site() {
   local domain="$1"
   local url="https://${domain}"
+  touch "${DEPLOY_STATE_FILE}"
+
+  if [[ "${EUID}" -ne 0 ]]; then
+    run_root chown "${LOCAL_OWNER}:${LOCAL_OWNER}" "${DEPLOY_STATE_FILE}" >/dev/null 2>&1 || true
+  fi
+
   log "Deployment completed: ${url}"
 
   if require_command xdg-open; then
