@@ -1,11 +1,12 @@
-<<<<<<< HEAD
 # OS / editors
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+.codex
 .codex/
 TZ.txt
+
 # Environment files
 .env
 .env.*
@@ -47,15 +48,3 @@ apps/api/test_cybersim.db
 .docker/
 .cache/
 tmp/
-=======
-node_modules
-.next
-dist
-coverage
-.pytest_cache
-__pycache__
-*.pyc
-.env
-apps/api/.venv
-apps/api/cybersec.db
->>>>>>> ab9e96cea3eed6ec1bf521ba59728883efe6c63e
