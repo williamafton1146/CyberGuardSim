@@ -292,9 +292,23 @@ deploy_stack() {
 
 verify_deploy() {
   local domain="$1"
+  local attempt=1
+  local max_attempts=18
+
   log "Verifying deployed services"
-  curl -fsS "http://127.0.0.1:80" >/dev/null 2>&1 || true
-  curl -kfsS "https://${domain}/api/health" >/dev/null
+
+  while (( attempt <= max_attempts )); do
+    if curl -kfsS "https://${domain}/api/health" >/dev/null; then
+      return
+    fi
+
+    sleep 5
+    attempt=$((attempt + 1))
+  done
+
+  echo "Deployment verification failed: https://${domain}/api/health did not become ready in time."
+  echo "Check logs with: docker-compose -f docker-compose.prod.yml logs --tail=200 nginx api web"
+  exit 1
 }
 
 open_site() {
