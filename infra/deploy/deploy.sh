@@ -143,7 +143,7 @@ prompt_value() {
 
   if [[ "${secret}" == "true" ]]; then
     read -r -s -p "${prompt} [leave empty to use generated value]: " input
-    printf '\n'
+    printf '\n' >&2
     if [[ -z "${input}" ]]; then
       input="$(openssl rand -hex 24)"
       log_stderr "generated secure value for ${prompt}"
