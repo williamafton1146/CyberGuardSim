@@ -48,3 +48,5 @@ apps/api/test_cybersim.db
 .docker/
 .cache/
 tmp/
+infra/letsencrypt/conf/
+infra/letsencrypt/www/

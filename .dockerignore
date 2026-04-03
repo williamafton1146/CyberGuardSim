@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # VCS / local tooling
 .git
 .gitignore
@@ -42,23 +41,10 @@ apps/**/__pycache__
 *.sqlite3
 .cache
 tmp
+infra/letsencrypt/conf
+infra/letsencrypt/www
 
 # Repo files not needed inside build context
 README.md
 TZ.txt
 docs
-=======
-.git
-.gitignore
-.codex
-node_modules
-apps/web/.next
-apps/api/.venv
-apps/api/.pytest_cache
-apps/api/__pycache__
-apps/api/app/__pycache__
-apps/api/tests/__pycache__
-apps/api/cybersec.db
-apps/api/test_cybersim.db
-*.pyc
->>>>>>> ab9e96cea3eed6ec1bf521ba59728883efe6c63e

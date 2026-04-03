@@ -78,6 +78,81 @@ docker-compose up --build
 - `docs` — `http://localhost:8000/docs`
 - `caddy` — reverse proxy на `http://localhost`
 
+## Деплой на сервер с Certbot
+
+Под серверный деплой подготовлены:
+
+- [docker-compose.prod.yml](/home/Flany/hack/docker-compose.prod.yml)
+- [app.conf.template](/home/Flany/hack/infra/nginx/app.conf.template)
+- [deploy.sh](/home/Flany/hack/infra/deploy/deploy.sh)
+- [init-letsencrypt.sh](/home/Flany/hack/infra/deploy/init-letsencrypt.sh)
+
+### Что нужно на сервере
+
+- Linux-сервер с установленными `docker` и `docker-compose`
+- домен, у которого `A`-запись указывает на IP сервера
+- открытые порты `80` и `443`
+
+### Подготовка
+
+1. Скопировать проект на сервер.
+2. Убедиться, что домен уже указывает на IP сервера.
+
+### Основной путь: один bootstrap-скрипт
+
+```bash
+chmod +x infra/deploy/deploy.sh
+./infra/deploy/deploy.sh
+```
+
+Скрипт сам:
+
+- проверяет, что сервер похож на Debian/Ubuntu
+- устанавливает недостающие зависимости: `docker`, compose, `curl`, `openssl`
+- включает и запускает `docker`
+- создает `.env`, если его еще нет
+- интерактивно спрашивает `DOMAIN`, `LETSENCRYPT_EMAIL`, `SECRET_KEY`, `POSTGRES_PASSWORD`
+- создает временный self-signed сертификат для первого старта `nginx`
+- получает боевой сертификат Let's Encrypt через `certbot`
+- поднимает production-стек
+- проверяет `https://your-domain.com/api/health`
+- пытается открыть сайт в браузере, если на машине доступен `xdg-open`
+
+### Ручной низкоуровневый шаг для сертификата
+
+Если нужно отдельно перевыпустить сертификат без полного bootstrap:
+
+```bash
+chmod +x infra/deploy/init-letsencrypt.sh
+./infra/deploy/init-letsencrypt.sh
+```
+
+### Запуск production-стека
+
+```bash
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+После этого:
+
+- приложение доступно по `https://your-domain.com`
+- API проксируется тем же доменом
+- WebSocket идет через `wss://your-domain.com/ws/...`
+- `certbot` работает в отдельном контейнере и периодически выполняет `renew`
+
+### Обновление после изменений
+
+```bash
+docker-compose -f docker-compose.prod.yml up --build -d
+```
+
+### Проверка
+
+```bash
+curl -I https://your-domain.com
+curl https://your-domain.com/api/health
+```
+
 ## Demo Flow
 
 1. Открыть `/login` и создать пользователя.
@@ -92,8 +167,6 @@ docker-compose up --build
 cd apps/api
 pytest
 ```
-
-<<<<<<< HEAD
 ## Локальные артефакты
 
 В репозиторий не должны попадать:
@@ -104,9 +177,6 @@ pytest
 - временные sqlite-файлы вроде `*.db`, `*.sqlite`, `*.sqlite3`
 
 Для этого в проекте настроены [.gitignore](/home/Flany/hack/.gitignore) и [.dockerignore](/home/Flany/hack/.dockerignore). Если после локальной работы проект снова разрастается, безопасно чистить именно воспроизводимые артефакты: зависимости, сборку, кэши, виртуальные окружения и локальные базы.
-
-=======
->>>>>>> ab9e96cea3eed6ec1bf521ba59728883efe6c63e
 ## Что проверено локально
 
 - `GET /api/health` возвращает `200`
