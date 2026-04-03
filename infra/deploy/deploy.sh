@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT_DIR}"
 DOCKER_PREFIX=()
+PROJECT_NAME="$(basename "${ROOT_DIR}" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
 
 log() {
   printf '\n[deploy] %s\n' "$1"
@@ -37,6 +38,16 @@ run_root() {
 
 docker_ok() {
   "${DOCKER_PREFIX[@]}" docker info >/dev/null 2>&1
+}
+
+postgres_volume_exists() {
+  local volume_name="${PROJECT_NAME}_postgres_data"
+
+  if ! docker_ok; then
+    return 1
+  fi
+
+  "${DOCKER_PREFIX[@]}" docker volume inspect "${volume_name}" >/dev/null 2>&1
 }
 
 compose() {
@@ -184,8 +195,15 @@ validate_env_file() {
 }
 
 ensure_env_file() {
+  local env_created="false"
+  local require_existing_db_password="false"
+
   if [[ ! -f .env ]]; then
+    if postgres_volume_exists; then
+      require_existing_db_password="true"
+    fi
     cp .env.example .env
+    env_created="true"
   fi
 
   local domain current_domain email current_email secret current_secret db_password current_db_password
@@ -214,7 +232,21 @@ ensure_env_file() {
   fi
 
   if [[ -z "${current_db_password}" || "${current_db_password}" == "change-me-db-password" ]]; then
-    db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
+    if [[ "${require_existing_db_password}" == "true" ]]; then
+      echo "Detected existing PostgreSQL volume (${PROJECT_NAME}_postgres_data)."
+      echo "Enter the current POSTGRES_PASSWORD for that database, or remove the volume before continuing."
+      read -r -s -p "POSTGRES_PASSWORD for existing database: " db_password
+      printf '\n' >&2
+      if [[ -z "${db_password}" ]]; then
+        echo "POSTGRES_PASSWORD is required when reusing an existing PostgreSQL volume."
+        if [[ "${env_created}" == "true" ]]; then
+          rm -f .env
+        fi
+        exit 1
+      fi
+    else
+      db_password="$(prompt_value 'POSTGRES_PASSWORD' '' true)"
+    fi
   else
     db_password="${current_db_password}"
   fi
