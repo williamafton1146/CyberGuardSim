@@ -22,6 +22,11 @@ compose() {
   fi
 }
 
+cleanup_bootstrap_nginx() {
+  compose --profile bootstrap stop nginx_bootstrap >/dev/null 2>&1 || true
+  compose --profile bootstrap rm -sf nginx_bootstrap >/dev/null 2>&1 || true
+}
+
 if [[ ! -f .env ]]; then
   echo ".env file not found. Copy .env.example to .env and set DOMAIN / LETSENCRYPT_EMAIL first."
   exit 1
@@ -41,6 +46,8 @@ if ! docker_ok && run_root docker info >/dev/null 2>&1; then
   DOCKER_PREFIX=(sudo)
 fi
 
+trap cleanup_bootstrap_nginx EXIT
+
 compose --profile bootstrap up -d --no-deps nginx_bootstrap
 compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
@@ -57,6 +64,3 @@ fi
 if [[ -d "${ARCHIVE_DIR}" && ! -f "infra/letsencrypt/conf/renewal/${DOMAIN}.conf" ]]; then
   rm -rf "${ARCHIVE_DIR}"
 fi
-
-compose --profile bootstrap stop nginx_bootstrap >/dev/null 2>&1 || true
-compose --profile bootstrap rm -sf nginx_bootstrap >/dev/null 2>&1 || true

@@ -409,6 +409,11 @@ ensure_letsencrypt_dirs() {
   ensure_path_writable "infra/letsencrypt/www"
 }
 
+cleanup_bootstrap_nginx() {
+  compose --profile bootstrap stop nginx_bootstrap >/dev/null 2>&1 || true
+  compose --profile bootstrap rm -sf nginx_bootstrap >/dev/null 2>&1 || true
+}
+
 print_compose_diagnostics() {
   log "Collecting docker-compose diagnostics"
   compose ps || true
@@ -442,6 +447,7 @@ ensure_certificate() {
 
 deploy_stack() {
   log "Starting production stack"
+  cleanup_bootstrap_nginx
   if ! compose up --build -d; then
     print_compose_diagnostics
     echo "Production stack failed to start."
