@@ -23,15 +23,16 @@ require_command() {
 read_from_tty() {
   local __var_name="$1"
   shift
-  local input=""
+  local read_value=""
+  local -n out_var="${__var_name}"
 
   if [[ ! -r /dev/tty ]]; then
     echo "Interactive input requires a TTY." >&2
     exit 1
   fi
 
-  read "$@" input < /dev/tty
-  printf -v "${__var_name}" '%s' "${input}"
+  read "$@" read_value < /dev/tty
+  out_var="${read_value}"
 }
 
 prompt_yes_no() {
