@@ -96,9 +96,12 @@ ensure_docker_access() {
 set_env_var() {
   local key="$1"
   local value="$2"
+  local escaped_value=""
+
+  escaped_value="$(printf '%s' "${value}" | sed 's/[&|\\]/\\&/g')"
 
   if grep -q "^${key}=" .env; then
-    sed -i "s|^${key}=.*|${key}=${value}|" .env
+    sed -i "s|^${key}=.*|${key}=${escaped_value}|" .env
   else
     printf '%s=%s\n' "${key}" "${value}" >> .env
   fi
