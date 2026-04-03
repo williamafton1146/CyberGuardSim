@@ -1,0 +1,110 @@
+# CyberSim Prototype
+
+Образовательный веб-прототип симулятора цифровой безопасности с `Next.js + Tailwind` на фронтенде и `FastAPI + PostgreSQL + Redis` на бэкенде.
+
+Для локального запуска backend может работать на `SQLite`, а `Redis` используется как ускоритель и не является обязательным для демо-сценария: при его отсутствии лидерборд строится из БД, а WebSocket берет состояние сессии через fallback на БД.
+
+## Что внутри
+
+- `apps/web` — desktop-first интерфейс симулятора, личный кабинет, лидерборд
+- `apps/api` — FastAPI API, аутентификация, игровая логика, статистика, Swagger
+- `packages/shared` — общие TS-типы и каталог сюжетных веток
+- `infra` — Dockerfile и `Caddy` reverse proxy
+- `docs` — ER-диаграмма, API summary и описание геймплея
+
+## Реализованный минимальный пример
+
+- Регистрация и логин с хэшированием пароля и JWT
+- 3 сюжетные линии в каталоге
+- 1 полностью играбельная миссия `office` на 4 шага
+- `Security HP`, score, подсказки и последствия ошибок
+- Личный кабинет со статистикой и историей ошибок
+- Лидерборд с Redis-кэшем
+- `WebSocket`-обновления состояния миссии
+- Swagger/OpenAPI на `/docs`
+
+## Структура
+
+```text
+apps/
+  api/
+  web/
+docs/
+infra/
+packages/
+  shared/
+```
+
+## Локальный запуск без Docker
+
+### API
+
+```bash
+cd apps/api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+По умолчанию backend может стартовать на SQLite, но в `docker-compose.yml` уже подготовлена связка с PostgreSQL и Redis.
+
+### Web
+
+```bash
+npm install
+npm run dev:web
+```
+
+Фронтенд ожидает API по `NEXT_PUBLIC_API_URL` и WebSocket по `NEXT_PUBLIC_WS_URL`.
+
+Для production-like запуска локально:
+
+```bash
+npm run build --workspace @cyber-sim/web
+npm run start --workspace @cyber-sim/web -- --hostname 127.0.0.1 --port 3000
+```
+
+## Запуск через Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+Сервисы:
+
+- `web` — `http://localhost:3000`
+- `api` — `http://localhost:8000`
+- `docs` — `http://localhost:8000/docs`
+- `caddy` — reverse proxy на `http://localhost`
+
+## Demo Flow
+
+1. Открыть `/login` и создать пользователя.
+2. Перейти в `/simulator`.
+3. Запустить сценарий `Офис: письмо от ИТ-поддержки`.
+4. Сделать один ошибочный выбор и увидеть подсказку и последствия.
+5. Завершить миссию и проверить обновленную статистику в `/dashboard`.
+
+## Тесты
+
+```bash
+cd apps/api
+pytest
+```
+
+## Что проверено локально
+
+- `GET /api/health` возвращает `200`
+- frontend-страницы `/`, `/login`, `/simulator` отвечают `200`
+- e2e flow: регистрация -> старт миссии -> ошибочный ответ -> WebSocket-апдейт -> завершение миссии -> статистика -> лидерборд
+- `pytest` для backend: `2 passed`
+- production build фронтенда: `npm run build --workspace @cyber-sim/web`
+- `docker-compose up --build` поднимает `db`, `redis`, `api`, `web`, `caddy`
+- через Docker подтверждены `http://127.0.0.1:8000/api/health`, `http://127.0.0.1:3000`, `https://localhost`, `https://localhost/api/health`
+
+## Ограничения текущего прототипа
+
+- Ветки `home` и `public-wifi` представлены как архитектурные заготовки.
+- Полноценный TLS 1.2+ для production не проверялся в этом окружении, но структура под reverse proxy подготовлена.
+- Контейнерный запуск проверен через `docker-compose`, но `docker compose` plugin на машине может отсутствовать, если установлен только отдельный пакет `docker-compose`.
