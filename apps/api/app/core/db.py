@@ -55,7 +55,10 @@ def migrate_legacy_schema() -> None:
 
     if inspector.has_table("scenarios"):
         if not has_column("scenarios", "is_enabled"):
-            add_column("scenarios", "is_enabled BOOLEAN DEFAULT 1")
+            if dialect == "postgresql":
+                add_column("scenarios", "is_enabled BOOLEAN DEFAULT TRUE")
+            else:
+                add_column("scenarios", "is_enabled BOOLEAN DEFAULT 1")
         if not has_column("scenarios", "release_at"):
             add_column("scenarios", "release_at TIMESTAMP")
         if not has_column("scenarios", "created_at"):
