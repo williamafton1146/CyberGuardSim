@@ -8,6 +8,10 @@ shopt -s nullglob
 
 tmp_targets=(/tmp/cybersim-* /tmp/cyberguard*)
 repo_targets=(
+  "cybersec.db"
+  "test_cybersim.db"
+  "apps/api/cybersec.db"
+  "apps/api/test_cybersim.db"
   "apps/web/.next"
   "apps/web/tsconfig.tsbuildinfo"
   "apps/api/.pytest_cache"

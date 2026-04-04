@@ -12,7 +12,6 @@ ENV npm_config_update_notifier=false
 COPY package.json /app/package.json
 COPY package-lock.json /app/package-lock.json
 COPY apps/web/package.json /app/apps/web/package.json
-COPY packages/shared/package.json /app/packages/shared/package.json
 
 RUN npm ci --no-audit --no-fund
 
@@ -31,10 +30,8 @@ COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/package.json /app/package.json
 COPY --from=deps /app/package-lock.json /app/package-lock.json
 COPY --from=deps /app/apps/web/package.json /app/apps/web/package.json
-COPY --from=deps /app/packages/shared/package.json /app/packages/shared/package.json
 
 COPY tsconfig.base.json /app/tsconfig.base.json
-COPY packages/shared /app/packages/shared
 COPY apps/web /app/apps/web
 
 RUN npm run build --workspace @cyber-sim/web

@@ -7,27 +7,8 @@ cd "${ROOT_DIR}"
 DOCKER_PREFIX=()
 AGGRESSIVE_CLEANUP="${1:-}"
 
-run_root() {
-  if [[ "${EUID}" -eq 0 ]]; then
-    "$@"
-  else
-    sudo "$@"
-  fi
-}
-
-docker_ok() {
-  "${DOCKER_PREFIX[@]}" docker info >/dev/null 2>&1
-}
-
-ensure_docker_access() {
-  if docker_ok; then
-    return
-  fi
-
-  if run_root docker info >/dev/null 2>&1; then
-    DOCKER_PREFIX=(sudo)
-  fi
-}
+source "${ROOT_DIR}/infra/deploy/lib/common.sh"
+source "${ROOT_DIR}/infra/deploy/lib/docker.sh"
 
 echo "[cleanup-system] Cleaning project temp artifacts"
 bash "${ROOT_DIR}/infra/deploy/cleanup-temp.sh" || true

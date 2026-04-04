@@ -4,11 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT_DIR}"
 
-if [[ -f .env ]]; then
-  DOMAIN="$(grep '^DOMAIN=' .env | cut -d '=' -f2- || true)"
-else
-  DOMAIN=""
-fi
+source "${ROOT_DIR}/infra/deploy/lib/common.sh"
+source "${ROOT_DIR}/infra/deploy/lib/env.sh"
+
+DOMAIN="$(get_env_value DOMAIN .env || true)"
 
 BASE_URL="${1:-}"
 if [[ -z "${BASE_URL}" ]]; then

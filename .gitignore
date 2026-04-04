@@ -11,6 +11,7 @@ TZ.txt
 .env
 .env.*
 !.env.example
+.deploy.production.ready
 
 # Node / Next.js
 node_modules/
@@ -41,8 +42,6 @@ apps/**/__pycache__/
 *.db
 *.sqlite
 *.sqlite3
-apps/api/cybersec.db
-apps/api/test_cybersim.db
 
 # Docker / local tooling
 .docker/
