@@ -13,7 +13,7 @@ if str(API_ROOT) not in sys.path:
 from app.core.db import Base
 from app.seeds.scenarios import seed_database
 
-TEST_DATABASE_URL = "sqlite:///./test_cybersim.db"
+TEST_DATABASE_URL = "sqlite:///./test_cyberguardsim.db"
 
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)

@@ -34,7 +34,7 @@ COPY --from=deps /app/apps/web/package.json /app/apps/web/package.json
 COPY tsconfig.base.json /app/tsconfig.base.json
 COPY apps/web /app/apps/web
 
-RUN npm run build --workspace @cyber-sim/web
+RUN npm run build --workspace @cyberguardsim/web
 
 FROM node:22-alpine AS runner
 

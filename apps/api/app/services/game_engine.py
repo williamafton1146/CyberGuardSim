@@ -12,7 +12,7 @@ from app.models.user import User
 from app.schemas.leaderboard import LeaderboardEntry
 from app.schemas.scenario import DecisionOptionPublic, ScenarioStepPublic
 from app.schemas.session import AnswerResult, SessionState
-from app.services.scenarios import scenario_is_live
+from app.services.scenarios import scenario_is_live, scenario_max_score
 from app.services.stats import compute_league
 
 
@@ -51,14 +51,6 @@ def _total_steps(scenario: Scenario) -> int:
     return len(scenario.steps)
 
 
-def _max_score(scenario: Scenario) -> int:
-    score = 0
-    for step in scenario.steps:
-        best_correct_gain = max((25 + max(option.hp_delta, 0) for option in step.decision_options if option.is_correct), default=0)
-        score += best_correct_gain
-    return score
-
-
 def _session_payload(session: GameSession) -> SessionState:
     current_step = _get_step(session.scenario, session.current_step_order) if session.status == "active" else None
     return SessionState(
@@ -67,7 +59,7 @@ def _session_payload(session: GameSession) -> SessionState:
         scenario_title=session.scenario.title,
         hp_left=session.hp_left,
         score=session.score,
-        max_score=_max_score(session.scenario),
+        max_score=scenario_max_score(session.scenario),
         status=session.status,
         step_number=session.current_step_order,
         total_steps=_total_steps(session.scenario),
@@ -190,6 +182,13 @@ def start_session(db: Session, user: User, scenario_slug: str) -> SessionState:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Этот сценарий пока недоступен для игроков",
+        )
+
+    progress = _load_scenario_progress(db, user.id, scenario.id)
+    if progress is not None and progress.best_completed and progress.best_score >= scenario_max_score(scenario):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Этот сценарий уже пройден на максимальный результат",
         )
 
     session = GameSession(user_id=user.id, scenario_id=scenario.id, hp_left=100, score=0, status="active", current_step_order=1)

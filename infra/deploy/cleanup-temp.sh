@@ -6,8 +6,12 @@ cd "${ROOT_DIR}"
 
 shopt -s nullglob
 
-tmp_targets=(/tmp/cybersim-* /tmp/cyberguard*)
+tmp_targets=(/tmp/cyberguardsim-* /tmp/cybersim-* /tmp/cyberguard*)
 repo_targets=(
+  "cyberguardsim.db"
+  "test_cyberguardsim.db"
+  "apps/api/cyberguardsim.db"
+  "apps/api/test_cyberguardsim.db"
   "cybersec.db"
   "test_cybersim.db"
   "apps/api/cybersec.db"

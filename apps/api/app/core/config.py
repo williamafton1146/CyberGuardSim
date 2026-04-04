@@ -3,13 +3,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "CyberSim API"
+    app_name: str = "CyberGuardSim API"
     environment: str = "development"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     secret_key: str = "change-me"
     access_token_expire_minutes: int = 60 * 24
-    database_url: str = "sqlite:///./cybersec.db"
+    database_url: str = "sqlite:///./cyberguardsim.db"
     redis_url: str = "redis://localhost:6379/0"
     frontend_origin: str = "http://localhost:3000"
     admin_username: str = "Admin"

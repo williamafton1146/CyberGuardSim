@@ -8,14 +8,14 @@ from app.models.user import User
 def ensure_admin_user(db: Session) -> User:
     admin = (
         db.query(User)
-        .filter((User.role == "admin") | (User.username == settings.admin_username) | (User.email == "admin@cybersim.local"))
+        .filter((User.role == "admin") | (User.username == settings.admin_username) | (User.email == "admin@cyberguardsim.local"))
         .first()
     )
     bootstrap_password = settings.admin_bootstrap_password
 
     if admin is None:
         admin = User(
-            email="admin@cybersim.local",
+            email="admin@cyberguardsim.local",
             username=settings.admin_username,
             password_hash=hash_password(bootstrap_password),
             display_name="Администратор",
@@ -28,7 +28,7 @@ def ensure_admin_user(db: Session) -> User:
         return admin
 
     admin.username = settings.admin_username
-    admin.email = admin.email or "admin@cybersim.local"
+    admin.email = admin.email or "admin@cyberguardsim.local"
     admin.display_name = admin.display_name or "Администратор"
     admin.role = "admin"
     admin.league = "Администратор"

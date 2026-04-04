@@ -7,8 +7,9 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { ScenarioCard } from "@/components/scenario/ScenarioCard";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { getScenarios } from "@/lib/api";
-import type { ScenarioSummary } from "@/types";
+import { getScenarios, getStats } from "@/lib/api";
+import { getToken } from "@/lib/auth";
+import type { ScenarioSummary, UserStats } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -43,36 +44,77 @@ const missionVisuals: Record<
 
 export default function SimulatorHubPage() {
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getScenarios()
-      .then((payload) => {
-        setScenarios(payload);
+    const token = getToken();
+    if (!token) {
+      return;
+    }
+
+    Promise.allSettled([getScenarios(), getStats(token)])
+      .then(([scenarioPayload, statsPayload]) => {
+        if (scenarioPayload.status === "fulfilled") {
+          setScenarios(scenarioPayload.value);
+        } else {
+          setScenarios([]);
+          throw scenarioPayload.reason;
+        }
+
+        if (statsPayload.status === "fulfilled") {
+          setStats(statsPayload.value);
+        } else {
+          setStats(null);
+        }
+
         setError(null);
       })
       .catch((loadError) => {
         setScenarios([]);
+        setStats(null);
         setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить каталог миссий");
       })
       .finally(() => setLoading(false));
   }, []);
 
+  const progressBySlug = useMemo(
+    () =>
+      new Map(
+        (stats?.scenario_progress ?? []).map((progress) => [
+          progress.slug,
+          progress
+        ]),
+      ),
+    [stats]
+  );
+
   const enrichedScenarios = useMemo(
     () =>
-      scenarios.map((scenario) => ({
-        ...scenario,
-        visual: missionVisuals[scenario.slug]
-      })),
-    [scenarios]
+      scenarios.map((scenario) => {
+        const progress = progressBySlug.get(scenario.slug);
+        const bestScore = progress?.best_score ?? 0;
+        const hasProgress = Boolean(progress) && (bestScore > 0 || progress?.status !== "not_started");
+        const perfectRun = Boolean(progress) && progress?.status === "completed" && bestScore >= scenario.max_score;
+
+        return {
+          ...scenario,
+          progress,
+          bestScore,
+          hasProgress,
+          perfectRun,
+          visual: missionVisuals[scenario.slug]
+        };
+      }),
+    [progressBySlug, scenarios]
   );
 
   return (
     <RequireAuth>
       <div className="shell shell-wide space-y-10 py-12">
         <SectionTitle
-          eyebrow="Mission hub"
+          eyebrow="Симулятор"
           title="Каталог интерактивных сред"
           description="Каждая миссия запускается в знакомом цифровом интерфейсе: почта, домашняя панель устройств или public Wi‑Fi. Откройте среду и разберите атаку в привычном контексте."
         />
@@ -86,9 +128,9 @@ export default function SimulatorHubPage() {
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <section className="glass-card p-6 md:p-7">
             <p className="eyebrow">Среды</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--color-text-primary)]">Выберите миссию и войдите в её интерфейс</h2>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--color-text-primary)]">Выберите миссию и откройте нужную среду</h2>
             <p className="body-copy mt-4 max-w-3xl">
-              Внутри каждой ветки есть только один действительно важный объект на шаг. Остальные элементы нужны для ощущения реальной среды и помогают считывать контекст, не превращая прохождение в слепой тест.
+              Внутри каждой ветки пользователь видит бытовой интерфейс и один считываемый активный объект на шаг. Остальные элементы формируют привычный контекст, но не превращают прохождение в слепой квест.
             </p>
 
             <div className="mt-8 grid gap-5 xl:grid-cols-3">
@@ -110,8 +152,31 @@ export default function SimulatorHubPage() {
                     </div>
                     <ScenarioCard
                       scenario={scenario}
-                      actionHref={scenario.visual.route}
-                      actionLabel={scenario.is_playable ? "Открыть среду" : "Скоро откроется"}
+                      actionHref={scenario.perfectRun ? undefined : scenario.visual.route}
+                      actionLabel={
+                        !scenario.is_playable
+                          ? "Скоро откроется"
+                          : scenario.perfectRun
+                            ? "Пройдено"
+                            : scenario.hasProgress
+                              ? "Перепройти"
+                              : "Пройти"
+                      }
+                      actionDisabled={!scenario.is_playable || scenario.perfectRun}
+                      statusText={
+                        scenario.perfectRun
+                          ? "Максимальный результат"
+                          : scenario.hasProgress
+                            ? "Есть сохранённый прогресс"
+                            : scenario.is_playable
+                              ? "Готово к запуску"
+                              : "Скоро"
+                      }
+                      progressNote={
+                        scenario.hasProgress || scenario.perfectRun
+                          ? `Лучший результат: ${scenario.bestScore} из ${scenario.max_score} очков`
+                          : `Максимум за миссию: ${scenario.max_score} очков`
+                      }
                     />
                   </div>
                 ))
@@ -129,13 +194,13 @@ export default function SimulatorHubPage() {
               <div className="soft-tile">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">1. Вход в привычную среду</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  Вы попадаете не в абстрактный тест, а в mock-интерфейс: почту, security dashboard или экран подключения к сети.
+                  Миссия открывается как знакомый интерфейс: почта, домашняя панель безопасности или страница подключения к сети.
                 </p>
               </div>
               <div className="soft-tile">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">2. Один значимый интерактивный объект</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  Активная зона помечена мягко и понятно: новым письмом, всплывающим сообщением, выделенной сетью или подозрительной кнопкой.
+                  Нужный объект выделяется естественно: новым письмом, служебным сообщением, подозрительной сетью или recovery-действием.
                 </p>
               </div>
               <div className="soft-tile">
@@ -147,12 +212,6 @@ export default function SimulatorHubPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/dashboard" className="secondary-button">
-                Кабинет
-              </Link>
-              <Link href="/leaderboard" className="secondary-button">
-                Рейтинг
-              </Link>
               <Link href="/for-users" className="primary-button">
                 Открыть материалы
                 <ArrowRight size={16} />

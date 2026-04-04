@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
+from app.core.passwords import extract_password_context, password_weakness_reason
+
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -22,6 +24,16 @@ class RegisterRequest(BaseModel):
         if len(str(value)) > 32:
             raise ValueError("Email не должен превышать 32 символа")
         return value
+
+    @model_validator(mode="after")
+    def validate_password_strength(self) -> "RegisterRequest":
+        weakness_reason = password_weakness_reason(
+            self.password,
+            context_fragments=extract_password_context(str(self.email), self.display_name),
+        )
+        if weakness_reason:
+            raise ValueError(weakness_reason)
+        return self
 
 
 class LoginRequest(BaseModel):

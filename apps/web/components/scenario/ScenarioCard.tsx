@@ -9,10 +9,14 @@ type ScenarioCardProps = {
   onStart?: (slug: string) => void;
   actionHref?: string;
   actionLabel?: string;
+  actionDisabled?: boolean;
+  statusText?: string;
+  progressNote?: string;
 };
 
-export function ScenarioCard({ scenario, onStart, actionHref, actionLabel }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onStart, actionHref, actionLabel, actionDisabled, statusText, progressNote }: ScenarioCardProps) {
   const label = actionLabel ?? (scenario.is_playable ? "Начать миссию" : "Скоро откроется");
+  const disabled = actionDisabled ?? !scenario.is_playable;
 
   return (
     <article className="glass-card p-6">
@@ -30,18 +34,20 @@ export function ScenarioCard({ scenario, onStart, actionHref, actionLabel }: Sce
 
       <div className="mt-6 flex items-center justify-between text-sm text-[var(--color-text-muted)]">
         <span>{scenario.step_count} шагов</span>
-        <span>{scenario.is_playable ? "Доступно сейчас" : "Скоро"}</span>
+        <span>{statusText ?? (scenario.is_playable ? "Доступно сейчас" : "Скоро")}</span>
       </div>
 
-      {actionHref ? (
-        <Link href={actionHref} className={`mt-6 flex w-full justify-center ${scenario.is_playable ? "primary-button" : "secondary-button opacity-70"}`}>
+      {progressNote ? <p className="mt-4 text-sm leading-7 text-[var(--color-text-muted)]">{progressNote}</p> : null}
+
+      {actionHref && !disabled ? (
+        <Link href={actionHref} className="primary-button mt-6 flex w-full justify-center">
           {label}
         </Link>
       ) : (
         <button
-          className="primary-button mt-6 w-full disabled:cursor-not-allowed disabled:opacity-45"
+          className="secondary-button mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => onStart?.(scenario.slug)}
-          disabled={!scenario.is_playable}
+          disabled={disabled}
         >
           {label}
         </button>

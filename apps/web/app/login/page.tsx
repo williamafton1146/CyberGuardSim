@@ -6,59 +6,10 @@ import { useRouter } from "next/navigation";
 
 import { loginUser, registerUser } from "@/lib/api";
 import { getStoredUser, getToken, saveAuthSession } from "@/lib/auth";
+import { evaluatePassword, type PasswordStrength } from "@/lib/password-strength";
 import type { UserProfile } from "@/types";
 
 export const dynamic = "force-dynamic";
-
-type PasswordStrength = {
-  label: string;
-  width: number;
-  tone: "weak" | "medium" | "good" | "strong";
-  advice: string;
-};
-
-function evaluatePassword(password: string): PasswordStrength {
-  const checks = [
-    password.length >= 8,
-    password.length >= 12,
-    /[A-ZА-Я]/.test(password),
-    /[a-zа-я]/.test(password),
-    /\d/.test(password),
-    /[^A-Za-zА-Яа-я0-9]/.test(password)
-  ];
-  const score = checks.filter(Boolean).length;
-
-  if (score <= 2) {
-    return {
-      label: "Потенциально небезопасный пароль",
-      width: 15,
-      tone: "weak",
-      advice: "Добавьте длину, цифры и хотя бы один специальный символ."
-    };
-  }
-  if (score === 3 || score === 4) {
-    return {
-      label: "Средняя сложность",
-      width: 48,
-      tone: "medium",
-      advice: "Сделайте пароль длиннее и не используйте знакомые слова целиком."
-    };
-  }
-  if (score === 5) {
-    return {
-      label: "Хороший пароль",
-      width: 74,
-      tone: "good",
-      advice: "Осталось убедиться, что этот пароль не повторяется в других сервисах."
-    };
-  }
-  return {
-    label: "С таким паролем вы защищены",
-    width: 100,
-    tone: "strong",
-    advice: "Сохраняйте его в менеджере паролей и не используйте повторно."
-  };
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -97,10 +48,14 @@ export default function LoginPage() {
   }, [router]);
 
   const title = useMemo(
-    () => (mode === "register" ? "Создайте профиль и откройте программу обучения" : "Войдите и продолжите работу в CyberSim"),
+    () => (mode === "register" ? "Создайте профиль и откройте программу обучения" : "Войдите и продолжите работу в CyberGuardSim"),
     [mode]
   );
-  const passwordStrength = useMemo(() => evaluatePassword(password), [password]);
+  const passwordStrength = useMemo(
+    () => evaluatePassword(password, { identifier, displayName }),
+    [displayName, identifier, password]
+  );
+  const registrationBlocked = mode === "register" && Boolean(passwordStrength.blockReason);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,6 +63,11 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      if (mode === "register" && passwordStrength.blockReason) {
+        setError(passwordStrength.blockReason);
+        return;
+      }
+
       const payload =
         mode === "register"
           ? await registerUser({ email: identifier, password, display_name: displayName || "Новый аналитик" })
@@ -132,7 +92,7 @@ export default function LoginPage() {
     <div className="shell py-12">
       <div className="auth-layout">
         <section className="glass-card landing-surface">
-          <p className="eyebrow">CyberSim access</p>
+          <p className="eyebrow">CyberGuardSim access</p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-[var(--color-text-primary)]">{title}</h1>
           <p className="body-copy mt-4 max-w-xl">
             После авторизации доступны сценарии, личная статистика, рейтинг цифровой устойчивости, раздел с пользовательскими материалами и выпуск сертификата.
@@ -245,7 +205,7 @@ export default function LoginPage() {
             </p>
           ) : null}
 
-          <button type="submit" className="primary-button mt-8 w-full" disabled={loading}>
+          <button type="submit" className="primary-button mt-8 w-full" disabled={loading || registrationBlocked}>
             {loading ? "Обработка..." : mode === "register" ? "Создать профиль" : "Войти"}
             {!loading ? <ArrowRight size={16} /> : null}
           </button>

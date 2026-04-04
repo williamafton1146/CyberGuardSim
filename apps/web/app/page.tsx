@@ -97,7 +97,7 @@ export default function HomePage() {
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
               <p className="eyebrow">Цифровая устойчивость без перегруза</p>
-              <h1 className="landing-title landing-title-balanced">CyberSim</h1>
+              <h1 className="landing-title landing-title-balanced">CyberGuardSim</h1>
               <p className="landing-tagline">Интерактивная платформа, которая учит замечать атаку до того, как ошибка превращается в реальный инцидент.</p>
               <p className="landing-lead">
                 Пользователь проходит знакомые рабочие и бытовые ситуации как понятный маршрут: видит контекст, выбирает действие, получает объяснение последствий и закрепляет безопасный паттерн.
@@ -128,14 +128,24 @@ export default function HomePage() {
                   <span>Пользователь видит риск, а не угадывает правильный ответ в отрыве от контекста.</span>
                 </div>
                 <div className="landing-hero-asset-frame">
-                  <Image
-                    src="/hero-cyber-event.svg"
-                    alt="Интерфейс CyberSim с устройством, карточками угроз и защитными действиями"
-                    width={1600}
-                    height={1200}
-                    priority
-                    className="landing-hero-asset-image"
-                  />
+                  <div className="landing-hero-asset-stack">
+                    <Image
+                      src="/hero-cyber-event.svg"
+                      alt="Интерфейс CyberGuardSim с устройством, сценарными карточками и защитными действиями"
+                      width={1600}
+                      height={1200}
+                      priority
+                      className="landing-hero-asset-image landing-hero-asset-image-dark"
+                    />
+                    <Image
+                      src="/hero-cyber-event-light.svg"
+                      alt="Интерфейс CyberGuardSim с устройством, сценарными карточками и защитными действиями"
+                      width={1600}
+                      height={1200}
+                      priority
+                      className="landing-hero-asset-image landing-hero-asset-image-light"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

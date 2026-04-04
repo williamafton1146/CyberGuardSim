@@ -82,7 +82,7 @@ export function SiteHeader() {
         <Link href={brandHref} className="brand-lockup">
           <div>
             <p className="brand-kicker">платформа цифровой устойчивости</p>
-            <p className="brand-title">CyberSim</p>
+            <p className="brand-title">CyberGuardSim</p>
           </div>
         </Link>
 

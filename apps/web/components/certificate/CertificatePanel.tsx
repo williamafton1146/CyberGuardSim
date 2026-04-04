@@ -84,7 +84,7 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
 
       setDownloadingPdf(true);
       try {
-        await downloadNodeAsPdf(exportRef.current, `cybersim-certificate-${certificate.code}.pdf`);
+        await downloadNodeAsPdf(exportRef.current, `cyberguardsim-certificate-${certificate.code}.pdf`);
       } finally {
         setDownloadingPdf(false);
       }

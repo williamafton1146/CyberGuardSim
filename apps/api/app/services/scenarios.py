@@ -46,6 +46,14 @@ def scenario_has_sessions(db: Session, scenario_id: int) -> bool:
     return db.query(GameSession.id).filter(GameSession.scenario_id == scenario_id).first() is not None
 
 
+def scenario_max_score(scenario: Scenario) -> int:
+    score = 0
+    for step in scenario.steps:
+        best_correct_gain = max((25 + max(option.hp_delta, 0) for option in step.decision_options if option.is_correct), default=0)
+        score += best_correct_gain
+    return score
+
+
 def serialize_scenario_public(scenario: Scenario, now: datetime | None = None) -> ScenarioListItem:
     return ScenarioListItem(
         id=scenario.id,
@@ -56,6 +64,7 @@ def serialize_scenario_public(scenario: Scenario, now: datetime | None = None) -
         description=scenario.description,
         is_playable=scenario_is_live(scenario, now),
         step_count=len(scenario.steps),
+        max_score=scenario_max_score(scenario),
     )
 
 

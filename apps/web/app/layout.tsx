@@ -7,15 +7,17 @@ import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CyberSim",
+  title: "CyberGuardSim",
   description: "Образовательный симулятор цифровой устойчивости и реагирования на реальные угрозы"
 };
 
 const themeInitScript = `
   (() => {
     try {
-      const savedTheme = localStorage.getItem('cyber-sim-theme');
+      const savedTheme = localStorage.getItem('cyberguardsim-theme') ?? localStorage.getItem('cyber-sim-theme');
       const theme = savedTheme === 'light' ? 'light' : 'dark';
+      localStorage.setItem('cyberguardsim-theme', theme);
+      localStorage.removeItem('cyber-sim-theme');
       document.documentElement.dataset.theme = theme;
       document.documentElement.style.colorScheme = theme;
     } catch {

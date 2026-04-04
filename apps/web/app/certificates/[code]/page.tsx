@@ -61,7 +61,7 @@ export default function CertificatePage({ params }: { params: { code: string } }
               <p className="eyebrow">Проверка сертификата</p>
               <h1 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">Сертификат действителен</h1>
               <p className="body-copy mt-4 max-w-2xl">
-                Этот сертификат подтверждает, что пользователь завершил текущую программу сценарного обучения цифровой устойчивости в CyberSim.
+                Этот сертификат подтверждает, что пользователь завершил текущую программу сценарного обучения цифровой устойчивости в CyberGuardSim.
               </p>
 
               <div className="certificate-verify-grid">
@@ -109,7 +109,7 @@ export default function CertificatePage({ params }: { params: { code: string } }
                   }
                   setDownloadingPdf(true);
                   try {
-                    await downloadNodeAsPdf(exportRef.current, `cybersim-certificate-${certificate.code}.pdf`);
+                    await downloadNodeAsPdf(exportRef.current, `cyberguardsim-certificate-${certificate.code}.pdf`);
                   } finally {
                     setDownloadingPdf(false);
                   }

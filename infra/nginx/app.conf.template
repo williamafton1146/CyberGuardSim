@@ -33,9 +33,9 @@ server {
   add_header X-Content-Type-Options "nosniff" always;
   add_header X-Frame-Options "DENY" always;
   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-  set $cybersim_api http://api:8000;
-  set $cybersim_web http://web:3000;
-  set $cybersim_forwarded_proto https;
+  set $cyberguardsim_api http://api:8000;
+  set $cyberguardsim_web http://web:3000;
+  set $cyberguardsim_forwarded_proto https;
 
   location /.well-known/acme-challenge/ {
     root /var/www/certbot;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SWAPFILE_PATH="${SWAPFILE_PATH:-/swapfile-cybersim}"
+SWAPFILE_PATH="${SWAPFILE_PATH:-/swapfile-cyberguardsim}"
 
 _bytes_to_mib() {
   local bytes="${1:-0}"

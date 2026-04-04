@@ -5,9 +5,7 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
-  BellRing,
   CheckCircle,
-  CircleGauge,
   CreditCard,
   KeyRound,
   Lock,
@@ -17,7 +15,6 @@ import {
   Shield,
   ShieldAlert,
   Smartphone,
-  Sparkles,
   Wifi,
   XCircle
 } from "lucide-react";
@@ -25,17 +22,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { DecisionPanel } from "@/components/scenario/DecisionPanel";
-import { HPMeter } from "@/components/scenario/HPMeter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { getScenarios, startSession, submitAnswer } from "@/lib/api";
+import { getScenarios, getStats, startSession, submitAnswer } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { connectSessionSocket } from "@/lib/ws";
-import type { AnswerResult, ScenarioStep, ScenarioSummary, SessionState } from "@/types";
+import type { AnswerResult, ScenarioProgress, ScenarioStep, ScenarioSummary, SessionState } from "@/types";
 
 import styles from "./MissionExperience.module.css";
 
 type MissionSlug = "office" | "home" | "public-wifi";
 type ConsequenceAnimation = "encrypt" | "disappear" | "leak" | null;
+type LockedCompletion = {
+  score: number;
+  maxScore: number;
+};
 
 const missionMeta: Record<
   MissionSlug,
@@ -44,48 +44,25 @@ const missionMeta: Record<
     title: string;
     description: string;
     environment: string;
-    runtimeHint: string;
-    hotspotHints: Record<number, string>;
   }
 > = {
   office: {
-    eyebrow: "Office mission",
+    eyebrow: "Офис",
     title: "Офисная почта и служебные сообщения",
-    description: "Письмо, поддельная ссылка, срочный запрос кода и безопасное завершение инцидента — всё внутри привычной рабочей среды.",
-    environment: "Почтовый клиент и служебные уведомления",
-    runtimeHint: "Смотрите на источник, домен и давление срочностью. В этой среде опасность маскируется под рабочую рутину.",
-    hotspotHints: {
-      1: "Откройте новое письмо во входящих.",
-      2: "Нажмите на подозрительную кнопку внутри письма.",
-      3: "Откройте всплывшее сообщение от «руководителя».",
-      4: "Запустите панель восстановления и завершения инцидента."
-    }
+    description: "Рабочее письмо, подозрительный портал, срочный запрос кода и безопасное завершение инцидента — внутри одной привычной офисной среды.",
+    environment: "Почта и служебные сообщения"
   },
   home: {
-    eyebrow: "Home mission",
+    eyebrow: "Дом",
     title: "Домашние аккаунты и смарт-устройства",
-    description: "Уведомления о входах, повторное использование пароля, фальшивое защитное приложение и восстановление контроля над домашной средой.",
-    environment: "Security dashboard и магазин приложений",
-    runtimeHint: "Домашние сервисы тоже требуют ИБ-дисциплины: уведомления, пароли и разрешения приложений связаны между собой.",
-    hotspotHints: {
-      1: "Откройте тревожное уведомление о новом входе.",
-      2: "Перейдите в блок проверки повторно используемых паролей.",
-      3: "Откройте карточку подозрительного «защитного» приложения.",
-      4: "Запустите локальный recovery-center для завершения инцидента."
-    }
+    description: "Уведомление о входе, повторное использование пароля, фальшивое защитное приложение и восстановление контроля над домашней средой.",
+    environment: "Домашняя панель безопасности"
   },
   "public-wifi": {
-    eyebrow: "Public Wi‑Fi mission",
-    title: "Общественная сеть и поддельные маршруты входа",
-    description: "Подозрительная точка доступа, captive portal, предупреждение о сертификате и QR-платёжная ловушка собираются в короткий реалистичный маршрут.",
-    environment: "Сети, браузер и public portal",
-    runtimeHint: "В общественной сети опасность часто начинается раньше ввода логина: уже сам маршрут подключения может быть подменён.",
-    hotspotHints: {
-      1: "Выберите подозрительную сеть из списка точек доступа.",
-      2: "Откройте captive portal с лишними запросами данных.",
-      3: "Нажмите на опасное продолжение соединения в браузере.",
-      4: "Откройте QR-экран с привязкой карты."
-    }
+    eyebrow: "Общественная сеть",
+    title: "Public Wi‑Fi и поддельные маршруты входа",
+    description: "Точка доступа, captive portal, небезопасный браузерный маршрут и QR-ловушка собираются в один короткий сценарий из реальной цифровой рутины.",
+    environment: "Сети, портал и браузер"
   }
 };
 
@@ -143,7 +120,7 @@ function buildModalNarrative(feedback: AnswerResult, threatType?: string | null)
       text: feedback.hint || "Остановить действие, проверить источник и вернуться в сервис только по официальному маршруту."
     },
     {
-      title: "На что смотреть в этом типе атаки",
+      title: "Что запомнить",
       text: getThreatChecklist(threatType).join(". ") + "."
     }
   ];
@@ -151,26 +128,15 @@ function buildModalNarrative(feedback: AnswerResult, threatType?: string | null)
 
 function getScoreEncouragement(score: number, maxScore: number, status: string) {
   if (status === "failed") {
-    return "Сценарий прерван, но именно в таких точках и формируется внимательность к реальным атакам.";
+    return "Сценарий прерван, но именно на таких точках и формируется внимательность к реальным атакам.";
   }
   if (score >= maxScore) {
     return "Максимальный результат зафиксирован. Такой паттерн уже можно считать устойчивым.";
   }
   if (score >= Math.round(maxScore * 0.75)) {
-    return "Ещё чуть-чуть — одно перепрохождение может довести этот сценарий до максимума.";
+    return "Ещё чуть-чуть — одно перепрохождение может довести эту среду до максимума.";
   }
   return "Ну, тренировка не помешает: перепройдите среду ещё раз и соберите максимум.";
-}
-
-function getHotspotHint(slug: MissionSlug, stepNumber: number) {
-  return missionMeta[slug].hotspotHints[stepNumber] ?? "Найдите активный объект среды и откройте его.";
-}
-
-function getPositiveLabel(feedback: AnswerResult | null) {
-  if (!feedback || !feedback.is_correct) {
-    return null;
-  }
-  return feedback.completed ? "Сценарий завершён" : "Безопасный паттерн закреплён";
 }
 
 function ConsequenceAnimationOverlay({ type }: { type: ConsequenceAnimation }) {
@@ -238,16 +204,15 @@ function ScenarioFeedbackOverlay({
             {feedback.severity === "critical" ? <AlertTriangle size={18} /> : <ShieldAlert size={18} />}
           </div>
           <div>
-            <p className="eyebrow">{feedback.severity === "critical" ? "Критическая ошибка" : "Нужна корректировка"}</p>
+            <p className="eyebrow">{feedback.severity === "critical" ? "Критическая ошибка" : "Разбор шага"}</p>
             <h3 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">
-              {feedback.severity === "critical" ? "Атаку нужно срочно останавливать" : "Сначала разберите опасный шаг"}
+              {feedback.severity === "critical" ? "Сначала остановите развитие атаки" : "Разберите опасное действие перед продолжением"}
             </h3>
           </div>
         </div>
 
         <div className={styles.feedbackChips}>
-          <span>{feedback.severity === "critical" ? "Прохождение временно заблокировано" : "Разбор шага открыт поверх среды"}</span>
-          <span>{threatType ?? "Контекст атаки требует проверки"}</span>
+          <span>{feedback.severity === "critical" ? "Продолжение заблокировано до подтверждения" : "Подтвердите разбор и вернитесь в среду"}</span>
         </div>
 
         <div className="mt-6 space-y-3">
@@ -275,12 +240,14 @@ function ScenarioFeedbackOverlay({
 function ScenarioDecisionOverlay({
   currentStep,
   scenarioTitle,
+  totalSteps,
   loading,
   onClose,
   onSelect
 }: {
   currentStep: ScenarioStep;
   scenarioTitle: string;
+  totalSteps: number;
   loading: boolean;
   onClose: () => void;
   onSelect: (optionId: number) => void;
@@ -298,9 +265,9 @@ function ScenarioDecisionOverlay({
           </div>
         </div>
 
-        <div className={styles.decisionThreatRow}>
-          <span className={styles.decisionThreatChip}>{currentStep.threat_type}</span>
-          <span className={styles.decisionStepMarker}>Шаг {currentStep.step_order}</span>
+        <div className={styles.feedbackChips}>
+          <span>Шаг {currentStep.step_order} из {totalSteps}</span>
+          <span>Решение засчитывается сразу после выбора</span>
         </div>
 
         <div className={styles.decisionPromptCard}>
@@ -311,12 +278,7 @@ function ScenarioDecisionOverlay({
           <DecisionPanel options={currentStep.options} disabled={loading} onSelect={onSelect} />
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-between gap-3">
-          <div className={styles.decisionChecklist}>
-            {getThreatChecklist(currentStep.threat_type).map((item) => (
-              <span key={item}>{item}</span>
-            ))}
-          </div>
+        <div className="mt-6 flex justify-end">
           <button type="button" className="secondary-button" onClick={onClose} disabled={loading}>
             Вернуться к среде
           </button>
@@ -334,8 +296,12 @@ type EnvironmentProps = {
 
 function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
   const [view, setView] = useState<"inbox" | "email" | "portal" | "chat" | "recovery">(
-    step.step_order === 1 ? "inbox" : step.step_order === 2 ? "email" : step.step_order === 3 ? "email" : "recovery"
+    step.step_order === 1 ? "inbox" : step.step_order === 2 ? "portal" : step.step_order === 3 ? "chat" : "recovery"
   );
+
+  useEffect(() => {
+    setView(step.step_order === 1 ? "inbox" : step.step_order === 2 ? "portal" : step.step_order === 3 ? "chat" : "recovery");
+  }, [step.step_order]);
 
   function activate(nextView: "email" | "portal" | "chat" | "recovery") {
     if (locked) {
@@ -350,11 +316,11 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
       <div className={styles.environmentToolbar}>
         <div className={styles.environmentToolbarTitle}>
           <Mail size={16} />
-          <span>Workspace Mail</span>
+          <span>Рабочая почта</span>
         </div>
         <div className={styles.environmentToolbarMeta}>
           <span>Входящие</span>
-          <span>Безопасность</span>
+          <span>Служебные уведомления</span>
           <span>Поддержка</span>
         </div>
       </div>
@@ -371,14 +337,14 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
         <section className={styles.mailList}>
           <button
             type="button"
-            className={`${styles.mailRow} ${styles.mailRowActive} ${step.step_order === 1 ? styles.hotspotPulse : ""}`}
+            className={`${styles.mailRow} ${step.step_order === 1 ? styles.mailRowInteractive : styles.mailRowActive}`}
             onClick={() => activate("email")}
             disabled={locked || step.step_order !== 1}
           >
             <span className={styles.mailUnreadDot} />
             <div className={styles.mailRowCopy}>
               <strong>IT Support Team</strong>
-              <span>Срочный сброс пароля</span>
+              <span>Срочный сброс пароля перед созвоном</span>
             </div>
             <span className={styles.mailRowTime}>10:14</span>
           </button>
@@ -401,7 +367,7 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
         <section className={styles.mailPreview}>
           {view === "inbox" ? (
             <div className={styles.scenePlaceholder}>
-              Откройте входящее письмо, чтобы увидеть содержимое и решить, как действовать дальше.
+              Откройте непрочитанное письмо во входящих, чтобы увидеть содержимое и принять решение в привычном почтовом контексте.
             </div>
           ) : null}
 
@@ -412,26 +378,12 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
                   <p className={styles.mailMessageSubject}>Срочный сброс пароля</p>
                   <p className={styles.mailMessageMeta}>От: IT Support Team &lt;alerts@corp-mail-support.security&gt;</p>
                 </div>
-                <span className={styles.mailSecurityBadge}>new</span>
+                <span className={styles.mailSecurityBadge}>новое</span>
               </div>
               <p className={styles.mailBody}>
-                Для восстановления доступа к рабочей почте перейдите по ссылке и подтвердите логин в течение 10 минут.
+                Для восстановления доступа к рабочей почте перейдите по кнопке ниже и подтвердите учётную запись в течение 10 минут.
               </p>
-
-              {step.step_order === 2 ? (
-                <button
-                  type="button"
-                  className={`${styles.sceneActionButton} ${styles.hotspotPulse}`}
-                  onClick={() => activate("portal")}
-                  disabled={locked}
-                >
-                  Проверить аккаунт
-                </button>
-              ) : (
-                <div className={styles.mailFooterLine}>
-                  <span>Сначала проверьте отправителя и маршрут перехода.</span>
-                </div>
-              )}
+              <div className={styles.mailFooterLine}>Письмо выглядит срочным и служебным, поэтому особенно важно проверить маршрут перехода, а не действовать автоматически.</div>
             </div>
           ) : null}
 
@@ -440,9 +392,12 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               <div className={styles.browserAddressBar}>https://portal-company-security-login.co/reset</div>
               <div className={styles.portalCard}>
                 <p className={styles.portalTitle}>Подтверждение корпоративного аккаунта</p>
-                <div className={styles.portalField}>Введите рабочий логин</div>
-                <div className={styles.portalField}>Введите пароль</div>
-                <div className={styles.portalDangerHint}>Портал выглядит как авторизация, но домен и маршрут подозрительны.</div>
+                <div className={styles.portalField}>Рабочий логин</div>
+                <div className={styles.portalField}>Текущий пароль</div>
+                <div className={styles.portalDangerHint}>Страница похожа на авторизацию, но домен не совпадает с привычным маршрутом компании.</div>
+                <button type="button" className={styles.sceneActionButton} onClick={() => activate("portal")} disabled={locked || step.step_order !== 2}>
+                  Проверить маршрут входа
+                </button>
               </div>
             </div>
           ) : null}
@@ -451,10 +406,14 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
             <div className={styles.chatCard}>
               <div className={styles.chatHeader}>
                 <MessageCircle size={16} />
-                <span>Корпоративный чат</span>
+                <span>Служебный чат</span>
               </div>
-              <div className={styles.chatMessageMine}>Есть минутка? Проверь письмо от ИТ.</div>
-              <div className={styles.chatMessageIncoming}>Срочно нужен код из SMS, чтобы разблокировать почту перед созвоном.</div>
+              <div className={styles.chatMessageMine}>Проверяю письмо от ИТ, разбираюсь с доступом.</div>
+              <div className={styles.chatMessageIncoming}>Скиньте код из SMS прямо сейчас, иначе сорвётся вход перед созвоном.</div>
+              <div className={styles.mailFooterLine}>Запрос выглядит срочным, но просит одноразовый код через сторонний канал. Такие действия нельзя выполнять без независимого подтверждения.</div>
+              <button type="button" className={styles.sceneActionButton} onClick={() => activate("chat")} disabled={locked || step.step_order !== 3}>
+                Разобрать запрос кода
+              </button>
             </div>
           ) : null}
 
@@ -464,39 +423,15 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               <div className={styles.securityChecklist}>
                 <span>Сменить пароль через официальный портал</span>
                 <span>Завершить активные сессии</span>
-                <span>Оформить инцидент в ИБ</span>
+                <span>Сообщить об инциденте в ИБ</span>
               </div>
+              <button type="button" className={styles.sceneActionButton} onClick={() => activate("recovery")} disabled={locked || step.step_order !== 4}>
+                Завершить инцидент безопасно
+              </button>
             </div>
           ) : null}
         </section>
       </div>
-
-      {step.step_order === 3 ? (
-        <button
-          type="button"
-          className={`${styles.chatToast} ${styles.hotspotPulse}`}
-          onClick={() => activate("chat")}
-          disabled={locked}
-        >
-          <BellRing size={16} />
-          <div>
-            <strong>Новое сообщение от Руководителя</strong>
-            <span>“Скиньте код из SMS прямо сейчас”</span>
-          </div>
-        </button>
-      ) : null}
-
-      {step.step_order === 4 ? (
-        <button
-          type="button"
-          className={`${styles.inlineMissionBanner} ${styles.hotspotPulse}`}
-          onClick={() => activate("recovery")}
-          disabled={locked}
-        >
-          <ShieldAlert size={16} />
-          Завершить инцидент через Security Center
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -519,7 +454,7 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
       <div className={styles.environmentToolbar}>
         <div className={styles.environmentToolbarTitle}>
           <Smartphone size={16} />
-          <span>Home Security Center</span>
+          <span>Домашний центр безопасности</span>
         </div>
         <div className={styles.environmentToolbarMeta}>
           <span>Устройства</span>
@@ -545,55 +480,58 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
             </div>
           </div>
 
-          {step.step_order === 1 ? (
-            <button type="button" className={`${styles.alertTile} ${styles.hotspotPulse}`} onClick={() => activate("incident")} disabled={locked}>
-              <ShieldAlert size={18} />
-              <div>
-                <strong>Новый вход в аккаунт камеры из другого города</strong>
-                <span>Нажмите, чтобы открыть детали и решить, как реагировать.</span>
-              </div>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className={`${styles.alertTile} ${step.step_order === 1 ? styles.alertTileInteractive : ""}`}
+            onClick={() => activate("incident")}
+            disabled={locked || step.step_order !== 1}
+          >
+            <ShieldAlert size={18} />
+            <div>
+              <strong>Новый вход в аккаунт камеры из другого города</strong>
+              <span>Откройте карточку инцидента и решите, как действовать с доступом прямо сейчас.</span>
+            </div>
+          </button>
 
-          {step.step_order === 2 ? (
-            <button type="button" className={`${styles.alertTile} ${styles.hotspotPulse}`} onClick={() => activate("password")} disabled={locked}>
-              <KeyRound size={18} />
-              <div>
-                <strong>Повторный пароль найден в нескольких сервисах</strong>
-                <span>Откройте аудит паролей и разберите риск цепной компрометации.</span>
-              </div>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className={`${styles.alertTile} ${step.step_order === 2 ? styles.alertTileInteractive : ""}`}
+            onClick={() => activate("password")}
+            disabled={locked || step.step_order !== 2}
+          >
+            <KeyRound size={18} />
+            <div>
+              <strong>Повторный пароль найден в нескольких сервисах</strong>
+              <span>Откройте аудит паролей и разберите риск цепной компрометации.</span>
+            </div>
+          </button>
 
-          {step.step_order === 3 ? (
-            <button type="button" className={`${styles.appCard} ${styles.hotspotPulse}`} onClick={() => activate("app")} disabled={locked}>
-              <div className={styles.appCardHead}>
-                <span className={styles.appStoreBadge}>New</span>
-                <span className={styles.appStoreRating}>4.9 ★</span>
-              </div>
-              <strong>Home Device Booster</strong>
-              <span>Защитит все устройства за 30 секунд</span>
-              <p>Просит доступ к SMS, экрану, файлам и специальным возможностям.</p>
-            </button>
-          ) : null}
-
-          {step.step_order === 4 ? (
-            <button type="button" className={`${styles.alertTile} ${styles.hotspotPulse}`} onClick={() => activate("recovery")} disabled={locked}>
-              <CheckCircle size={18} />
-              <div>
-                <strong>Recovery Center: завершить инцидент</strong>
-                <span>Откройте финальную панель восстановления доступа и закрепите безопасный алгоритм.</span>
-              </div>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className={`${styles.appCard} ${step.step_order === 3 ? styles.appCardInteractive : ""}`}
+            onClick={() => activate("app")}
+            disabled={locked || step.step_order !== 3}
+          >
+            <div className={styles.appCardHead}>
+              <span className={styles.appStoreBadge}>новое</span>
+              <span className={styles.appStoreRating}>4.9 ★</span>
+            </div>
+            <strong>Home Device Booster</strong>
+            <span>Защитит все устройства за 30 секунд</span>
+            <p>Просит доступ к SMS, экрану, файлам и специальным возможностям.</p>
+          </button>
         </section>
 
         <aside className={styles.homeSidePanel}>
-          {view === "dashboard" ? <div className={styles.scenePlaceholder}>Выберите тревожный объект, чтобы открыть нужный эпизод внутри домашней среды.</div> : null}
+          {view === "dashboard" ? (
+            <div className={styles.scenePlaceholder}>
+              В домашней среде важные действия тоже выглядят обыденно: нужная карточка уже находится на панели, без скрытых кликов и лишних шагов.
+            </div>
+          ) : null}
 
           {view === "incident" ? (
             <div className={styles.sidePaneCard}>
-              <p className={styles.portalTitle}>Детали входа</p>
+              <p className={styles.portalTitle}>Детали нового входа</p>
               <div className={styles.securityChecklist}>
                 <span>Локация: другой город</span>
                 <span>Устройство: неизвестный браузер</span>
@@ -604,7 +542,7 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
 
           {view === "password" ? (
             <div className={styles.sidePaneCard}>
-              <p className={styles.portalTitle}>Password health</p>
+              <p className={styles.portalTitle}>Аудит паролей</p>
               <div className={styles.securityChecklist}>
                 <span>Почта — тот же пароль</span>
                 <span>Камера — тот же пароль</span>
@@ -630,9 +568,19 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               <div className={styles.securityChecklist}>
                 <span>Сменить пароли</span>
                 <span>Завершить активные сессии</span>
-                <span>Проверить связанный email и устройства</span>
+                <span>Проверить связанные устройства и почту</span>
               </div>
             </div>
+          ) : null}
+
+          {step.step_order === 4 ? (
+            <button type="button" className={`${styles.alertTile} ${styles.alertTileInteractive}`} onClick={() => activate("recovery")} disabled={locked}>
+              <CheckCircle size={18} />
+              <div>
+                <strong>Recovery Center: завершить инцидент</strong>
+                <span>Закрепите безопасный алгоритм восстановления контроля над домашней средой.</span>
+              </div>
+            </button>
           ) : null}
         </aside>
       </div>
@@ -658,16 +606,16 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
       <div className={styles.environmentToolbar}>
         <div className={styles.environmentToolbarTitle}>
           <Wifi size={16} />
-          <span>Public Wi‑Fi Access</span>
+          <span>Public Wi‑Fi</span>
         </div>
         <div className={styles.environmentToolbarMeta}>
           <span>Сети</span>
-          <span>Порталы</span>
-          <span>Платежи</span>
+          <span>Портал</span>
+          <span>Платёжная форма</span>
         </div>
       </div>
 
-      {view === "wifi" || view === "connect" ? (
+      {(view === "wifi" || view === "connect") && (
         <div className={styles.wifiStage}>
           <section className={styles.wifiListCard}>
             <p className={styles.portalTitle}>Доступные сети</p>
@@ -676,7 +624,12 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
                 <span>COFFEE_GUEST</span>
                 <span>официальная</span>
               </div>
-              <button type="button" className={`${styles.wifiRow} ${styles.hotspotPulse}`} onClick={() => activate("connect")} disabled={locked || step.step_order !== 1}>
+              <button
+                type="button"
+                className={`${styles.wifiRow} ${step.step_order === 1 ? styles.wifiRowInteractive : ""}`}
+                onClick={() => activate("connect")}
+                disabled={locked || step.step_order !== 1}
+              >
                 <span>Cafe_Free_Fast</span>
                 <span>без ограничений</span>
               </button>
@@ -686,51 +639,53 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               </div>
             </div>
           </section>
+
           <section className={styles.wifiPanelCard}>
             {view === "connect" ? (
               <div className={styles.portalCard}>
                 <p className={styles.portalTitle}>Подключение к Cafe_Free_Fast</p>
-                <div className={styles.portalField}>QR для быстрого подключения</div>
-                <div className={styles.portalDangerHint}>Сеть выглядит удобной, но не подтверждена заведением.</div>
+                <div className={styles.portalField}>QR для быстрого доступа</div>
+                <div className={styles.portalDangerHint}>Сеть выглядит удобной, но не подтверждена заведением и просит нестандартный маршрут входа.</div>
               </div>
             ) : (
-              <div className={styles.scenePlaceholder}>Выберите сеть, чтобы открыть следующий шаг подключения.</div>
+              <div className={styles.scenePlaceholder}>Выберите сеть из списка, чтобы увидеть следующий шаг подключения в реальном контексте public Wi‑Fi.</div>
             )}
           </section>
         </div>
-      ) : null}
+      )}
 
-      {view === "portal" ? (
+      {view === "portal" && (
         <div className={styles.browserFrame}>
           <div className={styles.browserAddressBar}>guest-login.network-access.local</div>
           <div className={styles.portalCard}>
             <p className={styles.portalTitle}>Подтверждение гостя</p>
             <div className={styles.portalField}>Корпоративная почта</div>
             <div className={styles.portalField}>Банковская карта для проверки гостя</div>
-            <button type="button" className={`${styles.sceneActionButton} ${styles.hotspotPulse}`} onClick={() => activate("portal")} disabled={locked}>
+            <div className={styles.portalDangerHint}>Captive portal запрашивает лишние рабочие и платёжные данные, которых обычный доступ к сети не требует.</div>
+            <button type="button" className={styles.sceneActionButton} onClick={() => activate("portal")} disabled={locked}>
               Продолжить через портал
             </button>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {view === "warning" ? (
+      {view === "warning" && (
         <div className={styles.browserWarningFrame}>
           <div className={styles.browserAddressBar}>http://login.workspace.example</div>
           <div className={styles.browserWarningCard}>
             <AlertTriangle size={28} className="text-[var(--color-alert)]" />
             <div>
               <p className={styles.portalTitle}>Соединение не защищено</p>
-              <p className={styles.warningCopy}>Сертификат не подтверждён, а страница логина открывается по HTTP.</p>
+              <p className={styles.warningCopy}>Сертификат не подтверждён, а страница логина открывается по HTTP. Это выглядит как подмена маршрута.</p>
             </div>
-            <button type="button" className={`${styles.sceneActionButton} ${styles.hotspotPulse}`} onClick={() => activate("warning")} disabled={locked}>
+            <button type="button" className={styles.sceneActionButton} onClick={() => activate("warning")} disabled={locked}>
               Всё равно продолжить
             </button>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {view === "payment" ? (
+      {view === "payment" && (
         <div className={styles.qrStage}>
           <section className={styles.qrCard}>
             <div className={styles.qrMock}>
@@ -740,35 +695,16 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
             <p className={styles.warningCopy}>Сканируйте код и привяжите карту для “технической проверки”.</p>
           </section>
           <section className={styles.paymentPanel}>
-            <button type="button" className={`${styles.paymentCard} ${styles.hotspotPulse}`} onClick={() => activate("payment")} disabled={locked}>
+            <button type="button" className={`${styles.paymentCard} ${styles.paymentCardInteractive}`} onClick={() => activate("payment")} disabled={locked}>
               <CreditCard size={18} />
               <div>
                 <strong>Открыть привязку карты</strong>
-                <span>Форма выглядит аккуратно, но сама схема не подтверждена заведением.</span>
+                <span>Форма выглядит аккуратно, но сама схема не подтверждена заведением и начинается с случайного QR-кода.</span>
               </div>
             </button>
           </section>
         </div>
-      ) : null}
-
-      {step.step_order === 2 && view !== "portal" ? (
-        <button type="button" className={`${styles.inlineMissionBanner} ${styles.hotspotPulse}`} onClick={() => activate("portal")} disabled={locked}>
-          <Wifi size={16} />
-          Открыть captive portal
-        </button>
-      ) : null}
-      {step.step_order === 3 && view !== "warning" ? (
-        <button type="button" className={`${styles.inlineMissionBanner} ${styles.hotspotPulse}`} onClick={() => activate("warning")} disabled={locked}>
-          <AlertTriangle size={16} />
-          Открыть предупреждение браузера
-        </button>
-      ) : null}
-      {step.step_order === 4 && view !== "payment" ? (
-        <button type="button" className={`${styles.inlineMissionBanner} ${styles.hotspotPulse}`} onClick={() => activate("payment")} disabled={locked}>
-          <QrCode size={16} />
-          Открыть QR-платёжный экран
-        </button>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -798,6 +734,8 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
   const socketRef = useRef<WebSocket | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [scenarioSummary, setScenarioSummary] = useState<ScenarioSummary | null>(null);
+  const [scenarioProgress, setScenarioProgress] = useState<ScenarioProgress | null>(null);
+  const [lockedCompletion, setLockedCompletion] = useState<LockedCompletion | null>(null);
   const [session, setSession] = useState<SessionState | null>(null);
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
   const [decisionOpen, setDecisionOpen] = useState(false);
@@ -814,25 +752,93 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
     setToken(currentToken);
 
     if (!currentToken) {
+      setLoading(false);
       return;
     }
 
+    const activeToken = currentToken;
+
     let mounted = true;
 
-    getScenarios()
-      .then((items) => {
+    async function bootstrapMission() {
+      setLoading(true);
+      setError(null);
+      setFeedback(null);
+      setDecisionOpen(false);
+      setModalFeedback(null);
+      setPendingCriticalFeedback(null);
+      setCriticalPhase("idle");
+      setAnimationType(null);
+      setFeedbackThreatType(null);
+      setSession(null);
+      setLockedCompletion(null);
+      socketRef.current?.close();
+
+      try {
+        const [scenarioItemsResult, statsPayloadResult] = await Promise.allSettled([getScenarios(), getStats(activeToken)]);
         if (!mounted) {
           return;
         }
-        setScenarioSummary(items.find((item) => item.slug === slug) ?? null);
-      })
-      .catch(() => {
-        if (mounted) {
-          setScenarioSummary(null);
-        }
-      });
 
-    void launchScenario(currentToken, slug);
+        if (scenarioItemsResult.status !== "fulfilled") {
+          throw scenarioItemsResult.reason;
+        }
+
+        const scenarioItems = scenarioItemsResult.value;
+        const statsPayload = statsPayloadResult.status === "fulfilled" ? statsPayloadResult.value : null;
+
+        const summary = scenarioItems.find((item) => item.slug === slug) ?? null;
+        const progress = statsPayload?.scenario_progress.find((item) => item.slug === slug) ?? null;
+
+        setScenarioSummary(summary);
+        setScenarioProgress(progress);
+
+        if (summary && progress && progress.status === "completed" && progress.best_score >= summary.max_score) {
+          setLockedCompletion({
+            score: progress.best_score,
+            maxScore: summary.max_score
+          });
+          setLoading(false);
+          return;
+        }
+
+        let newSession: SessionState;
+        try {
+          newSession = await startSession(activeToken, slug);
+        } catch (launchError) {
+          const message = launchError instanceof Error ? launchError.message : "Не удалось запустить миссию";
+          if (summary && message.toLowerCase().includes("максималь")) {
+            setLockedCompletion({
+              score: progress?.best_score ?? summary.max_score,
+              maxScore: summary.max_score
+            });
+            setLoading(false);
+            return;
+          }
+          throw launchError;
+        }
+        if (!mounted) {
+          return;
+        }
+
+        setSession(newSession);
+        socketRef.current = connectSessionSocket(newSession.session_id, activeToken, (payload) => {
+          setSession((current) => (current?.session_id === payload.session_id ? payload : current));
+        });
+      } catch (launchError) {
+        if (!mounted) {
+          return;
+        }
+        setSession(null);
+        setError(launchError instanceof Error ? launchError.message : "Не удалось запустить миссию");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void bootstrapMission();
 
     return () => {
       mounted = false;
@@ -870,6 +876,7 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
     setCriticalPhase("idle");
     setAnimationType(null);
     setFeedbackThreatType(null);
+    setLockedCompletion(null);
     socketRef.current?.close();
 
     try {
@@ -879,8 +886,17 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
         setSession((current) => (current?.session_id === payload.session_id ? payload : current));
       });
     } catch (launchError) {
+      const message = launchError instanceof Error ? launchError.message : "Не удалось запустить миссию";
+      if (scenarioSummary && message.toLowerCase().includes("максималь")) {
+        setLockedCompletion({
+          score: scenarioProgress?.best_score ?? scenarioSummary.max_score,
+          maxScore: scenarioSummary.max_score
+        });
+        setSession(null);
+        return;
+      }
       setSession(null);
-      setError(launchError instanceof Error ? launchError.message : "Не удалось запустить миссию");
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -923,13 +939,14 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
 
   const currentStep = session?.current_step ?? null;
   const stageLocked = loading || Boolean(modalFeedback) || Boolean(pendingCriticalFeedback) || criticalPhase !== "idle";
-  const positiveFeedbackLabel = useMemo(() => getPositiveLabel(feedback), [feedback]);
-  const checklist = getThreatChecklist(currentStep?.threat_type);
+  const scenarioTitle = scenarioSummary?.title ?? meta.title;
+  const summaryScore = lockedCompletion?.score ?? session?.score ?? scenarioProgress?.best_score ?? 0;
+  const summaryMaxScore = lockedCompletion?.maxScore ?? session?.max_score ?? scenarioSummary?.max_score ?? 0;
 
   return (
     <RequireAuth>
-      <div className="shell shell-wide space-y-10 py-12">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="shell shell-wide space-y-8 py-12">
+        <div className={styles.pageTopBar}>
           <Link href="/simulator" className="secondary-button">
             <ArrowLeft size={16} />
             Назад к миссиям
@@ -937,135 +954,99 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
           <div className={styles.routeBadge}>{meta.environment}</div>
         </div>
 
-        <SectionTitle eyebrow={meta.eyebrow} title={scenarioSummary?.title ?? meta.title} description={meta.description} />
+        <SectionTitle eyebrow={meta.eyebrow} title={scenarioTitle} description={meta.description} />
 
-        {error ? (
+        {error && !lockedCompletion ? (
           <p className="rounded-[1.2rem] border border-[rgba(255,114,92,0.28)] bg-[var(--color-alert-soft)] px-4 py-3 text-sm text-[var(--color-alert)]">
             {error}
           </p>
         ) : null}
 
-        <div className={styles.missionLayout}>
-          <div className={styles.missionStageColumn}>
-            {loading && !session ? (
-              <div className="glass-card p-8 text-sm text-[var(--color-text-muted)]">
-                Подготавливаем среду, запускаем новую игровую сессию и собираем актуальный контекст миссии.
-              </div>
-            ) : null}
-
-            {session ? (
-              currentStep ? (
-                <MissionEnvironment slug={slug} currentStep={currentStep} locked={stageLocked || decisionOpen} onHotspot={() => setDecisionOpen(true)} />
-              ) : (
-                <div className={`glass-card ${styles.summaryShell}`}>
-                  <p className={styles.summaryKicker}>{session.status === "completed" ? "Сценарий завершён" : "Сценарий остановлен"}</p>
-                  <h3 className={styles.summaryTitle}>{session.status === "completed" ? "Итог зафиксирован" : "Нужна ещё одна попытка"}</h3>
-                  <div className={styles.summaryScoreRow}>
-                    <span className={styles.summaryScore}>{session.score}</span>
-                    <span className={styles.summaryScoreMeta}>из {session.max_score} очков</span>
-                  </div>
-                  <p className={styles.summaryCopy}>{getScoreEncouragement(session.score, session.max_score, session.status)}</p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {session.score < session.max_score && token ? (
-                      <button type="button" className="primary-button" onClick={() => launchScenario(token, slug)}>
-                        Перепройти
-                      </button>
-                    ) : null}
-                    <Link href="/simulator" className="secondary-button">
-                      Вернуться к миссиям
-                    </Link>
-                  </div>
-                </div>
-              )
-            ) : !loading ? (
-              <div className="glass-card p-8">
-                <AlertCircle size={28} className="mb-4 text-[var(--color-alert)]" />
-                <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">Среда не запустилась</h3>
-                <p className="body-copy mt-3 max-w-2xl">
-                  Если сценарий ещё не опубликован или временно недоступен, запустить его нельзя. Вернитесь в каталог миссий и выберите другую среду.
-                </p>
-              </div>
-            ) : null}
+        <div className={styles.runtimeStack}>
+          <div className={`glass-card ${styles.statusStrip}`}>
+            <div className={styles.statusMetric}>
+              <span className={styles.statusMetricLabel}>Security HP</span>
+              <strong className={styles.statusMetricValue}>{session?.hp_left ?? 100}</strong>
+            </div>
+            <div className={styles.statusMetric}>
+              <span className={styles.statusMetricLabel}>Очки</span>
+              <strong className={styles.statusMetricValue}>{summaryScore}</strong>
+              {summaryMaxScore ? <span className={styles.statusMetricMeta}>из {summaryMaxScore}</span> : null}
+            </div>
+            <div className={styles.statusMetric}>
+              <span className={styles.statusMetricLabel}>Прогресс</span>
+              <strong className={styles.statusMetricValue}>
+                {session ? `${Math.min(session.step_number, session.total_steps)} / ${session.total_steps}` : lockedCompletion ? "Максимум" : "Подготовка"}
+              </strong>
+            </div>
           </div>
 
-          <aside className={styles.missionRail}>
-            {session ? (
-              <HPMeter
-                hp={session.hp_left}
-                score={session.score}
-                stepNumber={Math.min(session.step_number, session.total_steps)}
-                totalSteps={session.total_steps}
-              />
-            ) : (
-              <div className="glass-card p-6">
-                <p className="eyebrow">Состояние</p>
-                <p className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Ожидание запуска</p>
-                <p className="body-copy mt-3 text-sm">После старта миссии здесь появятся HP, очки и текущий прогресс сценария.</p>
-              </div>
-            )}
+          {loading && !session && !lockedCompletion ? (
+            <div className="glass-card p-8 text-sm text-[var(--color-text-muted)]">
+              Подготавливаем среду, запускаем игровую сессию и собираем контекст миссии.
+            </div>
+          ) : null}
 
-            <div className="glass-card p-6">
-              <p className="eyebrow">Подсказка среды</p>
-              <h3 className="mt-4 text-xl font-semibold text-[var(--color-text-primary)]">
-                {session?.current_step ? getHotspotHint(slug, session.current_step.step_order) : "Выберите активный объект миссии"}
-              </h3>
-              <p className="body-copy mt-3 text-sm">{meta.runtimeHint}</p>
-              <div className="mt-5 space-y-3">
-                {checklist.map((item) => (
-                  <div key={item} className={`soft-tile ${styles.railChecklistItem}`}>
-                    <Shield size={14} className="shrink-0 text-[var(--color-accent)]" />
-                    <span>{item}</span>
-                  </div>
-                ))}
+          {lockedCompletion ? (
+            <div className={`glass-card ${styles.summaryShell}`}>
+              <p className={styles.summaryKicker}>Сценарий уже закрыт</p>
+              <h3 className={styles.summaryTitle}>Максимальный результат уже зафиксирован</h3>
+              <div className={styles.summaryScoreRow}>
+                <span className={styles.summaryScore}>{lockedCompletion.score}</span>
+                <span className={styles.summaryScoreMeta}>из {lockedCompletion.maxScore} очков</span>
+              </div>
+              <p className={styles.summaryCopy}>Эта миссия уже пройдена на максимум, поэтому новая игровая сессия не запускается повторно.</p>
+              <div className={styles.summaryActions}>
+                <Link href="/simulator" className="secondary-button">
+                  Вернуться к миссиям
+                </Link>
               </div>
             </div>
+          ) : null}
 
-            {feedback && feedback.is_correct ? (
-              <div className="glass-card p-5">
-                <div className="flex items-start gap-3">
-                  <CheckCircle size={22} className={`mt-0.5 shrink-0 ${styles.successIcon}`} />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">{positiveFeedbackLabel}</p>
-                    <p className="mt-3 font-medium text-[var(--color-text-primary)]">{feedback.consequence_text}</p>
-                    <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">{feedback.explanation}</p>
-                  </div>
-                </div>
-              </div>
-            ) : feedback && !feedback.is_correct ? (
-              <div className="glass-card p-5">
-                <div className="flex items-start gap-3">
-                  <XCircle size={22} className="mt-0.5 shrink-0 text-[var(--color-alert)]" />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-                      {feedback.severity === "critical" ? "Критическая ошибка" : "Разбор открыт"}
-                    </p>
-                    <p className="mt-3 font-medium text-[var(--color-text-primary)]">{feedback.consequence_text}</p>
-                    <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">
-                      Сначала разберите ошибку в модальном окне, затем вернитесь к среде и примите следующее решение.
-                    </p>
-                  </div>
-                </div>
-              </div>
+          {session ? (
+            currentStep ? (
+              <MissionEnvironment slug={slug} currentStep={currentStep} locked={stageLocked || decisionOpen} onHotspot={() => setDecisionOpen(true)} />
             ) : (
-              <div className="glass-card p-6 text-sm text-[var(--color-text-muted)]">
-                После клика по активному объекту среды откроется decision overlay с вариантами действий и разбором последствий.
+              <div className={`glass-card ${styles.summaryShell}`}>
+                <p className={styles.summaryKicker}>{session.status === "completed" ? "Сценарий завершён" : "Сценарий остановлен"}</p>
+                <h3 className={styles.summaryTitle}>{session.status === "completed" ? "Итог зафиксирован" : "Нужна ещё одна попытка"}</h3>
+                <div className={styles.summaryScoreRow}>
+                  <span className={styles.summaryScore}>{session.score}</span>
+                  <span className={styles.summaryScoreMeta}>из {session.max_score} очков</span>
+                </div>
+                <p className={styles.summaryCopy}>{getScoreEncouragement(session.score, session.max_score, session.status)}</p>
+                <div className={styles.summaryActions}>
+                  {session.score < session.max_score && token ? (
+                    <button type="button" className="primary-button" onClick={() => launchScenario(token, slug)}>
+                      Перепройти
+                    </button>
+                  ) : null}
+                  <Link href="/simulator" className="secondary-button">
+                    Вернуться к миссиям
+                  </Link>
+                </div>
               </div>
-            )}
+            )
+          ) : !loading && !lockedCompletion ? (
+            <div className="glass-card p-8">
+              <AlertCircle size={28} className="mb-4 text-[var(--color-alert)]" />
+              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">Среда не запустилась</h3>
+              <p className="body-copy mt-3 max-w-2xl">
+                Если сценарий ещё не опубликован или временно недоступен, запустить его нельзя. Вернитесь в каталог миссий и выберите другую среду.
+              </p>
+            </div>
+          ) : null}
 
-            <div className="glass-card p-6">
-              <p className="eyebrow">Маршрут</p>
-              <div className="mt-5 space-y-3">
-                <div className={`soft-tile ${styles.progressMarker}`}>
-                  <CircleGauge size={16} />
-                  <span>{session ? `Шаг ${Math.min(session.step_number, session.total_steps)} из ${session.total_steps}` : "Сессия готовится"}</span>
-                </div>
-                <div className={`soft-tile ${styles.progressMarker}`}>
-                  <Sparkles size={16} />
-                  <span>{session?.current_step ? session.current_step.threat_type : "Ожидаем активный шаг"}</span>
-                </div>
+          {feedback && feedback.is_correct && session?.current_step ? (
+            <div className={`glass-card ${styles.feedbackNotice}`}>
+              <CheckCircle size={20} className={styles.successIcon} />
+              <div>
+                <p className={styles.feedbackNoticeTitle}>Безопасный паттерн закреплён</p>
+                <p className={styles.feedbackNoticeCopy}>{feedback.explanation}</p>
               </div>
             </div>
-          </aside>
+          ) : null}
         </div>
 
         <ConsequenceAnimationOverlay type={animationType} />
@@ -1073,7 +1054,8 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
         {decisionOpen && currentStep ? (
           <ScenarioDecisionOverlay
             currentStep={currentStep}
-            scenarioTitle={session?.scenario_title ?? meta.title}
+            scenarioTitle={scenarioTitle}
+            totalSteps={session?.total_steps ?? 0}
             loading={loading}
             onClose={() => setDecisionOpen(false)}
             onSelect={handleAnswer}
@@ -1083,7 +1065,7 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
         {modalFeedback ? (
           <ScenarioFeedbackOverlay
             feedback={modalFeedback}
-            threatType={feedbackThreatType ?? session?.current_step?.threat_type}
+            threatType={feedbackThreatType}
             onClose={() => {
               setModalFeedback(null);
               setFeedbackThreatType(null);

@@ -10,9 +10,9 @@ server {
   server_name ${DOMAIN};
   server_tokens off;
 
-  set $cybersim_api http://api:8000;
-  set $cybersim_web http://web:3000;
-  set $cybersim_forwarded_proto http;
+  set $cyberguardsim_api http://api:8000;
+  set $cyberguardsim_web http://web:3000;
+  set $cyberguardsim_forwarded_proto http;
 
   include /etc/nginx/templates/includes/common-routes.inc;
 }

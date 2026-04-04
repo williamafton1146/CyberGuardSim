@@ -1,4 +1,4 @@
-# CyberSim
+# CyberGuardSim
 
 Образовательный веб-прототип симулятора цифровой безопасности с `Next.js + Tailwind` на фронтенде и `FastAPI + PostgreSQL + Redis` на бэкенде.
 
@@ -69,8 +69,8 @@ npm run dev:web
 Для production-like запуска фронтенда локально:
 
 ```bash
-npm run build --workspace @cyber-sim/web
-npm run start --workspace @cyber-sim/web -- --hostname 127.0.0.1 --port 3000
+npm run build --workspace @cyberguardsim/web
+npm run start --workspace @cyberguardsim/web -- --hostname 127.0.0.1 --port 3000
 ```
 
 ## Production deploy
@@ -87,7 +87,7 @@ chmod +x infra/deploy/deploy.sh
 - создаёт или обновляет `.env`
 - валидирует base compose и production override
 - при повторном деплое безопасно чистит project/system мусор от проекта
-- для слабых серверов адаптивно добавляет `/swapfile-cybersim`, если текущего swap не хватает
+- для слабых серверов адаптивно добавляет `/swapfile-cyberguardsim`, если текущего swap не хватает
 - получает или переиспользует сертификат Let's Encrypt
 - поднимает production-стек через `docker-compose.yml + docker-compose.prod.yml`
 - проверяет `https://<domain>/api/health`
@@ -149,7 +149,7 @@ pytest
 Frontend production build:
 
 ```bash
-npm run build --workspace @cyber-sim/web
+npm run build --workspace @cyberguardsim/web
 ```
 
 ## Локальные артефакты

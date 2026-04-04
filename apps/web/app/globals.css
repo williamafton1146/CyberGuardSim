@@ -1254,7 +1254,7 @@ input {
 }
 
 .landing-title-balanced {
-  max-width: 12ch;
+  max-width: 14ch;
 }
 
 .landing-tagline {
@@ -1353,10 +1353,22 @@ input {
   box-shadow: var(--shadow-card);
 }
 
+.landing-hero-asset-stack {
+  display: grid;
+  padding: clamp(0.8rem, 1.6vw, 1.25rem);
+}
+
 .landing-hero-asset-image {
+  grid-area: 1 / 1;
   display: block;
   width: 100%;
   height: auto;
+  border-radius: 1.45rem;
+}
+
+.landing-hero-asset-image-light {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .landing-stage-frame {
@@ -1564,6 +1576,16 @@ input {
   background:
     radial-gradient(circle at 18% 18%, rgba(23, 119, 105, 0.08), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 253, 0.96));
+}
+
+[data-theme="light"] .landing-hero-asset-image-dark {
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-theme="light"] .landing-hero-asset-image-light {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 [data-theme="light"] .desktop-taskbar-metric-icon {

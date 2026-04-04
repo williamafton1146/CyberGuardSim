@@ -31,6 +31,7 @@ export type ScenarioSummary = {
   description: string;
   is_playable: boolean;
   step_count: number;
+  max_score: number;
 };
 
 export type ScenarioDetail = ScenarioSummary & {

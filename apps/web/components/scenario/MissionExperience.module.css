@@ -1,18 +1,9 @@
-.missionLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.22fr) minmax(19rem, 0.78fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.missionStageColumn,
-.missionRail {
-  min-width: 0;
-}
-
-.missionRail {
-  display: grid;
-  gap: 1.2rem;
+.pageTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
 }
 
 .routeBadge {
@@ -29,10 +20,47 @@
   color: var(--color-text-muted);
 }
 
+.runtimeStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.statusStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+}
+
+.statusMetric {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.statusMetricLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.statusMetricValue {
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.statusMetricMeta {
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
 .summaryShell {
   display: grid;
   gap: 1rem;
-  min-height: 32rem;
+  min-height: 26rem;
   align-content: center;
   padding: 2rem;
 }
@@ -79,9 +107,44 @@
   color: var(--color-text-secondary);
 }
 
+.summaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.feedbackNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem;
+}
+
+.feedbackNoticeTitle {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.feedbackNoticeCopy {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--color-text-secondary);
+}
+
+.successIcon {
+  color: #4bb184;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
 .environmentShell {
   position: relative;
   overflow: hidden;
+  min-width: 0;
   border-radius: 1.85rem;
   border: 1px solid var(--color-border);
   background:
@@ -95,6 +158,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
   padding: 1rem 1.15rem;
   border-bottom: 1px solid var(--color-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
@@ -117,6 +181,7 @@
 
 .environmentToolbarMeta {
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .environmentToolbarMeta span {
@@ -135,9 +200,8 @@
 
 .mailLayout {
   display: grid;
-  grid-template-columns: 13rem minmax(15rem, 0.84fr) minmax(0, 1.16fr);
-  gap: 0;
-  min-height: 36rem;
+  grid-template-columns: minmax(9rem, 10.75rem) minmax(15.5rem, 18rem) minmax(0, 1fr);
+  min-height: clamp(35rem, 70vh, 44rem);
 }
 
 .mailSidebar,
@@ -191,6 +255,15 @@
   padding: 1rem;
   border-right: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.02);
+  overflow: auto;
+}
+
+.mailPreview {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.2rem;
+  overflow: auto;
 }
 
 .mailRow,
@@ -198,13 +271,11 @@
 .appCard,
 .wifiRow,
 .chatToast,
-.inlineMissionBanner,
 .sceneActionButton,
 .paymentCard {
   width: 100%;
   appearance: none;
   font: inherit;
-  cursor: pointer;
   border: 1px solid var(--color-border);
   transition:
     transform 180ms ease,
@@ -218,7 +289,6 @@
 .appCard:disabled,
 .wifiRow:disabled,
 .chatToast:disabled,
-.inlineMissionBanner:disabled,
 .sceneActionButton:disabled,
 .paymentCard:disabled {
   cursor: not-allowed;
@@ -237,20 +307,31 @@
 }
 
 .mailRowActive {
-  background: rgba(107, 212, 196, 0.08);
+  cursor: default;
 }
 
-.mailRow:hover:not(:disabled),
-.alertTile:hover:not(:disabled),
-.appCard:hover:not(:disabled),
-.wifiRow:hover:not(:disabled),
-.chatToast:hover:not(:disabled),
-.inlineMissionBanner:hover:not(:disabled),
-.sceneActionButton:hover:not(:disabled),
-.paymentCard:hover:not(:disabled) {
-  transform: translateY(-1px);
+.mailRowInteractive,
+.alertTileInteractive,
+.appCardInteractive,
+.wifiRowInteractive,
+.chatToastInteractive,
+.paymentCardInteractive {
+  cursor: pointer;
   border-color: var(--color-border-strong);
+  background:
+    radial-gradient(circle at top right, rgba(107, 212, 196, 0.12), transparent 28%),
+    rgba(255, 255, 255, 0.05);
   box-shadow: var(--shadow-soft);
+}
+
+.mailRowInteractive:hover:not(:disabled),
+.alertTileInteractive:hover:not(:disabled),
+.appCardInteractive:hover:not(:disabled),
+.wifiRowInteractive:hover:not(:disabled),
+.chatToastInteractive:hover:not(:disabled),
+.paymentCardInteractive:hover:not(:disabled),
+.sceneActionButton:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .mailUnreadDot {
@@ -269,6 +350,7 @@
 
 .mailRowCopy strong {
   font-size: 0.92rem;
+  line-height: 1.45;
   color: var(--color-text-primary);
 }
 
@@ -277,12 +359,6 @@
   font-size: 0.82rem;
   line-height: 1.6;
   color: var(--color-text-muted);
-}
-
-.mailPreview {
-  display: grid;
-  align-content: start;
-  padding: 1.2rem;
 }
 
 .scenePlaceholder,
@@ -330,7 +406,7 @@
 .portalTitle {
   margin: 0;
   font-size: 1.08rem;
-  line-height: 1.45;
+  line-height: 1.5;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -370,7 +446,7 @@
 .mailBody {
   margin: 1rem 0 0;
   font-size: 0.95rem;
-  line-height: 1.85;
+  line-height: 1.9;
   color: var(--color-text-secondary);
 }
 
@@ -394,6 +470,7 @@
   padding: 0.8rem 1rem;
   color: var(--button-primary-text);
   font-weight: 600;
+  cursor: pointer;
 }
 
 .browserFrame,
@@ -498,41 +575,11 @@
   color: var(--color-text-secondary);
 }
 
-.chatToast,
-.inlineMissionBanner {
-  position: absolute;
-  z-index: 2;
-  left: 1.2rem;
-  right: 1.2rem;
-  bottom: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.95rem 1rem;
-  text-align: left;
-  color: var(--color-text-primary);
-}
-
-.chatToast strong,
-.inlineMissionBanner {
-  font-weight: 600;
-}
-
-.chatToast span {
-  display: block;
-  margin-top: 0.12rem;
-  font-size: 0.84rem;
-  line-height: 1.6;
-  color: var(--color-text-muted);
-}
-
 .homeGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(18rem, 0.94fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
   gap: 1rem;
-  min-height: 35rem;
+  min-height: clamp(34rem, 68vh, 42rem);
   padding: 1rem;
 }
 
@@ -541,6 +588,7 @@
   display: grid;
   gap: 1rem;
   align-content: start;
+  overflow: auto;
 }
 
 .homeStatRow {
@@ -624,9 +672,9 @@
 .wifiStage,
 .qrStage {
   display: grid;
-  grid-template-columns: minmax(18rem, 0.92fr) minmax(0, 1.08fr);
+  grid-template-columns: minmax(17rem, 0.92fr) minmax(0, 1.08fr);
   gap: 1rem;
-  min-height: 34rem;
+  min-height: clamp(33rem, 66vh, 40rem);
   padding: 1rem;
 }
 
@@ -637,6 +685,7 @@
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.04);
   padding: 1.2rem;
+  overflow: auto;
 }
 
 .wifiRow {
@@ -715,6 +764,8 @@
 .feedbackModal,
 .decisionModal {
   width: min(860px, 100%);
+  max-height: min(86vh, 54rem);
+  overflow: auto;
   border-radius: 1.85rem;
   border: 1px solid var(--color-border);
   background: linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
@@ -735,22 +786,14 @@
   color: var(--color-alert);
 }
 
-.feedbackChips,
-.decisionChecklist,
-.decisionThreatRow {
+.feedbackChips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-}
-
-.feedbackChips {
   margin-top: 1.3rem;
 }
 
-.feedbackChips span,
-.decisionChecklist span,
-.decisionThreatChip,
-.decisionStepMarker {
+.feedbackChips span {
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
@@ -800,42 +843,12 @@
   color: var(--color-text-secondary);
 }
 
-.decisionThreatRow {
-  margin-top: 1.35rem;
-  justify-content: space-between;
-}
-
-.decisionThreatChip {
-  color: var(--color-accent);
-}
-
 .decisionPromptCard {
   margin-top: 1rem;
   border-radius: 1.3rem;
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.04);
   padding: 1.15rem 1.2rem;
-}
-
-.decisionChecklist {
-  flex: 1 1 18rem;
-}
-
-.railChecklistItem,
-.progressMarker {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  line-height: 1.7;
-  color: var(--color-text-secondary);
-}
-
-.progressMarker {
-  align-items: center;
-}
-
-.successIcon {
-  color: #4bb184;
 }
 
 .consequenceOverlay {
@@ -858,20 +871,6 @@
   padding: 2rem;
   text-align: center;
   box-shadow: var(--shadow-card);
-}
-
-.hotspotPulse {
-  animation: hotspotPulse 1.9s ease-in-out infinite;
-}
-
-@keyframes hotspotPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(107, 212, 196, 0.08);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(107, 212, 196, 0.12);
-  }
 }
 
 @keyframes fadeInUp {
@@ -924,13 +923,9 @@
 [data-theme="light"] .appCard,
 [data-theme="light"] .wifiRow,
 [data-theme="light"] .chatToast,
-[data-theme="light"] .inlineMissionBanner,
 [data-theme="light"] .paymentCard,
 [data-theme="light"] .environmentToolbarMeta span,
 [data-theme="light"] .feedbackChips span,
-[data-theme="light"] .decisionChecklist span,
-[data-theme="light"] .decisionThreatChip,
-[data-theme="light"] .decisionStepMarker,
 [data-theme="light"] .browserAddressBar,
 [data-theme="light"] .portalCard,
 [data-theme="light"] .portalField,
@@ -957,12 +952,21 @@
 }
 
 @media (max-width: 1180px) {
-  .missionLayout,
+  .pageTopBar,
+  .environmentToolbar {
+    flex-wrap: wrap;
+  }
+
+  .statusStrip,
   .mailLayout,
   .homeGrid,
   .wifiStage,
   .qrStage {
     grid-template-columns: 1fr;
+  }
+
+  .environmentToolbarMeta {
+    justify-content: flex-start;
   }
 
   .mailSidebar {
@@ -977,25 +981,17 @@
 }
 
 @media (max-width: 720px) {
+  .pageTopBar,
   .environmentToolbar,
   .feedbackHead,
-  .decisionThreatRow,
   .summaryScoreRow {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .environmentToolbarMeta,
-  .feedbackChips,
-  .decisionChecklist {
+  .feedbackChips {
     width: 100%;
-  }
-
-  .chatToast,
-  .inlineMissionBanner {
-    left: 0.85rem;
-    right: 0.85rem;
-    bottom: 0.85rem;
   }
 
   .homeStatRow {
@@ -1008,7 +1004,7 @@
   }
 
   .summaryShell {
-    min-height: 24rem;
-    padding: 1.35rem;
+    min-height: 22rem;
+    padding: 1.4rem;
   }
 }

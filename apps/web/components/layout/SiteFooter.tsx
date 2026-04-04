@@ -13,7 +13,7 @@ export function SiteFooter() {
     <footer className="shell shell-wide landing-footer">
       <div className="landing-footer-line" />
       <div className="landing-footer-meta">
-        <span>CyberSim</span>
+        <span>CyberGuardSim</span>
         <span>Платформа цифровой устойчивости</span>
         <span>UMIRHack 2026</span>
       </div>

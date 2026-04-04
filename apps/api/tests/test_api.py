@@ -105,7 +105,7 @@ def test_auth_normalization_and_length_limits(db_session: Session) -> None:
 
     with pytest.raises(ValidationError):
         RegisterRequest(
-            email="very-long-mail-address-for-cybersim@example.com",
+            email="very-long-mail-address-for-cyberguardsim@example.com",
             password="superpass1",
             display_name="Аналитик",
         )
@@ -114,12 +114,29 @@ def test_auth_normalization_and_length_limits(db_session: Session) -> None:
         LoginRequest(identifier="a" * 33, password="superpass1")
 
 
+def test_register_rejects_weak_passwords(db_session: Session) -> None:
+    with pytest.raises(ValidationError):
+        RegisterRequest(
+            email="hero@example.com",
+            password="password123",
+            display_name="Герой",
+        )
+
+    with pytest.raises(ValidationError):
+        RegisterRequest(
+            email="hero@example.com",
+            password="heroexample123",
+            display_name="Герой",
+        )
+
+
 def test_scenarios_and_session_progression(db_session: Session) -> None:
     user = create_user(db_session)
 
     scenarios = asyncio.run(list_scenarios(db_session))
     assert len(scenarios) == 3
     assert sum(1 for scenario in scenarios if scenario.is_playable) == 3
+    assert all(scenario.max_score > 0 for scenario in scenarios)
 
     state = start_session(db_session, user, StartSessionRequest(scenario_slug="office").scenario_slug)
     assert state.hp_left == 100
@@ -152,6 +169,11 @@ def test_scenarios_and_session_progression(db_session: Session) -> None:
     assert completion_response.status == "completed"
     assert completion_response.severity == "safe"
 
+    with pytest.raises(HTTPException) as exc_info:
+        start_session(db_session, user, StartSessionRequest(scenario_slug="office").scenario_slug)
+
+    assert exc_info.value.status_code == status.HTTP_409_CONFLICT
+
     stats_payload = build_user_stats(db_session, user)
     assert stats_payload.completed_sessions == 1
     assert stats_payload.success_rate > 0
@@ -179,6 +201,18 @@ def test_session_payload_exposes_max_score(db_session: Session) -> None:
 
     final_result = complete_scenario(db_session, user, "office")
     assert final_result.max_score == expected_max_score
+
+
+def test_perfect_scenario_cannot_restart(db_session: Session) -> None:
+    user = create_user(db_session, email="perfect@example.com")
+    result = complete_scenario(db_session, user, "office")
+    assert result.score == result.max_score
+
+    with pytest.raises(HTTPException) as exc_info:
+        start_session(db_session, user, StartSessionRequest(scenario_slug="office").scenario_slug)
+
+    assert exc_info.value.status_code == status.HTTP_409_CONFLICT
+    assert "максимальный результат" in str(exc_info.value.detail)
 
 
 def test_certificate_is_issued_after_completing_all_playable_scenarios(db_session: Session) -> None:
@@ -370,9 +404,11 @@ def test_scheduled_scenarios_are_hidden_and_best_score_only_counts_once(db_sessi
     assert user.security_rating == perfect_result.score
     assert perfect_result.score > imperfect_score
 
-    repeated_best_result = complete_scenario(db_session, user, "office")
+    with pytest.raises(HTTPException) as exc_info:
+        complete_scenario(db_session, user, "office")
+    assert exc_info.value.status_code == status.HTTP_409_CONFLICT
+
     db_session.refresh(user)
-    assert repeated_best_result.score == perfect_result.score
     assert user.security_rating == perfect_result.score
 
     progress = (
@@ -382,7 +418,7 @@ def test_scheduled_scenarios_are_hidden_and_best_score_only_counts_once(db_sessi
     )
     assert progress is not None
     assert progress.best_score == perfect_result.score
-    assert progress.attempts_count == 3
+    assert progress.attempts_count == 2
 
 
 def test_admin_can_create_schedule_publish_and_delete_scenario(db_session: Session) -> None:

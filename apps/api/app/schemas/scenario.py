@@ -26,6 +26,7 @@ class ScenarioListItem(BaseModel):
     description: str
     is_playable: bool
     step_count: int
+    max_score: int
 
 
 class ScenarioDetail(ScenarioListItem):

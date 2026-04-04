@@ -10,7 +10,8 @@ type ThemeContextValue = {
   toggleTheme: () => void;
 };
 
-const THEME_KEY = "cyber-sim-theme";
+const THEME_KEY = "cyberguardsim-theme";
+const LEGACY_THEME_KEY = "cyber-sim-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -24,8 +25,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem(THEME_KEY);
+    const savedTheme = window.localStorage.getItem(THEME_KEY) ?? window.localStorage.getItem(LEGACY_THEME_KEY);
     const nextTheme = savedTheme === "light" ? "light" : "dark";
+    if (savedTheme) {
+      window.localStorage.setItem(THEME_KEY, nextTheme);
+      window.localStorage.removeItem(LEGACY_THEME_KEY);
+    }
     setTheme(nextTheme);
     applyTheme(nextTheme);
     setMounted(true);
