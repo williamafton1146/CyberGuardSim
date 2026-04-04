@@ -164,6 +164,15 @@ export default function AdminPage() {
     () => (selectedScenarioId === "new" ? null : scenarios.find((item) => item.id === selectedScenarioId) || null),
     [scenarios, selectedScenarioId]
   );
+  const adminSummary = useMemo(
+    () => ({
+      users: users.length,
+      activeUsers: users.filter((user) => user.role !== "admin").length,
+      liveScenarios: scenarios.filter((scenario) => scenario.status === "live").length,
+      scheduledScenarios: scenarios.filter((scenario) => scenario.status === "scheduled").length
+    }),
+    [scenarios, users]
+  );
 
   async function reloadAdminData() {
     const token = getToken();
@@ -342,6 +351,25 @@ export default function AdminPage() {
             {info}
           </p>
         ) : null}
+
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="soft-tile admin-summary-card">
+            <span className="admin-summary-label">Всего аккаунтов</span>
+            <strong className="admin-summary-value">{adminSummary.users}</strong>
+          </div>
+          <div className="soft-tile admin-summary-card">
+            <span className="admin-summary-label">Пользователи</span>
+            <strong className="admin-summary-value">{adminSummary.activeUsers}</strong>
+          </div>
+          <div className="soft-tile admin-summary-card">
+            <span className="admin-summary-label">Live-сценарии</span>
+            <strong className="admin-summary-value">{adminSummary.liveScenarios}</strong>
+          </div>
+          <div className="soft-tile admin-summary-card">
+            <span className="admin-summary-label">Премьеры</span>
+            <strong className="admin-summary-value">{adminSummary.scheduledScenarios}</strong>
+          </div>
+        </div>
 
         <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <section className="glass-card p-6">

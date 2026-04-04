@@ -104,6 +104,7 @@ def test_scenarios_and_session_progression(db_session: Session) -> None:
     )
     answer_payload = submit_answer(db_session, user, state.session_id, wrong_option.id)
     assert answer_payload.is_correct is False
+    assert answer_payload.severity in {"warning", "critical"}
     assert answer_payload.hp_left < 100
     assert answer_payload.hint
 
@@ -119,6 +120,7 @@ def test_scenarios_and_session_progression(db_session: Session) -> None:
 
     assert completion_response.completed is True
     assert completion_response.status == "completed"
+    assert completion_response.severity == "safe"
 
     stats_payload = build_user_stats(db_session, user)
     assert stats_payload.completed_sessions == 1

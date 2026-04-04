@@ -22,7 +22,7 @@
 ## Sessions
 
 - `POST /sessions` — старт новой миссии; выключенные и запланированные сценарии не запускаются
-- `POST /sessions/{session_id}/answers` — отправка выбранного действия и получение обратной связи
+- `POST /sessions/{session_id}/answers` — отправка выбранного действия и получение обратной связи; ответ содержит `severity` (`safe`, `warning`, `critical`) для UI-фидбека
 
 ### Start Session Request
 

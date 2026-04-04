@@ -25,8 +25,8 @@ class AnswerRequest(BaseModel):
 
 class AnswerResult(SessionState):
     is_correct: bool
+    severity: str
     hint: str | None
     consequence_text: str
     explanation: str
     completed: bool
-

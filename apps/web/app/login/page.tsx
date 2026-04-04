@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowRight, BadgeCheck, KeyRound, ShieldCheck, UserRoundPlus } from "lucide-react";
+import { ArrowRight, BadgeCheck, Eye, EyeOff, KeyRound, ShieldCheck, UserRoundPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { loginUser, registerUser } from "@/lib/api";
@@ -65,6 +65,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -203,15 +204,26 @@ export default function LoginPage() {
 
             <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
               Пароль
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Минимум 8 символов"
-                className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
-                required
-                minLength={8}
-              />
+              <div className="password-field-shell">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Минимум 8 символов"
+                  className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 pr-14 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  className="password-visibility-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {mode === "register" && password ? (
                 <div className="password-strength-block">
                   <div className="password-strength-track">

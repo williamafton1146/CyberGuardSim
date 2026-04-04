@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, ShieldAlert, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { DecisionPanel } from "@/components/scenario/DecisionPanel";
@@ -14,11 +15,29 @@ import type { AnswerResult, ScenarioSummary, SessionState } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+function buildImpactTimeline(feedback: AnswerResult) {
+  return [
+    {
+      title: "Что пошло не так",
+      text: feedback.consequence_text
+    },
+    {
+      title: "Почему атака опасна",
+      text: feedback.explanation
+    },
+    {
+      title: "Как действовать правильно",
+      text: feedback.hint || "Остановить действие, проверить источник запроса и вернуться к сервису только через официальный канал."
+    }
+  ];
+}
+
 export default function SimulatorPage() {
   const [token, setToken] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [session, setSession] = useState<SessionState | null>(null);
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
+  const [criticalPhase, setCriticalPhase] = useState<"idle" | "breaking" | "impact">("idle");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
@@ -31,6 +50,19 @@ export default function SimulatorPage() {
     return () => socketRef.current?.close();
   }, []);
 
+  useEffect(() => {
+    if (!feedback || feedback.is_correct || feedback.severity !== "critical") {
+      setCriticalPhase("idle");
+      return;
+    }
+
+    setCriticalPhase("breaking");
+    const timer = window.setTimeout(() => setCriticalPhase("impact"), 720);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
+
+  const impactTimeline = useMemo(() => (feedback && feedback.severity === "critical" ? buildImpactTimeline(feedback) : []), [feedback]);
+
   async function launchScenario(slug: string) {
     if (!token) {
       return;
@@ -39,6 +71,7 @@ export default function SimulatorPage() {
     setLoading(true);
     setError(null);
     setFeedback(null);
+    setCriticalPhase("idle");
     socketRef.current?.close();
 
     try {
@@ -104,28 +137,72 @@ export default function SimulatorPage() {
                   totalSteps={session.total_steps}
                 />
 
-                <div className="glass-card p-6">
-                  <p className="eyebrow">{session.scenario_title}</p>
-                  {session.current_step ? (
-                    <>
-                      <h3 className="mt-4 text-2xl font-semibold text-[var(--color-text-primary)]">{session.current_step.prompt}</h3>
-                      <p className="mt-3 text-sm uppercase tracking-[0.25em] text-[var(--color-text-muted)]">{session.current_step.threat_type}</p>
-                      <div className="mt-6">
-                        <DecisionPanel options={session.current_step.options} disabled={loading} onSelect={handleAnswer} />
+                <div className={`glass-card p-6 simulator-stage ${criticalPhase === "breaking" ? "simulator-stage-breaking" : ""}`}>
+                  <div className="simulator-stage-content">
+                    <p className="eyebrow">{session.scenario_title}</p>
+                    {session.current_step ? (
+                      <>
+                        <h3 className="mt-4 text-2xl font-semibold text-[var(--color-text-primary)]">{session.current_step.prompt}</h3>
+                        <p className="mt-3 text-sm uppercase tracking-[0.25em] text-[var(--color-text-muted)]">{session.current_step.threat_type}</p>
+                        <div className="mt-6">
+                          <DecisionPanel options={session.current_step.options} disabled={loading || criticalPhase === "breaking"} onSelect={handleAnswer} />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="soft-tile mt-5">
+                        <p className="text-sm uppercase tracking-[0.25em] text-[var(--color-accent)]">Миссия завершена</p>
+                        <h3 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">Безопасный паттерн зафиксирован</h3>
+                        <p className="body-copy mt-4 text-sm">
+                          Сценарий завершен. Пользователь увидел полный цикл атаки и закрепил корректный алгоритм реакции.
+                        </p>
                       </div>
+                    )}
+                  </div>
+
+                  {criticalPhase === "breaking" ? (
+                    <>
+                      <div className="simulator-voxel-overlay" aria-hidden="true" />
+                      <div className="simulator-voxel-overlay simulator-voxel-overlay-secondary" aria-hidden="true" />
                     </>
-                  ) : (
-                    <div className="soft-tile mt-5">
-                      <p className="text-sm uppercase tracking-[0.25em] text-[var(--color-accent)]">Миссия завершена</p>
-                      <h3 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">Безопасный паттерн зафиксирован</h3>
-                      <p className="body-copy mt-4 text-sm">
-                        Сценарий завершен. Пользователь увидел полный цикл атаки и закрепил корректный алгоритм реакции.
-                      </p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
 
-                {feedback ? (
+                {feedback && criticalPhase === "impact" && feedback.severity === "critical" && !feedback.is_correct ? (
+                  <div className="glass-card simulator-impact-panel">
+                    <div className="simulator-impact-head">
+                      <div className="feature-icon simulator-impact-icon">
+                        <AlertTriangle size={18} />
+                      </div>
+                      <div>
+                        <p className="eyebrow">Критическая ошибка</p>
+                        <h3 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">Атака получает развитие</h3>
+                      </div>
+                    </div>
+
+                    <p className="body-copy mt-4 text-sm">
+                      Неверный алгоритм не просто снижает HP. Он запускает реальную цепочку последствий, из-за которой злоумышленник получает время,
+                      доступ или доверие.
+                    </p>
+
+                    <div className="mt-6 space-y-3">
+                      {impactTimeline.map((step, index) => (
+                        <div key={step.title} className="soft-tile simulator-impact-step">
+                          <span className="simulator-impact-step-index">0{index + 1}</span>
+                          <div>
+                            <p className="simulator-impact-step-title">{step.title}</p>
+                            <p className="simulator-impact-step-copy">{step.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6">
+                      <button type="button" className="secondary-button" onClick={() => setCriticalPhase("idle")}>
+                        Продолжить миссию
+                      </button>
+                    </div>
+                  </div>
+                ) : feedback ? (
                   <div
                     className={`glass-card p-6 ${
                       feedback.is_correct
@@ -134,7 +211,7 @@ export default function SimulatorPage() {
                     }`}
                   >
                     <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">
-                      {feedback.is_correct ? "Правильное действие" : "Рискованный выбор"}
+                      {feedback.is_correct ? "Правильное действие" : feedback.severity === "critical" ? "Критическая ошибка" : "Рискованный выбор"}
                     </p>
                     <p className="mt-4 text-lg font-medium text-[var(--color-text-primary)]">{feedback.consequence_text}</p>
                     <p className="mt-4 text-sm leading-7 text-[var(--color-text-secondary)]">{feedback.explanation}</p>
@@ -151,9 +228,12 @@ export default function SimulatorPage() {
                 <p className="eyebrow">Ready state</p>
                 <h3 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">Выберите сценарий слева</h3>
                 <p className="body-copy mt-4 max-w-xl text-sm">
-                  Доступны три игровые ветки. После запуска справа появятся текущая угроза, варианты действий, шкала
-                  HP и обратная связь по каждому решению.
+                  Доступны три игровые ветки. После запуска справа появятся текущая угроза, варианты действий, шкала HP и обратная связь по каждому решению.
                 </p>
+                <div className="mt-6 soft-tile simulator-ready-note">
+                  <Sparkles size={18} />
+                  <span>Критические ошибки запускают расширенный пост-фидбек с визуальным разрушением интерфейсного блока и разбором последствий.</span>
+                </div>
               </div>
             )}
           </div>

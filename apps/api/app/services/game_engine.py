@@ -54,6 +54,14 @@ def _session_payload(session: GameSession) -> SessionState:
     )
 
 
+def _answer_severity(option: DecisionOption) -> str:
+    if option.is_correct:
+        return "safe"
+    if option.hp_delta <= -25:
+        return "critical"
+    return "warning"
+
+
 def _load_scenario_progress(db: Session, user_id: int, scenario_id: int) -> UserScenarioProgress | None:
     return db.query(UserScenarioProgress).filter(UserScenarioProgress.user_id == user_id, UserScenarioProgress.scenario_id == scenario_id).first()
 
@@ -216,6 +224,7 @@ def submit_answer(db: Session, user: User, session_id: int, option_id: int) -> A
     return AnswerResult(
         **session_state.model_dump(),
         is_correct=option.is_correct,
+        severity=_answer_severity(option),
         hint=option.hint,
         consequence_text=option.consequence_text,
         explanation=step.explanation,

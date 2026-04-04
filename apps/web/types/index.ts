@@ -75,6 +75,7 @@ export type SessionState = {
 
 export type AnswerResult = SessionState & {
   is_correct: boolean;
+  severity: "safe" | "warning" | "critical";
   hint: string | null;
   consequence_text: string;
   explanation: string;

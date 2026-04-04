@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, LogOut, Shield } from "lucide-react";
+import { ArrowRight, LogOut, Shield, UserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -10,6 +10,17 @@ import { clearToken, getAuthEventName, getStoredUser, getToken } from "@/lib/aut
 import type { UserProfile } from "@/types";
 
 const APP_PATHS = new Set(["/simulator", "/dashboard", "/leaderboard", "/admin", "/for-users"]);
+
+function getInitials(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) {
+    return "CS";
+  }
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -52,9 +63,6 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="shell header-shell">
         <Link href={isAuthed ? (isAdmin ? "/admin" : "/simulator") : "/"} className="brand-lockup">
-          <div className="brand-mark">
-            <Shield size={18} />
-          </div>
           <div>
             <p className="brand-kicker">платформа цифровой устойчивости</p>
             <p className="brand-title">CyberSim</p>
@@ -97,6 +105,31 @@ export function SiteHeader() {
           ) : null}
 
           <ThemeToggle />
+
+          {isAuthed && storedUser ? (
+            <div className="header-identity-cluster">
+              <div className="header-top-brand" aria-hidden="true">
+                <div className="brand-mark brand-mark-compact">
+                  <Shield size={16} />
+                </div>
+                <div>
+                  <p className="header-top-brand-label">CyberSim</p>
+                  <p className="header-top-brand-meta">Secure mode</p>
+                </div>
+              </div>
+
+              <div className="header-avatar-chip">
+                <div className="header-avatar-badge">{getInitials(storedUser.display_name)}</div>
+                <div className="header-avatar-meta">
+                  <p className="header-avatar-name">{storedUser.display_name}</p>
+                  <p className="header-avatar-league">
+                    <UserRound size={13} />
+                    {isAdmin ? "Администратор" : storedUser.league}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {isAuthed && isLanding ? (
             <Link href={isAdmin ? "/admin" : "/simulator"} className="primary-button">
