@@ -478,6 +478,7 @@ export default function AdminPage() {
                       onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
                       className="admin-input"
                       required
+                      maxLength={100}
                     />
                   </label>
                   <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -487,6 +488,7 @@ export default function AdminPage() {
                       onChange={(event) => setForm((current) => ({ ...current, difficulty: event.target.value }))}
                       className="admin-input"
                       required
+                      maxLength={50}
                     />
                   </label>
                   <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -496,6 +498,7 @@ export default function AdminPage() {
                       onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                       className="admin-input"
                       required
+                      maxLength={255}
                     />
                   </label>
                   <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -505,6 +508,7 @@ export default function AdminPage() {
                       onChange={(event) => setForm((current) => ({ ...current, theme: event.target.value }))}
                       className="admin-input"
                       required
+                      maxLength={255}
                     />
                   </label>
                   <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
@@ -514,6 +518,7 @@ export default function AdminPage() {
                       onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                       className="admin-input admin-textarea"
                       required
+                      maxLength={1500}
                     />
                   </label>
                   <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -560,6 +565,7 @@ export default function AdminPage() {
                             onChange={(event) => updateStep(stepIndex, { prompt: event.target.value })}
                             className="admin-input admin-textarea"
                             required
+                            maxLength={2000}
                           />
                         </label>
                         <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -569,6 +575,7 @@ export default function AdminPage() {
                             onChange={(event) => updateStep(stepIndex, { threat_type: event.target.value })}
                             className="admin-input"
                             required
+                            maxLength={120}
                           />
                         </label>
                         <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
@@ -578,6 +585,7 @@ export default function AdminPage() {
                             onChange={(event) => updateStep(stepIndex, { explanation: event.target.value })}
                             className="admin-input admin-textarea"
                             required
+                            maxLength={3000}
                           />
                         </label>
                       </div>
@@ -612,6 +620,7 @@ export default function AdminPage() {
                                   onChange={(event) => updateOption(stepIndex, optionIndex, { label: event.target.value })}
                                   className="admin-input admin-textarea"
                                   required
+                                  maxLength={255}
                                 />
                               </label>
                               <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
@@ -630,6 +639,7 @@ export default function AdminPage() {
                                   value={option.hint ?? ""}
                                   onChange={(event) => updateOption(stepIndex, optionIndex, { hint: event.target.value })}
                                   className="admin-input admin-textarea"
+                                  maxLength={500}
                                 />
                               </label>
                               <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
@@ -639,6 +649,7 @@ export default function AdminPage() {
                                   onChange={(event) => updateOption(stepIndex, optionIndex, { consequence_text: event.target.value })}
                                   className="admin-input admin-textarea"
                                   required
+                                  maxLength={1500}
                                 />
                               </label>
                             </div>

@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 import httpx
+from pydantic import ValidationError
 import pytest
 from sqlalchemy.orm import Session
 
@@ -85,6 +86,34 @@ def test_register_login_and_profile(db_session: Session) -> None:
     assert stats_response.total_sessions == 0
 
 
+def test_auth_normalization_and_length_limits(db_session: Session) -> None:
+    token_response = asyncio.run(
+        register(
+            RegisterRequest(
+                email=" Hero@Example.com ",
+                password="superpass1",
+                display_name="  Герой  ",
+            ),
+            db_session,
+        )
+    )
+    assert token_response.access_token
+
+    created_user = db_session.query(User).filter(User.email == "hero@example.com").first()
+    assert created_user is not None
+    assert created_user.display_name == "Герой"
+
+    with pytest.raises(ValidationError):
+        RegisterRequest(
+            email="very-long-mail-address-for-cybersim@example.com",
+            password="superpass1",
+            display_name="Аналитик",
+        )
+
+    with pytest.raises(ValidationError):
+        LoginRequest(identifier="a" * 33, password="superpass1")
+
+
 def test_scenarios_and_session_progression(db_session: Session) -> None:
     user = create_user(db_session)
 
@@ -129,6 +158,27 @@ def test_scenarios_and_session_progression(db_session: Session) -> None:
 
     leaderboard = build_leaderboard(db_session)
     assert leaderboard[0].display_name == "Аналитик"
+
+
+def test_session_payload_exposes_max_score(db_session: Session) -> None:
+    user = create_user(db_session, email="maxscore@example.com")
+    state = start_session(db_session, user, StartSessionRequest(scenario_slug="office").scenario_slug)
+
+    office_steps = db_session.query(ScenarioStep).join(Scenario).filter(Scenario.slug == "office").order_by(ScenarioStep.step_order).all()
+    expected_max_score = 0
+    for step in office_steps:
+        correct_option = (
+            db_session.query(DecisionOption)
+            .filter(DecisionOption.step_id == step.id, DecisionOption.is_correct.is_(True))
+            .first()
+        )
+        assert correct_option is not None
+        expected_max_score += 25 + max(correct_option.hp_delta, 0)
+
+    assert state.max_score == expected_max_score
+
+    final_result = complete_scenario(db_session, user, "office")
+    assert final_result.max_score == expected_max_score
 
 
 def test_certificate_is_issued_after_completing_all_playable_scenarios(db_session: Session) -> None:

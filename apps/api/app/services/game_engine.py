@@ -51,6 +51,14 @@ def _total_steps(scenario: Scenario) -> int:
     return len(scenario.steps)
 
 
+def _max_score(scenario: Scenario) -> int:
+    score = 0
+    for step in scenario.steps:
+        best_correct_gain = max((25 + max(option.hp_delta, 0) for option in step.decision_options if option.is_correct), default=0)
+        score += best_correct_gain
+    return score
+
+
 def _session_payload(session: GameSession) -> SessionState:
     current_step = _get_step(session.scenario, session.current_step_order) if session.status == "active" else None
     return SessionState(
@@ -59,6 +67,7 @@ def _session_payload(session: GameSession) -> SessionState:
         scenario_title=session.scenario.title,
         hp_left=session.hp_left,
         score=session.score,
+        max_score=_max_score(session.scenario),
         status=session.status,
         step_number=session.current_step_order,
         total_steps=_total_steps(session.scenario),

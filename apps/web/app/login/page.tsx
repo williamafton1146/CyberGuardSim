@@ -186,6 +186,7 @@ export default function LoginPage() {
                   onChange={(event) => setDisplayName(event.target.value)}
                   placeholder="Например, Анна Смирнова"
                   className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
+                  maxLength={32}
                 />
               </label>
             ) : null}
@@ -199,6 +200,7 @@ export default function LoginPage() {
                 placeholder={mode === "register" ? "you@company.ru" : "you@company.ru или Admin"}
                 className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                 required
+                maxLength={32}
               />
             </label>
 
@@ -213,6 +215,7 @@ export default function LoginPage() {
                   className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 pr-14 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                   required
                   minLength={8}
+                  maxLength={32}
                 />
                 <button
                   type="button"

@@ -67,6 +67,7 @@ export type SessionState = {
   scenario_title: string;
   hp_left: number;
   score: number;
+  max_score: number;
   status: string;
   step_number: number;
   total_steps: number;

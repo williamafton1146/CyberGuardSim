@@ -4,7 +4,7 @@
 
 ## Auth
 
-- `POST /auth/register` — создает пользователя и сразу возвращает `access_token`
+- `POST /auth/register` — создает пользователя и сразу возвращает `access_token`; auth-поля ограничены по длине и нормализуются на сервере
 - `POST /auth/login` — авторизация по `identifier + password`; обычный пользователь входит по email, админ может входить по логину `Admin`
 
 ## Users
@@ -22,7 +22,7 @@
 ## Sessions
 
 - `POST /sessions` — старт новой миссии; выключенные и запланированные сценарии не запускаются
-- `POST /sessions/{session_id}/answers` — отправка выбранного действия и получение обратной связи; ответ содержит `severity` (`safe`, `warning`, `critical`) для UI-фидбека
+- `POST /sessions/{session_id}/answers` — отправка выбранного действия и получение обратной связи; ответ содержит `severity` (`safe`, `warning`, `critical`) для UI-фидбека и `max_score` для итогового экрана сценария
 
 ### Start Session Request
 
@@ -60,3 +60,4 @@
 ## WebSocket
 
 - `WS /ws/sessions/{session_id}` — обновления состояния текущей миссии, включая `hp_left`, `score`, `status` и `current_step`
+- `SessionState` и `AnswerResult` содержат `max_score`, чтобы фронтенд мог корректно показывать прогресс сценария и условия для перепрохождения

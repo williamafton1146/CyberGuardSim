@@ -13,6 +13,7 @@ class SessionState(BaseModel):
     scenario_title: str
     hp_left: int
     score: int
+    max_score: int
     status: str
     step_number: int
     total_steps: int

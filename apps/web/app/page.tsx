@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Award, Shield, ShieldCheck, Trophy, Waypoints } from "lucide-react";
+import { ArrowRight, Award, ShieldCheck, Trophy, Waypoints } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { getScenarios } from "@/lib/api";
@@ -84,44 +84,13 @@ export default function HomePage() {
     <div className="landing-page">
       <section className="shell shell-wide landing-hero">
         <div className="landing-hero-surface">
-          <div className="landing-hero-bar">
-            <p className="landing-hero-bar-title">Цифровая платформа</p>
-            <div className="landing-hero-bar-actions">
-              <Link href="/for-users" className="landing-hero-bar-button">
-                Навигатор
-              </Link>
-              <span className="landing-hero-bar-orb" aria-hidden="true">
-                <Shield size={16} />
-              </span>
-              <Link href={isAuthed ? "/simulator" : "/login"} className="landing-hero-bar-button landing-hero-bar-button-strong">
-                {isAuthed ? "Симулятор" : "Войти"}
-              </Link>
-            </div>
-          </div>
-
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
-              <div className="landing-hero-topline">
-                <span className="landing-hero-pill">Cybersecurity simulator</span>
-                <span className="landing-hero-note">Финтех-эстетика, сценарии и проверяемый прогресс</span>
-              </div>
               <h1 className="landing-title">KiberSim</h1>
               <p className="landing-tagline">Минималистичная платформа для тренировки цифровой устойчивости в бытовых и рабочих сценариях.</p>
               <p className="landing-lead">
                 Пользователь проходит кибер-инциденты как понятный маршрут: принимает решения, видит последствия, повышает рейтинг и закрепляет безопасный паттерн.
               </p>
-              <div className="landing-actions landing-actions-hero">
-                <Link href={isAuthed ? "/simulator" : "/login"} className="landing-hero-chip-button">
-                  {isAuthed ? "Открыть миссии" : "Начать"}
-                  <ArrowRight size={16} />
-                </Link>
-                <a href="#scenarios" className="landing-hero-chip-button">
-                  Сценарии
-                </a>
-                <Link href="/for-users" className="landing-hero-chip-button">
-                  Гайды
-                </Link>
-              </div>
             </div>
 
             <div className="landing-hero-stage">
@@ -140,12 +109,10 @@ export default function HomePage() {
                         <strong>Threat score 96%</strong>
                         <span>Подозрительный запрос на код подтверждения</span>
                       </div>
-                      <div className="landing-device-shield-cluster">
-                        <div className="landing-device-shield-ring">
-                          <div className="landing-device-shield-core">
-                            <ShieldCheck size={50} />
-                          </div>
-                        </div>
+                      <div className="landing-device-response-card">
+                        <span className="landing-device-response-kicker">Следующий шаг</span>
+                        <strong>Остановить действие и проверить источник</strong>
+                        <span>Официальный канал и повторная проверка защищают от подмены ссылки и кода.</span>
                       </div>
                       <div className="landing-device-sidecards">
                         <div className="landing-device-sidecard">
