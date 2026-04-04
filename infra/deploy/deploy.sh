@@ -7,6 +7,7 @@ DOCKER_PREFIX=()
 PROJECT_NAME="$(basename "${ROOT_DIR}" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
 DEPLOY_STATE_FILE=".deploy.production.ready"
 LOCAL_OWNER="${SUDO_USER:-${USER}}"
+ADMIN_BOOTSTRAP_PASSWORD_VALUE=""
 
 log() {
   printf '\n[deploy] %s\n' "$1"
@@ -257,6 +258,16 @@ prompt_value() {
   printf '%s' "${input}"
 }
 
+generate_admin_password() {
+  local generated=""
+
+  while [[ ${#generated} -lt 12 ]]; do
+    generated="$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9' | head -c 12)"
+  done
+
+  printf '%s' "${generated}"
+}
+
 validate_env_file() {
   local line_number=0
   local line=""
@@ -394,6 +405,9 @@ ensure_env_file() {
   set_env_var FRONTEND_ORIGIN "https://${domain}"
   set_env_var NEXT_PUBLIC_API_URL "https://${domain}"
   set_env_var NEXT_PUBLIC_WS_URL "wss://${domain}"
+  set_env_var ADMIN_USERNAME "Admin"
+  ADMIN_BOOTSTRAP_PASSWORD_VALUE="$(generate_admin_password)"
+  set_env_var ADMIN_BOOTSTRAP_PASSWORD "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
   validate_env_file
 }
 
@@ -540,6 +554,10 @@ open_site() {
   fi
 
   log "Deployment completed: ${url}"
+  if [[ -n "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}" ]]; then
+    printf '\n[deploy] Admin login: Admin\n'
+    printf '[deploy] Admin password: %s\n' "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
+  fi
 
   if require_command xdg-open; then
     xdg-open "${url}" >/dev/null 2>&1 || true

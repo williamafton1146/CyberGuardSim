@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
 class UserRead(BaseModel):
     id: int
     email: str
+    username: str | None = None
     display_name: str
+    role: str
     security_rating: int
     league: str
 
@@ -33,3 +37,16 @@ class UserStats(BaseModel):
     total_mistakes: int
     scenario_progress: list[ScenarioProgress]
     recent_mistakes: list[RecentMistake]
+
+
+class AdminUserRead(BaseModel):
+    id: int
+    email: str
+    username: str | None = None
+    display_name: str
+    role: str
+    security_rating: int
+    league: str
+    total_sessions: int
+    completed_scenarios: int
+    created_at: datetime | None = None

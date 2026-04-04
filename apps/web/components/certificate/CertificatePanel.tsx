@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Award, CheckCircle2, QrCode, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 
+import { downloadNodeAsPdf } from "@/lib/pdf";
 import type { CertificateStatus } from "@/types";
 
 type CertificatePanelProps = {
@@ -23,6 +24,8 @@ function formatIssuedAt(value: string) {
 
 export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelProps) {
   const [qrSrc, setQrSrc] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const exportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -72,9 +75,24 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
   }
 
   if (status.status === "issued" && status.certificate) {
+    const certificate = status.certificate;
+
+    async function handleDownloadPdf() {
+      if (!exportRef.current) {
+        return;
+      }
+
+      setDownloadingPdf(true);
+      try {
+        await downloadNodeAsPdf(exportRef.current, `cybersim-certificate-${certificate.code}.pdf`);
+      } finally {
+        setDownloadingPdf(false);
+      }
+    }
+
     return (
       <div className="glass-card certificate-card certificate-card-issued">
-        <div>
+        <div ref={exportRef} className="certificate-export-surface">
           <p className="eyebrow">Сертификат</p>
           <h2 className="mt-4 text-2xl font-semibold text-[var(--color-text-primary)]">Сертификат программы уже выпущен</h2>
           <p className="body-copy mt-4 max-w-2xl text-sm">
@@ -91,27 +109,16 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
             </div>
             <div className="soft-tile">
               <p className="certificate-meta-label">Дата выпуска</p>
-              <p className="certificate-meta-value">{formatIssuedAt(status.certificate.issued_at)}</p>
+              <p className="certificate-meta-value">{formatIssuedAt(certificate.issued_at)}</p>
             </div>
             <div className="soft-tile">
               <p className="certificate-meta-label">Рейтинг на момент выпуска</p>
-              <p className="certificate-meta-value">{status.certificate.security_rating}</p>
+              <p className="certificate-meta-value">{certificate.security_rating}</p>
             </div>
             <div className="soft-tile">
               <p className="certificate-meta-label">Лига</p>
-              <p className="certificate-meta-value">{status.certificate.league}</p>
+              <p className="certificate-meta-value">{certificate.league}</p>
             </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-4">
-            <Link href={`/certificates/${status.certificate.code}`} className="primary-button">
-              <Award size={16} />
-              Открыть сертификат
-            </Link>
-            <a href={status.certificate.verify_url} className="secondary-button">
-              <QrCode size={16} />
-              Публичная ссылка
-            </a>
           </div>
         </div>
 
@@ -126,7 +133,21 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
               </div>
             )}
           </div>
-          <p className="certificate-code">ID: {status.certificate.code}</p>
+          <p className="certificate-code">ID: {certificate.code}</p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-4 no-print">
+          <Link href={`/certificates/${certificate.code}`} className="primary-button">
+            <Award size={16} />
+            Открыть сертификат
+          </Link>
+          <a href={certificate.verify_url} className="secondary-button">
+            <QrCode size={16} />
+            Публичная ссылка
+          </a>
+          <button type="button" className="secondary-button" onClick={handleDownloadPdf} disabled={downloadingPdf}>
+            {downloadingPdf ? "Готовим PDF..." : "Скачать в PDF"}
+          </button>
         </div>
       </div>
     );

@@ -5,7 +5,7 @@
 ## Auth
 
 - `POST /auth/register` — создает пользователя и сразу возвращает `access_token`
-- `POST /auth/login` — авторизация по email/паролю
+- `POST /auth/login` — авторизация по `identifier + password`; обычный пользователь входит по email, админ может входить по логину `Admin`
 
 ## Users
 
@@ -16,12 +16,12 @@
 
 ## Scenarios
 
-- `GET /scenarios` — список сюжетных линий
-- `GET /scenarios/{slug}` — детали сценария и шаги
+- `GET /scenarios` — список только опубликованных и уже открытых игрокам сюжетных линий
+- `GET /scenarios/{slug}` — детали live-сценария и шаги
 
 ## Sessions
 
-- `POST /sessions` — старт новой миссии
+- `POST /sessions` — старт новой миссии; выключенные и запланированные сценарии не запускаются
 - `POST /sessions/{session_id}/answers` — отправка выбранного действия и получение обратной связи
 
 ### Start Session Request
@@ -47,6 +47,15 @@
 ## Certificates
 
 - `GET /api/certificates/{code}` — публичная верификация выпущенного сертификата
+
+## Admin
+
+- `GET /admin/users` — список пользователей и базовая статистика
+- `DELETE /admin/users/{id}` — удаление пользовательского аккаунта
+- `GET /admin/scenarios` — список всех сценариев, включая `draft`, `scheduled`, `live`, `disabled`
+- `POST /admin/scenarios` — создание нового сценария
+- `PATCH /admin/scenarios/{id}` — обновление сценария, публикации и расписания
+- `DELETE /admin/scenarios/{id}` — удаление сценария без пользовательских прохождений
 
 ## WebSocket
 

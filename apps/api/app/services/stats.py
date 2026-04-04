@@ -1,9 +1,10 @@
-from sqlalchemy.orm import Session
-
+from app.models.progress import UserScenarioProgress
 from app.models.scenario import Scenario, ScenarioStep
 from app.models.session import AnswerEvent, GameSession
 from app.models.user import User
 from app.schemas.user import RecentMistake, ScenarioProgress, UserStats
+from app.services.scenarios import scenario_is_live, scenario_status_value
+from sqlalchemy.orm import Session
 
 
 def compute_league(security_rating: int) -> str:
@@ -24,23 +25,32 @@ def build_user_stats(db: Session, user: User) -> UserStats:
         .filter(GameSession.user_id == user.id)
         .all()
     )
+    progress_rows = {
+        progress.scenario_id: progress for progress in db.query(UserScenarioProgress).filter(UserScenarioProgress.user_id == user.id).all()
+    }
+
     total_answers = len(answers)
     correct_answers = sum(1 for answer in answers if answer.is_correct)
-    completed_sessions = sum(1 for session in sessions if session.status == "completed")
+    completed_sessions = sum(1 for progress in progress_rows.values() if progress.best_completed)
     average_score = round(sum(session.score for session in sessions) / len(sessions), 1) if sessions else 0.0
     success_rate = round((correct_answers / total_answers) * 100, 1) if total_answers else 0.0
     total_mistakes = sum(1 for answer in answers if not answer.is_correct)
 
-    progress_rows = []
-    for scenario in db.query(Scenario).order_by(Scenario.id).all():
-        related_sessions = [session for session in sessions if session.scenario_id == scenario.id]
-        if related_sessions:
-            best_score = max(session.score for session in related_sessions)
-            status = "completed" if any(session.status == "completed" for session in related_sessions) else related_sessions[-1].status
+    known_scenario_ids = set(progress_rows.keys())
+    scenarios = db.query(Scenario).order_by(Scenario.id).all()
+    scenario_cards = []
+    for scenario in scenarios:
+        if not scenario_is_live(scenario) and scenario.id not in known_scenario_ids:
+            continue
+        progress = progress_rows.get(scenario.id)
+        if progress is not None:
+            status = "completed" if progress.best_completed else "in_progress"
+            best_score = progress.best_score
         else:
             best_score = 0
-            status = "locked" if not scenario.is_playable else "not_started"
-        progress_rows.append(
+            status = scenario_status_value(scenario)
+
+        scenario_cards.append(
             ScenarioProgress(
                 slug=scenario.slug,
                 title=scenario.title,
@@ -75,7 +85,6 @@ def build_user_stats(db: Session, user: User) -> UserStats:
         success_rate=success_rate,
         average_score=average_score,
         total_mistakes=total_mistakes,
-        scenario_progress=progress_rows,
+        scenario_progress=scenario_cards,
         recent_mistakes=recent_mistakes,
     )
-

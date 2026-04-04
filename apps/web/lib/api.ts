@@ -1,7 +1,9 @@
-import { scenarioCatalog } from "@cyber-sim/shared";
-
 import type {
+  AdminScenario,
+  AdminScenarioInput,
+  AdminUser,
   AnswerResult,
+  AuthResponse,
   CertificateStatus,
   CertificateVerification,
   LeaderboardEntry,
@@ -38,28 +40,9 @@ const demoStats: UserStats = {
   success_rate: 0,
   average_score: 0,
   total_mistakes: 0,
-  scenario_progress: scenarioCatalog.map((scenario) => ({
-    slug: scenario.slug,
-    title: scenario.title,
-    status: scenario.isPlayable ? "not_started" : "locked",
-    best_score: 0
-  })),
+  scenario_progress: [],
   recent_mistakes: []
 };
-
-function scenarioFallback(): ScenarioSummary[] {
-  return scenarioCatalog.map((scenario) => ({
-    slug: scenario.slug,
-    title: scenario.title,
-    theme: scenario.theme,
-    difficulty: scenario.difficulty,
-    description: scenario.isPlayable
-      ? "Игровая ветка с пошаговой обратной связью, подсказками и фиксацией прогресса."
-      : "Подготовленная ветка сценария для следующего этапа.",
-    is_playable: scenario.isPlayable,
-    step_count: 4
-  }));
-}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${resolveApiUrl()}${path}`, {
@@ -82,6 +65,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -90,14 +77,14 @@ export async function registerUser(payload: {
   password: string;
   display_name: string;
 }) {
-  return request<{ access_token: string }>("/auth/register", {
+  return request<AuthResponse>("/auth/register", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
-export async function loginUser(payload: { email: string; password: string }) {
-  return request<{ access_token: string }>("/auth/login", {
+export async function loginUser(payload: { identifier: string; password: string }) {
+  return request<AuthResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload)
   });
@@ -119,7 +106,7 @@ export async function getScenarios() {
   try {
     return await request<ScenarioSummary[]>("/scenarios");
   } catch {
-    return scenarioFallback();
+    return [];
   }
 }
 
@@ -160,6 +147,48 @@ export async function issueCertificate(token: string) {
 
 export async function verifyCertificate(code: string) {
   return request<CertificateVerification>(`/api/certificates/${code}`);
+}
+
+export async function getAdminUsers(token: string) {
+  return request<AdminUser[]>("/admin/users", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function deleteAdminUser(token: string, userId: number) {
+  return request<void>(`/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function getAdminScenarios(token: string) {
+  return request<AdminScenario[]>("/admin/scenarios", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function createAdminScenario(token: string, payload: AdminScenarioInput) {
+  return request<AdminScenario>("/admin/scenarios", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function updateAdminScenario(token: string, scenarioId: number, payload: AdminScenarioInput) {
+  return request<AdminScenario>(`/admin/scenarios/${scenarioId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function deleteAdminScenario(token: string, scenarioId: number) {
+  return request<void>(`/admin/scenarios/${scenarioId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
 }
 
 export { demoStats };

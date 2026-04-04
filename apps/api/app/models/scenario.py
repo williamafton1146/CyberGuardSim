@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -14,6 +16,15 @@ class Scenario(Base):
     difficulty: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(Text)
     is_playable: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    release_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=True,
+    )
 
     steps = relationship(
         "ScenarioStep",
@@ -22,6 +33,7 @@ class Scenario(Base):
         cascade="all, delete-orphan",
     )
     sessions = relationship("GameSession", back_populates="scenario")
+    user_progress = relationship("UserScenarioProgress", back_populates="scenario", cascade="all, delete-orphan")
 
 
 class ScenarioStep(Base):

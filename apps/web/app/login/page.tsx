@@ -5,14 +5,65 @@ import { ArrowRight, BadgeCheck, KeyRound, ShieldCheck, UserRoundPlus } from "lu
 import { useRouter } from "next/navigation";
 
 import { loginUser, registerUser } from "@/lib/api";
-import { getToken, saveToken } from "@/lib/auth";
+import { getStoredUser, getToken, saveAuthSession } from "@/lib/auth";
+import type { UserProfile } from "@/types";
 
 export const dynamic = "force-dynamic";
+
+type PasswordStrength = {
+  label: string;
+  width: number;
+  tone: "weak" | "medium" | "good" | "strong";
+  advice: string;
+};
+
+function evaluatePassword(password: string): PasswordStrength {
+  const checks = [
+    password.length >= 8,
+    password.length >= 12,
+    /[A-ZА-Я]/.test(password),
+    /[a-zа-я]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-zА-Яа-я0-9]/.test(password)
+  ];
+  const score = checks.filter(Boolean).length;
+
+  if (score <= 2) {
+    return {
+      label: "Потенциально небезопасный пароль",
+      width: 15,
+      tone: "weak",
+      advice: "Добавьте длину, цифры и хотя бы один специальный символ."
+    };
+  }
+  if (score === 3 || score === 4) {
+    return {
+      label: "Средняя сложность",
+      width: 48,
+      tone: "medium",
+      advice: "Сделайте пароль длиннее и не используйте знакомые слова целиком."
+    };
+  }
+  if (score === 5) {
+    return {
+      label: "Хороший пароль",
+      width: 74,
+      tone: "good",
+      advice: "Осталось убедиться, что этот пароль не повторяется в других сервисах."
+    };
+  }
+  return {
+    label: "С таким паролем вы защищены",
+    width: 100,
+    tone: "strong",
+    advice: "Сохраняйте его в менеджере паролей и не используйте повторно."
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +88,10 @@ export default function LoginPage() {
   useEffect(() => {
     setMode(resolveMode());
 
-    if (getToken()) {
-      router.replace(resolveNextPath());
+    const token = getToken();
+    const storedUser = getStoredUser<UserProfile>();
+    if (token && storedUser) {
+      router.replace(storedUser.role === "admin" ? "/admin" : resolveNextPath());
     }
   }, [router]);
 
@@ -46,6 +99,7 @@ export default function LoginPage() {
     () => (mode === "register" ? "Создайте профиль и откройте программу обучения" : "Войдите и продолжите работу в CyberSim"),
     [mode]
   );
+  const passwordStrength = useMemo(() => evaluatePassword(password), [password]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,11 +109,16 @@ export default function LoginPage() {
     try {
       const payload =
         mode === "register"
-          ? await registerUser({ email, password, display_name: displayName || "Новый аналитик" })
-          : await loginUser({ email, password });
+          ? await registerUser({ email: identifier, password, display_name: displayName || "Новый аналитик" })
+          : await loginUser({ identifier, password });
 
-      saveToken(payload.access_token);
-      router.replace(resolveNextPath());
+      saveAuthSession(payload.access_token, payload.user);
+
+      if (payload.user.role === "admin") {
+        router.replace("/admin");
+      } else {
+        router.replace(resolveNextPath() || payload.redirect_to);
+      }
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Не удалось выполнить запрос");
@@ -75,8 +134,7 @@ export default function LoginPage() {
           <p className="eyebrow">CyberSim access</p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-[var(--color-text-primary)]">{title}</h1>
           <p className="body-copy mt-4 max-w-xl">
-            После авторизации доступны сценарии, личная статистика, рейтинг цифровой устойчивости и выпуск сертификата
-            по завершении программы.
+            После авторизации доступны сценарии, личная статистика, рейтинг цифровой устойчивости, раздел с пользовательскими материалами и выпуск сертификата.
           </p>
 
           <div className="mt-8 grid gap-4">
@@ -85,15 +143,15 @@ export default function LoginPage() {
                 <ShieldCheck size={18} />
               </div>
               <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Сценарии и прогресс</h2>
-              <p className="body-copy mt-2 text-sm">Пройденные миссии, ошибки и накопленный security rating сохраняются в личном кабинете.</p>
+              <p className="body-copy mt-2 text-sm">Пройденные миссии, лучший результат по каждому кейсу и накопленный рейтинг сохраняются в кабинете.</p>
             </article>
 
             <article className="soft-tile">
               <div className="feature-icon">
                 <BadgeCheck size={18} />
               </div>
-              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Сертификат и верификация</h2>
-              <p className="body-copy mt-2 text-sm">После завершения всех доступных сценариев пользователь может выпустить верифицируемый сертификат.</p>
+              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Сертификат и материалы</h2>
+              <p className="body-copy mt-2 text-sm">После прохождения программы можно выпустить сертификат и открыть раздел с понятными пользовательскими рекомендациями.</p>
             </article>
           </div>
         </section>
@@ -132,12 +190,12 @@ export default function LoginPage() {
             ) : null}
 
             <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-              Email
+              {mode === "register" ? "Email" : "Email или логин"}
               <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@company.ru"
+                type={mode === "register" ? "email" : "text"}
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                placeholder={mode === "register" ? "you@company.ru" : "you@company.ru или Admin"}
                 className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                 required
               />
@@ -154,6 +212,15 @@ export default function LoginPage() {
                 required
                 minLength={8}
               />
+              {mode === "register" && password ? (
+                <div className="password-strength-block">
+                  <div className="password-strength-track">
+                    <div className={`password-strength-fill password-strength-${passwordStrength.tone}`} style={{ width: `${passwordStrength.width}%` }} />
+                  </div>
+                  <p className={`password-strength-label password-strength-label-${passwordStrength.tone}`}>{passwordStrength.label}</p>
+                  <p className="password-strength-advice">{passwordStrength.advice}</p>
+                </div>
+              ) : null}
             </label>
           </div>
 

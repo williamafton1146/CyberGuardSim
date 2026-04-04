@@ -6,19 +6,25 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { clearToken, getAuthEventName, getToken } from "@/lib/auth";
+import { clearToken, getAuthEventName, getStoredUser, getToken } from "@/lib/auth";
+import type { UserProfile } from "@/types";
 
-const APP_PATHS = new Set(["/simulator", "/dashboard", "/leaderboard"]);
+const APP_PATHS = new Set(["/simulator", "/dashboard", "/leaderboard", "/admin", "/for-users"]);
 
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
+  const [storedUser, setStoredUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     setToken(getToken());
+    setStoredUser(getStoredUser<UserProfile>());
 
-    const syncToken = () => setToken(getToken());
+    const syncToken = () => {
+      setToken(getToken());
+      setStoredUser(getStoredUser<UserProfile>());
+    };
     window.addEventListener("storage", syncToken);
     window.addEventListener(getAuthEventName(), syncToken);
 
@@ -32,10 +38,12 @@ export function SiteHeader() {
   const isLanding = pathname === "/";
   const isLogin = pathname === "/login";
   const isAuthed = Boolean(token);
+  const isAdmin = storedUser?.role === "admin";
 
   function handleLogout() {
     clearToken();
     setToken(null);
+    setStoredUser(null);
     router.push("/");
     router.refresh();
   }
@@ -43,7 +51,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="shell header-shell">
-        <Link href={isAuthed ? "/simulator" : "/"} className="brand-lockup">
+        <Link href={isAuthed ? (isAdmin ? "/admin" : "/simulator") : "/"} className="brand-lockup">
           <div className="brand-mark">
             <Shield size={18} />
           </div>
@@ -56,6 +64,11 @@ export function SiteHeader() {
         <div className="header-actions">
           {isAuthed && isAppRoute ? (
             <nav className="nav-pills">
+              {isAdmin ? (
+                <Link href="/admin" className="nav-pill">
+                  Админка
+                </Link>
+              ) : null}
               <Link href="/simulator" className="nav-pill">
                 Симулятор
               </Link>
@@ -64,6 +77,9 @@ export function SiteHeader() {
               </Link>
               <Link href="/leaderboard" className="nav-pill">
                 Лидерборд
+              </Link>
+              <Link href="/for-users" className="nav-pill">
+                Для пользователей
               </Link>
             </nav>
           ) : null}
@@ -74,11 +90,17 @@ export function SiteHeader() {
             </Link>
           ) : null}
 
+          {!isAuthed || !isAppRoute ? (
+            <Link href="/for-users" className="nav-pill">
+              Для пользователей
+            </Link>
+          ) : null}
+
           <ThemeToggle />
 
           {isAuthed && isLanding ? (
-            <Link href="/simulator" className="primary-button">
-              Открыть симулятор
+            <Link href={isAdmin ? "/admin" : "/simulator"} className="primary-button">
+              {isAdmin ? "Открыть админку" : "Открыть симулятор"}
               <ArrowRight size={16} />
             </Link>
           ) : null}

@@ -4,12 +4,14 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.redis_client import LEADERBOARD_KEY, delete_key, get_json, set_json, set_session_state
+from app.models.progress import UserScenarioProgress
 from app.models.scenario import DecisionOption, Scenario, ScenarioStep
 from app.models.session import AnswerEvent, GameSession
 from app.models.user import User
 from app.schemas.leaderboard import LeaderboardEntry
 from app.schemas.scenario import DecisionOptionPublic, ScenarioStepPublic
 from app.schemas.session import AnswerResult, SessionState
+from app.services.scenarios import scenario_is_live
 from app.services.stats import compute_league
 
 
@@ -52,11 +54,45 @@ def _session_payload(session: GameSession) -> SessionState:
     )
 
 
-def _update_user_rating(user: User, session: GameSession) -> None:
-    if session.status != "completed":
-        return
-    user.security_rating += max(session.score // 2, 10)
+def _load_scenario_progress(db: Session, user_id: int, scenario_id: int) -> UserScenarioProgress | None:
+    return db.query(UserScenarioProgress).filter(UserScenarioProgress.user_id == user_id, UserScenarioProgress.scenario_id == scenario_id).first()
+
+
+def _get_or_create_progress(db: Session, user_id: int, scenario_id: int) -> UserScenarioProgress:
+    progress = _load_scenario_progress(db, user_id, scenario_id)
+    if progress is not None:
+        return progress
+
+    progress = UserScenarioProgress(user_id=user_id, scenario_id=scenario_id)
+    db.add(progress)
+    db.flush()
+    return progress
+
+
+def _recalculate_user_rating(db: Session, user: User) -> None:
+    db.flush()
+    best_total = (
+        db.query(UserScenarioProgress)
+        .filter(UserScenarioProgress.user_id == user.id)
+        .with_entities(UserScenarioProgress.best_score)
+        .all()
+    )
+    user.security_rating = sum(score for score, in best_total)
     user.league = compute_league(user.security_rating)
+
+
+def _apply_progress_update(db: Session, user: User, session: GameSession) -> None:
+    if session.status not in {"completed", "failed"}:
+        return
+
+    progress = _get_or_create_progress(db, user.id, session.scenario_id)
+    progress.attempts_count += 1
+    progress.last_played_at = datetime.now(UTC)
+    progress.best_completed = progress.best_completed or session.status == "completed"
+    if session.score > progress.best_score:
+        progress.best_score = session.score
+
+    _recalculate_user_rating(db, user)
 
 
 def build_leaderboard(db: Session) -> list[LeaderboardEntry]:
@@ -64,12 +100,12 @@ def build_leaderboard(db: Session) -> list[LeaderboardEntry]:
     if isinstance(cached, list):
         return [LeaderboardEntry(**row) for row in cached]
 
-    users = db.query(User).order_by(User.security_rating.desc(), User.id.asc()).limit(10).all()
+    users = db.query(User).filter(User.role != "admin").order_by(User.security_rating.desc(), User.id.asc()).limit(10).all()
     entries: list[LeaderboardEntry] = []
     for index, user in enumerate(users, start=1):
         completed_sessions = (
-            db.query(GameSession)
-            .filter(GameSession.user_id == user.id, GameSession.status == "completed")
+            db.query(UserScenarioProgress)
+            .filter(UserScenarioProgress.user_id == user.id, UserScenarioProgress.best_completed.is_(True))
             .count()
         )
         entries.append(
@@ -105,10 +141,10 @@ def start_session(db: Session, user: User, scenario_slug: str) -> SessionState:
     scenario = db.query(Scenario).filter(Scenario.slug == scenario_slug).first()
     if scenario is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сценарий не найден")
-    if not scenario.is_playable:
+    if not scenario_is_live(scenario):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Этот сценарий пока доступен только как заготовка",
+            detail="Этот сценарий пока недоступен для игроков",
         )
 
     session = GameSession(user_id=user.id, scenario_id=scenario.id, hp_left=100, score=0, status="active", current_step_order=1)
@@ -165,7 +201,7 @@ def submit_answer(db: Session, user: User, session_id: int, option_id: int) -> A
 
     event = AnswerEvent(session_id=session.id, step_id=step.id, option_id=option.id, is_correct=option.is_correct)
     db.add(event)
-    _update_user_rating(user, session)
+    _apply_progress_update(db, user, session)
     db.commit()
     db.refresh(session)
     _ = session.scenario.steps

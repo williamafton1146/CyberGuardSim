@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models.scenario import DecisionOption, Scenario, ScenarioStep
 from app.models.session import GameSession
+from app.services.scenarios import utc_now
 
 SCENARIOS = [
     {
@@ -431,6 +432,8 @@ def seed_database(db: Session) -> None:
                 difficulty=scenario_data["difficulty"],
                 description=scenario_data["description"],
                 is_playable=scenario_data["is_playable"],
+                is_enabled=scenario_data["is_playable"],
+                release_at=utc_now(),
             )
             db.add(scenario)
             db.flush()
@@ -440,6 +443,8 @@ def seed_database(db: Session) -> None:
         scenario.difficulty = scenario_data["difficulty"]
         scenario.description = scenario_data["description"]
         scenario.is_playable = scenario_data["is_playable"]
+        scenario.is_enabled = scenario_data["is_playable"]
+        scenario.release_at = scenario.release_at or utc_now()
 
         has_sessions = db.query(GameSession.id).filter(GameSession.scenario_id == scenario.id).first() is not None
         if has_sessions:

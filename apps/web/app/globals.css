@@ -288,6 +288,55 @@ input {
   padding: 1rem 1.1rem;
 }
 
+[data-theme="light"] .brand-mark,
+[data-theme="light"] .primary-button,
+[data-theme="light"] .glass-card,
+[data-theme="light"] .landing-stage-frame,
+[data-theme="light"] .landing-scenario-card,
+[data-theme="light"] .landing-highlight-card,
+[data-theme="light"] .landing-flow-step,
+[data-theme="light"] .landing-rail-card,
+[data-theme="light"] .certificate-qr-card,
+[data-theme="light"] .guide-card,
+[data-theme="light"] .guide-hero-card,
+[data-theme="light"] .guide-modal,
+[data-theme="light"] .admin-scenario-list-item,
+[data-theme="light"] .admin-option-card {
+  box-shadow: 0 8px 22px rgba(20, 36, 59, 0.06);
+}
+
+[data-theme="light"] .secondary-button,
+[data-theme="light"] .icon-button,
+[data-theme="light"] .nav-pills,
+[data-theme="light"] .soft-tile {
+  box-shadow: none;
+}
+
+[data-theme="light"] .glass-card,
+[data-theme="light"] .soft-tile,
+[data-theme="light"] .secondary-button,
+[data-theme="light"] .icon-button,
+[data-theme="light"] .nav-pills,
+[data-theme="light"] .landing-rail-card,
+[data-theme="light"] .landing-scenario-card,
+[data-theme="light"] .landing-flow-step,
+[data-theme="light"] .landing-highlight-card,
+[data-theme="light"] .guide-card,
+[data-theme="light"] .guide-hero-card,
+[data-theme="light"] .guide-modal,
+[data-theme="light"] .admin-scenario-list-item,
+[data-theme="light"] .admin-option-card {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .primary-button {
+  box-shadow: 0 6px 18px rgba(23, 119, 105, 0.12);
+}
+
+[data-theme="light"] .site-gradient {
+  opacity: 0.6;
+}
+
 .eyebrow {
   margin: 0;
   font-size: 0.75rem;
@@ -808,11 +857,340 @@ input {
   padding: 1.8rem;
 }
 
+.password-strength-block {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.1rem;
+}
+
+.password-strength-track {
+  position: relative;
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-surface);
+}
+
+.password-strength-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition:
+    width 220ms ease,
+    background-color 220ms ease;
+}
+
+.password-strength-weak {
+  background: #cf5a4d;
+}
+
+.password-strength-medium {
+  background: #de8d3e;
+}
+
+.password-strength-good {
+  background: #d4b034;
+}
+
+.password-strength-strong {
+  background: #3baa70;
+}
+
+.password-strength-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.password-strength-label-weak {
+  color: #cf5a4d;
+}
+
+.password-strength-label-medium {
+  color: #de8d3e;
+}
+
+.password-strength-label-good {
+  color: #c59b1d;
+}
+
+.password-strength-label-strong {
+  color: #2f9d67;
+}
+
+.password-strength-advice {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.admin-user-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-inline-action {
+  min-width: 8.5rem;
+}
+
+.admin-scenario-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.42fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.admin-scenario-list {
+  display: grid;
+  gap: 0.8rem;
+  align-self: start;
+}
+
+.admin-scenario-list-item {
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.admin-scenario-list-item:hover,
+.admin-scenario-list-item-active {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  background: linear-gradient(180deg, rgba(107, 212, 196, 0.12), rgba(8, 17, 27, 0.82));
+}
+
+.admin-scenario-status {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.admin-scenario-name {
+  color: var(--color-text-primary);
+}
+
+.admin-scenario-meta {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.admin-scenario-editor {
+  display: grid;
+  gap: 1.3rem;
+}
+
+.admin-editor-head,
+.admin-step-head,
+.admin-options-head,
+.guide-card-top,
+.guide-modal-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-grid-span {
+  grid-column: 1 / -1;
+}
+
+.admin-input {
+  width: 100%;
+  border-radius: 1.1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+  color: var(--color-text-primary);
+  padding: 0.9rem 1rem;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.admin-input:focus {
+  border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 3px rgba(107, 212, 196, 0.08);
+}
+
+.admin-textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.admin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 100%;
+  border-radius: 1.1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+  padding: 0.95rem 1rem;
+  color: var(--color-text-primary);
+}
+
+.admin-warning-card {
+  color: var(--color-text-secondary);
+}
+
+.admin-step-card,
+.admin-option-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.guide-hero-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1.6rem;
+  border-radius: 1.7rem;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 17, 27, 0.82));
+}
+
+.guide-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.guide-card {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 100%;
+  border-radius: 1.45rem;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 17, 27, 0.82));
+  padding: 1.35rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease;
+}
+
+.guide-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+}
+
+.guide-card-index,
+.guide-card-kicker {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.guide-card-index {
+  color: var(--color-accent);
+}
+
+.guide-card-kicker {
+  color: var(--color-text-muted);
+}
+
+.guide-card-title {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.guide-card-summary {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.guide-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(6, 16, 26, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.guide-modal {
+  position: relative;
+  width: min(980px, 100%);
+  border-radius: 1.8rem;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(11, 20, 34, 0.96), rgba(6, 11, 18, 0.98));
+  padding: 1.8rem;
+}
+
+.guide-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.guide-modal-grid {
+  margin-top: 1.6rem;
+}
+
+.guide-modal-tile {
+  flex: 1 1 0;
+}
+
+.guide-modal-tile-alert {
+  border-color: rgba(255, 114, 92, 0.22);
+  background: var(--color-alert-soft);
+}
+
+.guide-modal-alert-icon {
+  border-color: rgba(255, 114, 92, 0.24);
+  background: rgba(255, 114, 92, 0.12);
+  color: var(--color-alert);
+}
+
+.certificate-export-surface {
+  isolation: isolate;
+}
+
+.no-print {
+  print-color-adjust: exact;
+}
+
+@media print {
+  .site-header,
+  .landing-footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+  }
+}
+
 @media (max-width: 1080px) {
   .landing-hero,
   .landing-flow-grid,
   .certificate-card-issued,
-  .auth-layout {
+  .auth-layout,
+  .admin-scenario-layout,
+  .guide-card-grid {
     grid-template-columns: 1fr;
   }
 
@@ -877,8 +1255,21 @@ input {
   }
 
   .landing-scenario-card,
-  .landing-highlight-card {
+  .landing-highlight-card,
+  .guide-card,
+  .guide-modal,
+  .guide-hero-card {
     padding: 1.3rem;
+  }
+
+  .admin-editor-grid,
+  .guide-modal-grid,
+  .admin-user-card,
+  .admin-editor-head,
+  .admin-step-head,
+  .admin-options-head {
+    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .certificate-meta-list,

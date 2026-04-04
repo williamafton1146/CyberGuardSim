@@ -103,6 +103,9 @@ export default function DashboardPage() {
                 <Link href="/leaderboard" className="secondary-button">
                   Открыть рейтинг
                 </Link>
+                <Link href="/for-users" className="secondary-button">
+                  Для пользователей
+                </Link>
               </div>
             </div>
           </div>

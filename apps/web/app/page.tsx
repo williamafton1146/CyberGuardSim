@@ -5,21 +5,24 @@ import Link from "next/link";
 import { ArrowRight, Award, ShieldCheck, Trophy, Waypoints } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { getScenarios } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { scenarioCatalog } from "@cyber-sim/shared";
+import type { ScenarioSummary } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
 
   useEffect(() => {
     setIsAuthed(Boolean(getToken()));
+    getScenarios().then(setScenarios);
   }, []);
 
   const showcase = useMemo(
     () =>
-      scenarioCatalog.map((scenario) => ({
+      scenarios.map((scenario) => ({
         slug: scenario.slug,
         title: scenario.title,
         theme: scenario.theme,
@@ -36,10 +39,10 @@ export default function HomePage() {
             : scenario.slug === "home"
               ? "Сценарий о повторном использовании паролей, подозрительных уведомлениях и защите домашней цифровой среды."
               : "Миссия про поддельные точки доступа, фальшивые captive portal и безопасную работу в общественной сети.",
-        is_playable: scenario.isPlayable,
-        step_count: 4
+        is_playable: scenario.is_playable,
+        step_count: scenario.step_count
       })),
-    []
+    [scenarios]
   );
 
   const workflow = [
@@ -89,6 +92,9 @@ export default function HomePage() {
             <a href="#scenarios" className="secondary-button">
               Посмотреть сценарии
             </a>
+            <Link href="/for-users" className="secondary-button">
+              Для пользователей
+            </Link>
           </div>
         </div>
 
@@ -144,6 +150,14 @@ export default function HomePage() {
               </Link>
             </article>
           ))}
+          {!showcase.length ? (
+            <article className="landing-scenario-card">
+              <h3 className="landing-scenario-title">Сценарии загружаются</h3>
+              <p className="landing-scenario-description">
+                Как только backend ответит, здесь появятся актуальные игровые ветки и их текущий статус публикации.
+              </p>
+            </article>
+          ) : null}
         </div>
       </section>
 
@@ -183,6 +197,23 @@ export default function HomePage() {
               <span>QR на verify-route</span>
             </div>
           </article>
+        </div>
+      </section>
+
+      <section className="shell shell-wide landing-section">
+        <div className="landing-section-heading">
+          <p className="eyebrow">Для пользователей</p>
+          <h2 className="section-subheading">Понятные бытовые рекомендации без длинных инструкций и сухих памяток.</h2>
+          <p className="body-copy landing-section-copy">
+            Внутри раздела собраны короткие карточки о кодах подтверждения, фишинге, публичном Wi‑Fi, подозрительных приложениях и QR-кодах с объяснением последствий ошибки.
+          </p>
+        </div>
+
+        <div className="mt-8">
+          <Link href="/for-users" className="primary-button">
+            Открыть раздел для пользователей
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
     </div>

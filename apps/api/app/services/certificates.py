@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.certificate import Certificate
+from app.models.progress import UserScenarioProgress
 from app.models.scenario import Scenario
-from app.models.session import GameSession
 from app.models.user import User
 from app.schemas.certificate import CertificateStatus, CertificateVerification, IssuedCertificate
+from app.services.scenarios import scenario_is_live
 
 
 def build_verify_url(code: str) -> str:
@@ -27,19 +28,22 @@ def _serialize_certificate(certificate: Certificate) -> IssuedCertificate:
 
 
 def _playable_scenarios(db: Session) -> list[Scenario]:
-    return db.query(Scenario).filter(Scenario.is_playable.is_(True)).order_by(Scenario.id).all()
+    scenarios = db.query(Scenario).order_by(Scenario.id).all()
+    return [scenario for scenario in scenarios if scenario_is_live(scenario)]
 
 
 def _completed_playable_scenarios(db: Session, user: User) -> set[int]:
+    live_ids = [scenario.id for scenario in _playable_scenarios(db)]
+    if not live_ids:
+        return set()
+
     rows = (
-        db.query(GameSession.scenario_id)
-        .join(Scenario, Scenario.id == GameSession.scenario_id)
+        db.query(UserScenarioProgress.scenario_id)
         .filter(
-            GameSession.user_id == user.id,
-            GameSession.status == "completed",
-            Scenario.is_playable.is_(True),
+            UserScenarioProgress.user_id == user.id,
+            UserScenarioProgress.best_completed.is_(True),
+            UserScenarioProgress.scenario_id.in_(live_ids),
         )
-        .distinct()
         .all()
     )
     return {scenario_id for scenario_id, in rows}

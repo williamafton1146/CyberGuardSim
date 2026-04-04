@@ -1,7 +1,9 @@
 export type UserProfile = {
   id: number;
   email: string;
+  username: string | null;
   display_name: string;
+  role: "user" | "admin";
   security_rating: number;
   league: string;
 };
@@ -21,6 +23,7 @@ export type ScenarioStep = {
 };
 
 export type ScenarioSummary = {
+  id: number;
   slug: string;
   title: string;
   theme: string;
@@ -110,4 +113,87 @@ export type CertificateVerification = {
   issued_at: string;
   verify_url: string;
   status: "valid";
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: string;
+  redirect_to: string;
+  user: UserProfile;
+};
+
+export type AdminUser = {
+  id: number;
+  email: string;
+  username: string | null;
+  display_name: string;
+  role: "user" | "admin";
+  security_rating: number;
+  league: string;
+  total_sessions: number;
+  completed_scenarios: number;
+  created_at: string | null;
+};
+
+export type AdminDecisionOption = {
+  id: number;
+  label: string;
+  is_correct: boolean;
+  hp_delta: number;
+  hint: string | null;
+  consequence_text: string;
+};
+
+export type AdminScenarioStep = {
+  id: number;
+  step_order: number;
+  prompt: string;
+  threat_type: string;
+  explanation: string;
+  options: AdminDecisionOption[];
+};
+
+export type AdminScenario = {
+  id: number;
+  slug: string;
+  title: string;
+  theme: string;
+  difficulty: string;
+  description: string;
+  is_enabled: boolean;
+  release_at: string | null;
+  status: "draft" | "scheduled" | "live" | "disabled";
+  is_playable: boolean;
+  step_count: number;
+  created_at: string | null;
+  updated_at: string | null;
+  has_sessions: boolean;
+  steps: AdminScenarioStep[];
+};
+
+export type AdminScenarioOptionInput = {
+  label: string;
+  is_correct: boolean;
+  hp_delta: number;
+  hint: string | null;
+  consequence_text: string;
+};
+
+export type AdminScenarioStepInput = {
+  step_order: number;
+  prompt: string;
+  threat_type: string;
+  explanation: string;
+  options: AdminScenarioOptionInput[];
+};
+
+export type AdminScenarioInput = {
+  slug: string;
+  title: string;
+  theme: string;
+  difficulty: string;
+  description: string;
+  is_enabled: boolean;
+  release_at: string | null;
+  steps: AdminScenarioStepInput[];
 };

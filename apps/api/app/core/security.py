@@ -46,13 +46,18 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return hmac.compare_digest(derived_key, expected_hash)
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(user: User) -> str:
     expires_at = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": subject, "exp": expires_at}
+    payload = {
+        "sub": str(user.id),
+        "role": user.role,
+        "username": user.username,
+        "exp": expires_at,
+    }
     return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
 
 
-def decode_access_token(token: str) -> str:
+def decode_access_token(token: str) -> dict[str, str]:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
     except JWTError as exc:
@@ -67,7 +72,7 @@ def decode_access_token(token: str) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Токен не содержит идентификатор пользователя",
         )
-    return subject
+    return payload
 
 
 async def get_current_user(
@@ -80,11 +85,21 @@ async def get_current_user(
             detail="Требуется авторизация",
         )
 
-    email = decode_access_token(credentials.credentials)
-    user = db.query(User).filter(User.email == email).first()
+    payload = decode_access_token(credentials.credentials)
+    subject = payload.get("sub")
+    user = db.query(User).filter(User.id == int(subject)).first() if subject and str(subject).isdigit() else None
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Пользователь не найден",
         )
     return user
+
+
+async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права администратора",
+        )
+    return current_user

@@ -10,9 +10,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./cybersec.db"
     redis_url: str = "redis://localhost:6379/0"
     frontend_origin: str = "http://localhost:3000"
+    admin_username: str = "Admin"
+    admin_bootstrap_password: str = "AdminCyber12"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()
-
