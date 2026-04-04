@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@cyber-sim/shared": "*",
+    "lucide-react": "^1.7.0",
     "next": "14.2.24",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -23,4 +24,3 @@
     "typescript": "5.7.2"
   }
 }
-

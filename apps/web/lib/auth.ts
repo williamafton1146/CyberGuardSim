@@ -1,4 +1,13 @@
 const TOKEN_KEY = "cyber-sim-token";
+const AUTH_EVENT = "cyber-sim-auth-change";
+
+function notifyAuthChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(AUTH_EVENT));
+}
 
 export function getToken() {
   if (typeof window === "undefined") {
@@ -12,6 +21,7 @@ export function saveToken(token: string) {
     return;
   }
   window.localStorage.setItem(TOKEN_KEY, token);
+  notifyAuthChange();
 }
 
 export function clearToken() {
@@ -19,5 +29,9 @@ export function clearToken() {
     return;
   }
   window.localStorage.removeItem(TOKEN_KEY);
+  notifyAuthChange();
 }
 
+export function getAuthEventName() {
+  return AUTH_EVENT;
+}

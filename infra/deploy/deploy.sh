@@ -477,6 +477,55 @@ verify_deploy() {
   exit 1
 }
 
+smoke_test_registration() {
+  local domain="$1"
+  local nonce
+  local email
+  local password="SmokePass123!"
+  local register_response=""
+  local login_response=""
+  local token=""
+
+  nonce="$(date +%s)-$(openssl rand -hex 3)"
+  email="smoke-${nonce}@example.com"
+
+  log "Running auth smoke test against production domain"
+
+  register_response="$(
+    curl -kfsS "https://${domain}/auth/register" \
+      -H "Content-Type: application/json" \
+      --data "{\"email\":\"${email}\",\"password\":\"${password}\",\"display_name\":\"Deploy Smoke\"}"
+  )"
+
+  token="$(printf '%s' "${register_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  if [[ -z "${token}" ]]; then
+    echo "Smoke test failed: register response did not contain access_token."
+    echo "Response: ${register_response}"
+    print_compose_diagnostics
+    exit 1
+  fi
+
+  curl -kfsS "https://${domain}/users/me" \
+    -H "Authorization: Bearer ${token}" >/dev/null
+
+  login_response="$(
+    curl -kfsS "https://${domain}/auth/login" \
+      -H "Content-Type: application/json" \
+      --data "{\"email\":\"${email}\",\"password\":\"${password}\"}"
+  )"
+
+  token="$(printf '%s' "${login_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  if [[ -z "${token}" ]]; then
+    echo "Smoke test failed: login response did not contain access_token."
+    echo "Response: ${login_response}"
+    print_compose_diagnostics
+    exit 1
+  fi
+
+  curl -kfsS "https://${domain}/users/me" \
+    -H "Authorization: Bearer ${token}" >/dev/null
+}
+
 open_site() {
   local domain="$1"
   local url="https://${domain}"
@@ -506,6 +555,7 @@ main() {
   ensure_certificate "${domain}"
   deploy_stack
   verify_deploy "${domain}"
+  smoke_test_registration "${domain}"
   open_site "${domain}"
 }
 

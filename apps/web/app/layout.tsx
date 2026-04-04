@@ -1,11 +1,29 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 
 import "./globals.css";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "CyberSim",
-  description: "Образовательный симулятор защиты личных данных"
+  description: "Образовательный симулятор цифровой устойчивости и реагирования на реальные угрозы"
 };
+
+const themeInitScript = `
+  (() => {
+    try {
+      const savedTheme = localStorage.getItem('cyber-sim-theme');
+      const theme = savedTheme === 'light' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    } catch {
+      document.documentElement.dataset.theme = 'dark';
+      document.documentElement.style.colorScheme = 'dark';
+    }
+  })();
+`;
 
 export default function RootLayout({
   children
@@ -13,35 +31,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
-        <div className="relative overflow-hidden">
-          <header className="border-b border-white/10 backdrop-blur">
-            <div className="shell flex items-center justify-between py-6">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl border border-safe/40 bg-safe/10 text-lg font-semibold text-safe">
-                  CS
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-skyglass/55">cyber simulator</p>
-                  <p className="text-lg font-semibold text-white">Лаборатория цифровой устойчивости</p>
-                </div>
-              </Link>
-
-              <nav className="flex items-center gap-6 text-sm text-skyglass/75">
-                <Link href="/dashboard">Кабинет</Link>
-                <Link href="/simulator">Симулятор</Link>
-                <Link href="/leaderboard">Лидерборд</Link>
-                <Link href="/login" className="rounded-full border border-white/10 px-4 py-2 text-white">
-                  Вход
-                </Link>
-              </nav>
-            </div>
-          </header>
-          <main className="pb-16">{children}</main>
-        </div>
+        <ThemeProvider>
+          <div className="site-frame">
+            <div className="site-noise" />
+            <div className="site-gradient site-gradient-one" />
+            <div className="site-gradient site-gradient-two" />
+            <SiteHeader />
+            <main className="pb-16">{children}</main>
+            <SiteFooter />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-

@@ -12,7 +12,7 @@ export function DecisionPanel({ options, disabled, onSelect }: DecisionPanelProp
       {options.map((option) => (
         <button
           key={option.id}
-          className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-left text-sm leading-6 text-white transition hover:border-safe/40 hover:bg-safe/10 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-[1.35rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-5 py-4 text-left text-sm leading-6 text-[var(--color-text-primary)] transition hover:border-[var(--color-border-strong)] hover:bg-[var(--color-accent-soft)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={disabled}
           onClick={() => onSelect(option.id)}
         >
@@ -22,4 +22,3 @@ export function DecisionPanel({ options, disabled, onSelect }: DecisionPanelProp
     </div>
   );
 }
-

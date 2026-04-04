@@ -1,39 +1,51 @@
 "use client";
 
+import Link from "next/link";
+
 import type { ScenarioSummary } from "@/types";
 
 type ScenarioCardProps = {
   scenario: ScenarioSummary;
   onStart?: (slug: string) => void;
+  actionHref?: string;
+  actionLabel?: string;
 };
 
-export function ScenarioCard({ scenario, onStart }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onStart, actionHref, actionLabel }: ScenarioCardProps) {
+  const label = actionLabel ?? (scenario.is_playable ? "Начать миссию" : "Скоро откроется");
+
   return (
-    <article className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-ambient backdrop-blur">
+    <article className="glass-card p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-safe">{scenario.theme}</p>
-          <h3 className="mt-3 text-2xl font-semibold text-white">{scenario.title}</h3>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-accent)]">{scenario.theme}</p>
+          <h3 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">{scenario.title}</h3>
         </div>
-        <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-skyglass/75">
+        <span className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
           {scenario.difficulty}
         </span>
       </div>
 
-      <p className="mt-4 min-h-20 text-sm leading-7 text-skyglass/80">{scenario.description}</p>
+      <p className="mt-4 min-h-20 text-sm leading-7 text-[var(--color-text-muted)]">{scenario.description}</p>
 
-      <div className="mt-6 flex items-center justify-between text-sm text-skyglass/65">
+      <div className="mt-6 flex items-center justify-between text-sm text-[var(--color-text-muted)]">
         <span>{scenario.step_count} шагов</span>
         <span>{scenario.is_playable ? "Играбельно" : "Coming soon"}</span>
       </div>
 
-      <button
-        className="mt-6 w-full rounded-2xl border border-safe/40 bg-safe/15 px-4 py-3 text-sm font-semibold text-safe transition hover:bg-safe/20 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/5 disabled:text-skyglass/40"
-        onClick={() => onStart?.(scenario.slug)}
-        disabled={!scenario.is_playable}
-      >
-        {scenario.is_playable ? "Начать миссию" : "Скоро откроется"}
-      </button>
+      {actionHref ? (
+        <Link href={actionHref} className={`mt-6 flex w-full justify-center ${scenario.is_playable ? "primary-button" : "secondary-button opacity-70"}`}>
+          {label}
+        </Link>
+      ) : (
+        <button
+          className="primary-button mt-6 w-full disabled:cursor-not-allowed disabled:opacity-45"
+          onClick={() => onStart?.(scenario.slug)}
+          disabled={!scenario.is_playable}
+        >
+          {label}
+        </button>
+      )}
     </article>
   );
 }

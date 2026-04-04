@@ -9,7 +9,26 @@ import type {
   UserStats
 } from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+function resolveApiUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (typeof window === "undefined") {
+    return envUrl ?? "http://localhost:8000";
+  }
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  const { hostname, origin, port, protocol } = window.location;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+
+  if (isLocal && port === "3000") {
+    return `${protocol}//${hostname}:8000`;
+  }
+
+  return origin;
+}
 
 const demoStats: UserStats = {
   total_sessions: 0,
@@ -47,7 +66,7 @@ function scenarioFallback(): ScenarioSummary[] {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${resolveApiUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -133,4 +152,3 @@ export async function getLeaderboard() {
 }
 
 export { demoStats };
-
