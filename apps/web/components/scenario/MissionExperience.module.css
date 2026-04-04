@@ -1,0 +1,1014 @@
+.missionLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(19rem, 0.78fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.missionStageColumn,
+.missionRail {
+  min-width: 0;
+}
+
+.missionRail {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.routeBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  padding: 0.58rem 0.95rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.summaryShell {
+  display: grid;
+  gap: 1rem;
+  min-height: 32rem;
+  align-content: center;
+  padding: 2rem;
+}
+
+.summaryKicker {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.summaryTitle {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  color: var(--color-text-primary);
+}
+
+.summaryScoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.summaryScore {
+  font-size: clamp(3.1rem, 6vw, 5rem);
+  line-height: 0.92;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.summaryScoreMeta {
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+}
+
+.summaryCopy {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 0.96rem;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+}
+
+.environmentShell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.85rem;
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at top left, rgba(107, 212, 196, 0.1), transparent 18%),
+    linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
+  box-shadow: var(--shadow-card);
+}
+
+.environmentToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+}
+
+.environmentToolbarTitle,
+.environmentToolbarMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.environmentToolbarTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.environmentToolbarMeta {
+  flex-wrap: wrap;
+}
+
+.environmentToolbarMeta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.34rem 0.72rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.mailLayout {
+  display: grid;
+  grid-template-columns: 13rem minmax(15rem, 0.84fr) minmax(0, 1.16fr);
+  gap: 0;
+  min-height: 36rem;
+}
+
+.mailSidebar,
+.mailList,
+.mailPreview,
+.homeMainBoard,
+.homeSidePanel,
+.wifiListCard,
+.wifiPanelCard,
+.paymentPanel {
+  min-height: 0;
+}
+
+.mailSidebar {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  padding: 1.15rem;
+  border-right: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mailCompose,
+.mailFolder,
+.mailFolderMuted {
+  display: flex;
+  align-items: center;
+  min-height: 2.8rem;
+  border-radius: 1rem;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.86rem;
+  color: var(--color-text-primary);
+}
+
+.mailCompose {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-accent-soft);
+  font-weight: 600;
+}
+
+.mailFolder {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mailFolderMuted {
+  color: var(--color-text-muted);
+}
+
+.mailList {
+  padding: 1rem;
+  border-right: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mailRow,
+.alertTile,
+.appCard,
+.wifiRow,
+.chatToast,
+.inlineMissionBanner,
+.sceneActionButton,
+.paymentCard {
+  width: 100%;
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.mailRow:disabled,
+.alertTile:disabled,
+.appCard:disabled,
+.wifiRow:disabled,
+.chatToast:disabled,
+.inlineMissionBanner:disabled,
+.sceneActionButton:disabled,
+.paymentCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.mailRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: start;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.95rem;
+  text-align: left;
+}
+
+.mailRowActive {
+  background: rgba(107, 212, 196, 0.08);
+}
+
+.mailRow:hover:not(:disabled),
+.alertTile:hover:not(:disabled),
+.appCard:hover:not(:disabled),
+.wifiRow:hover:not(:disabled),
+.chatToast:hover:not(:disabled),
+.inlineMissionBanner:hover:not(:disabled),
+.sceneActionButton:hover:not(:disabled),
+.paymentCard:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.mailUnreadDot {
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  margin-top: 0.38rem;
+}
+
+.mailRowCopy {
+  display: grid;
+  gap: 0.14rem;
+  min-width: 0;
+}
+
+.mailRowCopy strong {
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+}
+
+.mailRowCopy span,
+.mailRowTime {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.mailPreview {
+  display: grid;
+  align-content: start;
+  padding: 1.2rem;
+}
+
+.scenePlaceholder,
+.mailMessageCard,
+.browserFrame,
+.chatCard,
+.securityCenterCard,
+.sidePaneCard,
+.wifiPanelCard,
+.browserWarningFrame,
+.qrCard {
+  border-radius: 1.35rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scenePlaceholder {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 1.6rem;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--color-text-muted);
+}
+
+.mailMessageCard,
+.portalCard,
+.chatCard,
+.securityCenterCard,
+.sidePaneCard,
+.browserWarningCard {
+  padding: 1.3rem;
+}
+
+.mailMessageHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mailMessageSubject,
+.portalTitle {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.mailMessageMeta,
+.warningCopy {
+  margin: 0.35rem 0 0;
+  font-size: 0.83rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.mailSecurityBadge,
+.appStoreBadge,
+.appStoreRating {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  padding: 0.3rem 0.62rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mailSecurityBadge,
+.appStoreBadge {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.appStoreRating {
+  color: var(--color-text-muted);
+}
+
+.mailBody {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+}
+
+.mailFooterLine {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.sceneActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  margin-top: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+  padding: 0.8rem 1rem;
+  color: var(--button-primary-text);
+  font-weight: 600;
+}
+
+.browserFrame,
+.browserWarningFrame {
+  padding: 0.9rem;
+}
+
+.browserAddressBar {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0 0.95rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.portalCard {
+  margin-top: 1rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.2rem;
+}
+
+.portalField {
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  margin-top: 0.85rem;
+  border-radius: 1rem;
+  border: 1px dashed var(--color-border);
+  padding: 0 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.portalDangerHint {
+  margin-top: 0.95rem;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--color-alert);
+}
+
+.chatCard {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.chatHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.chatMessageMine,
+.chatMessageIncoming {
+  max-width: 80%;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.chatMessageMine {
+  margin-left: auto;
+  background: var(--color-accent-soft);
+  color: var(--color-text-primary);
+}
+
+.chatMessageIncoming {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-secondary);
+}
+
+.securityCenterCard {
+  display: grid;
+  gap: 1rem;
+}
+
+.securityChecklist {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+}
+
+.securityChecklist span {
+  display: flex;
+  align-items: center;
+  min-height: 2.7rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.72rem 0.9rem;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.chatToast,
+.inlineMissionBanner {
+  position: absolute;
+  z-index: 2;
+  left: 1.2rem;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.95rem 1rem;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.chatToast strong,
+.inlineMissionBanner {
+  font-weight: 600;
+}
+
+.chatToast span {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.homeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(18rem, 0.94fr);
+  gap: 1rem;
+  min-height: 35rem;
+  padding: 1rem;
+}
+
+.homeMainBoard,
+.homeSidePanel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.homeStatRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.homeStatCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.homeStatCard span {
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.homeStatCard strong {
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+}
+
+.alertTile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  border-radius: 1.3rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 123, 103, 0.12), transparent 26%),
+    rgba(255, 255, 255, 0.04);
+  padding: 1.05rem 1.1rem;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.alertTile span,
+.appCard span,
+.paymentCard span {
+  display: block;
+  margin-top: 0.14rem;
+  font-size: 0.86rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.appCard {
+  display: grid;
+  gap: 0.55rem;
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.15rem;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.appCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.appCard p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.sidePaneCard {
+  padding: 1.2rem;
+}
+
+.wifiStage,
+.qrStage {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.92fr) minmax(0, 1.08fr);
+  gap: 1rem;
+  min-height: 34rem;
+  padding: 1rem;
+}
+
+.wifiListCard,
+.wifiPanelCard,
+.paymentPanel {
+  border-radius: 1.35rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.2rem;
+}
+
+.wifiRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.95rem 1rem;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.wifiRow span:last-child {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.browserWarningCard {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.qrCard,
+.paymentPanel {
+  padding: 1.2rem;
+}
+
+.qrCard {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  text-align: center;
+}
+
+.qrMock {
+  display: grid;
+  place-items: center;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(rgba(12, 25, 39, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 25, 39, 0.12) 1px, transparent 1px),
+    #f4fbff;
+  background-size: 16px 16px, 16px 16px, auto;
+  color: #0f2337;
+}
+
+.paymentCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem 1.05rem;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(6, 16, 26, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.feedbackModal,
+.decisionModal {
+  width: min(860px, 100%);
+  border-radius: 1.85rem;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
+  padding: 1.8rem;
+  box-shadow: var(--shadow-card);
+  animation: fadeInUp 220ms ease;
+}
+
+.feedbackHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.feedbackIconCritical {
+  border-color: rgba(255, 123, 103, 0.34);
+  background: rgba(255, 123, 103, 0.16);
+  color: var(--color-alert);
+}
+
+.feedbackChips,
+.decisionChecklist,
+.decisionThreatRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.feedbackChips {
+  margin-top: 1.3rem;
+}
+
+.feedbackChips span,
+.decisionChecklist span,
+.decisionThreatChip,
+.decisionStepMarker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.4rem 0.78rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.feedbackTimelineCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.feedbackTimelineIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 123, 103, 0.15);
+  color: var(--color-alert);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.feedbackTimelineTitle {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.feedbackTimelineCopy,
+.decisionPrompt {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+.decisionThreatRow {
+  margin-top: 1.35rem;
+  justify-content: space-between;
+}
+
+.decisionThreatChip {
+  color: var(--color-accent);
+}
+
+.decisionPromptCard {
+  margin-top: 1rem;
+  border-radius: 1.3rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.15rem 1.2rem;
+}
+
+.decisionChecklist {
+  flex: 1 1 18rem;
+}
+
+.railChecklistItem,
+.progressMarker {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.progressMarker {
+  align-items: center;
+}
+
+.successIcon {
+  color: #4bb184;
+}
+
+.consequenceOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(6, 12, 21, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.consequenceContent {
+  max-width: 22rem;
+  border-radius: 1.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.hotspotPulse {
+  animation: hotspotPulse 1.9s ease-in-out infinite;
+}
+
+@keyframes hotspotPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(107, 212, 196, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(107, 212, 196, 0.12);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+[data-theme="light"] .environmentShell,
+[data-theme="light"] .scenePlaceholder,
+[data-theme="light"] .mailMessageCard,
+[data-theme="light"] .browserFrame,
+[data-theme="light"] .chatCard,
+[data-theme="light"] .securityCenterCard,
+[data-theme="light"] .sidePaneCard,
+[data-theme="light"] .wifiListCard,
+[data-theme="light"] .wifiPanelCard,
+[data-theme="light"] .qrCard,
+[data-theme="light"] .paymentPanel,
+[data-theme="light"] .feedbackModal,
+[data-theme="light"] .decisionModal,
+[data-theme="light"] .consequenceContent {
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .environmentShell,
+[data-theme="light"] .mailSidebar,
+[data-theme="light"] .mailList,
+[data-theme="light"] .scenePlaceholder,
+[data-theme="light"] .mailMessageCard,
+[data-theme="light"] .browserFrame,
+[data-theme="light"] .chatCard,
+[data-theme="light"] .securityCenterCard,
+[data-theme="light"] .sidePaneCard,
+[data-theme="light"] .wifiListCard,
+[data-theme="light"] .wifiPanelCard,
+[data-theme="light"] .browserWarningFrame,
+[data-theme="light"] .qrCard,
+[data-theme="light"] .paymentPanel,
+[data-theme="light"] .feedbackModal,
+[data-theme="light"] .decisionModal,
+[data-theme="light"] .consequenceContent,
+[data-theme="light"] .mailRow,
+[data-theme="light"] .alertTile,
+[data-theme="light"] .appCard,
+[data-theme="light"] .wifiRow,
+[data-theme="light"] .chatToast,
+[data-theme="light"] .inlineMissionBanner,
+[data-theme="light"] .paymentCard,
+[data-theme="light"] .environmentToolbarMeta span,
+[data-theme="light"] .feedbackChips span,
+[data-theme="light"] .decisionChecklist span,
+[data-theme="light"] .decisionThreatChip,
+[data-theme="light"] .decisionStepMarker,
+[data-theme="light"] .browserAddressBar,
+[data-theme="light"] .portalCard,
+[data-theme="light"] .portalField,
+[data-theme="light"] .homeStatCard,
+[data-theme="light"] .securityChecklist span {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="light"] .modalBackdrop,
+[data-theme="light"] .consequenceOverlay {
+  background: rgba(233, 239, 248, 0.72);
+}
+
+[data-theme="light"] .environmentToolbar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.88));
+}
+
+[data-theme="light"] .qrMock {
+  background:
+    linear-gradient(rgba(12, 25, 39, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 25, 39, 0.12) 1px, transparent 1px),
+    #f7fbff;
+  background-size: 16px 16px, 16px 16px, auto;
+}
+
+@media (max-width: 1180px) {
+  .missionLayout,
+  .mailLayout,
+  .homeGrid,
+  .wifiStage,
+  .qrStage {
+    grid-template-columns: 1fr;
+  }
+
+  .mailSidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mailList {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 720px) {
+  .environmentToolbar,
+  .feedbackHead,
+  .decisionThreatRow,
+  .summaryScoreRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .environmentToolbarMeta,
+  .feedbackChips,
+  .decisionChecklist {
+    width: 100%;
+  }
+
+  .chatToast,
+  .inlineMissionBanner {
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0.85rem;
+  }
+
+  .homeStatRow {
+    grid-template-columns: 1fr;
+  }
+
+  .feedbackModal,
+  .decisionModal {
+    padding: 1.2rem;
+  }
+
+  .summaryShell {
+    min-height: 24rem;
+    padding: 1.35rem;
+  }
+}
