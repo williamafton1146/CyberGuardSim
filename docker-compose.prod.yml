@@ -89,7 +89,7 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1"]
+      test: ["CMD-SHELL", "wget --no-check-certificate -q --spider https://127.0.0.1/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12

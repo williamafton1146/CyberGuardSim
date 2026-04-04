@@ -471,6 +471,13 @@ deploy_stack() {
     echo "Production stack failed to start."
     exit 1
   fi
+
+  log "Reloading nginx to refresh upstream targets after container recreation"
+  if ! compose up -d --force-recreate --no-deps nginx; then
+    print_compose_diagnostics
+    echo "Failed to recreate nginx after app update."
+    exit 1
+  fi
 }
 
 verify_deploy() {
