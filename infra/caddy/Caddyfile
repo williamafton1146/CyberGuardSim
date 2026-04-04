@@ -17,10 +17,6 @@
     reverse_proxy api:8000
   }
 
-  handle /leaderboard* {
-    reverse_proxy api:8000
-  }
-
   handle /api/* {
     reverse_proxy api:8000
   }

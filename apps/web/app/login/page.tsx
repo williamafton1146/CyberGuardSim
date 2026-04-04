@@ -11,21 +11,39 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("register");
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function resolveNextPath() {
+    if (typeof window === "undefined") {
+      return "/simulator";
+    }
+
+    return new URLSearchParams(window.location.search).get("next") || "/simulator";
+  }
+
+  function resolveMode() {
+    if (typeof window === "undefined") {
+      return "login" as const;
+    }
+
+    return new URLSearchParams(window.location.search).get("mode") === "register" ? "register" : "login";
+  }
+
   useEffect(() => {
+    setMode(resolveMode());
+
     if (getToken()) {
-      router.replace("/simulator");
+      router.replace(resolveNextPath());
     }
   }, [router]);
 
   const title = useMemo(
-    () => (mode === "register" ? "Создай профиль и сразу войди в симулятор" : "Войди и продолжи миссии"),
+    () => (mode === "register" ? "Создайте профиль и откройте программу обучения" : "Войдите и продолжите работу в CyberSim"),
     [mode]
   );
 
@@ -41,7 +59,7 @@ export default function LoginPage() {
           : await loginUser({ email, password });
 
       saveToken(payload.access_token);
-      router.replace("/simulator");
+      router.replace(resolveNextPath());
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Не удалось выполнить запрос");
@@ -54,11 +72,11 @@ export default function LoginPage() {
     <div className="shell py-12">
       <div className="auth-layout">
         <section className="glass-card landing-surface">
-          <p className="eyebrow">Access portal</p>
+          <p className="eyebrow">CyberSim access</p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-[var(--color-text-primary)]">{title}</h1>
           <p className="body-copy mt-4 max-w-xl">
-            После входа пользователь сразу попадает в `/simulator`, где уже доступны миссия, live-обновление состояния,
-            Security HP и обратная связь по каждому решению.
+            После авторизации доступны сценарии, личная статистика, рейтинг цифровой устойчивости и выпуск сертификата
+            по завершении программы.
           </p>
 
           <div className="mt-8 grid gap-4">
@@ -66,16 +84,16 @@ export default function LoginPage() {
               <div className="feature-icon">
                 <ShieldCheck size={18} />
               </div>
-              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Один стиль от landing до dashboard</h2>
-              <p className="body-copy mt-2 text-sm">Единый visual language, theme toggle и согласованная навигация по всему продукту.</p>
+              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Сценарии и прогресс</h2>
+              <p className="body-copy mt-2 text-sm">Пройденные миссии, ошибки и накопленный security rating сохраняются в личном кабинете.</p>
             </article>
 
             <article className="soft-tile">
               <div className="feature-icon">
                 <BadgeCheck size={18} />
               </div>
-              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Регистрация без потери контекста</h2>
-              <p className="body-copy mt-2 text-sm">Созданный токен сразу сохраняется, после чего пользователь попадает в защищенную часть приложения.</p>
+              <h2 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Сертификат и верификация</h2>
+              <p className="body-copy mt-2 text-sm">После завершения всех доступных сценариев пользователь может выпустить верифицируемый сертификат.</p>
             </article>
           </div>
         </section>
@@ -107,7 +125,7 @@ export default function LoginPage() {
                 <input
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="Например, Security Owl"
+                  placeholder="Например, Анна Смирнова"
                   className="rounded-[1.25rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-3 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                 />
               </label>
@@ -146,7 +164,7 @@ export default function LoginPage() {
           ) : null}
 
           <button type="submit" className="primary-button mt-8 w-full" disabled={loading}>
-            {loading ? "Обработка..." : mode === "register" ? "Создать профиль и открыть симулятор" : "Войти в симулятор"}
+            {loading ? "Обработка..." : mode === "register" ? "Создать профиль" : "Войти"}
             {!loading ? <ArrowRight size={16} /> : null}
           </button>
         </form>

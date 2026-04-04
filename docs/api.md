@@ -11,6 +11,8 @@
 
 - `GET /users/me` — профиль текущего пользователя
 - `GET /users/me/stats` — статистика, прогресс по веткам и последние ошибки
+- `GET /users/me/certificate` — статус сертификата текущего пользователя
+- `POST /users/me/certificate` — выпуск сертификата после завершения всех доступных сценариев
 
 ## Scenarios
 
@@ -40,9 +42,12 @@
 
 ## Leaderboard
 
-- `GET /leaderboard` — рейтинг по `security_rating`
+- `GET /api/leaderboard` — защищенный рейтинг по `security_rating`
+
+## Certificates
+
+- `GET /api/certificates/{code}` — публичная верификация выпущенного сертификата
 
 ## WebSocket
 
 - `WS /ws/sessions/{session_id}` — обновления состояния текущей миссии, включая `hp_left`, `score`, `status` и `current_step`
-

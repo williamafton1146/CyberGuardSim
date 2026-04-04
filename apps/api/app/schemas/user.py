@@ -33,4 +33,3 @@ class UserStats(BaseModel):
     total_mistakes: int
     scenario_progress: list[ScenarioProgress]
     recent_mistakes: list[RecentMistake]
-

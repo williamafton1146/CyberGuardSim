@@ -30,7 +30,7 @@ export function ScenarioCard({ scenario, onStart, actionHref, actionLabel }: Sce
 
       <div className="mt-6 flex items-center justify-between text-sm text-[var(--color-text-muted)]">
         <span>{scenario.step_count} шагов</span>
-        <span>{scenario.is_playable ? "Играбельно" : "Coming soon"}</span>
+        <span>{scenario.is_playable ? "Доступно сейчас" : "Скоро"}</span>
       </div>
 
       {actionHref ? (

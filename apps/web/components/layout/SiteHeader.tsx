@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, LogOut, Shield } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -48,8 +48,8 @@ export function SiteHeader() {
             <Shield size={18} />
           </div>
           <div>
-            <p className="brand-kicker">cyber simulator</p>
-            <p className="brand-title">Лаборатория цифровой устойчивости</p>
+            <p className="brand-kicker">платформа цифровой устойчивости</p>
+            <p className="brand-title">CyberSim</p>
           </div>
         </Link>
 
@@ -74,16 +74,16 @@ export function SiteHeader() {
             </Link>
           ) : null}
 
-          {isLanding && !isAuthed ? (
-            <div className="nav-badge">
-              <Sparkles size={14} />
-              <span>Premium cyber-glass experience</span>
-            </div>
-          ) : null}
-
           <ThemeToggle />
 
-          {isAuthed ? (
+          {isAuthed && isLanding ? (
+            <Link href="/simulator" className="primary-button">
+              Открыть симулятор
+              <ArrowRight size={16} />
+            </Link>
+          ) : null}
+
+          {isAuthed && !isLanding ? (
             <button type="button" className="secondary-button inline-flex items-center gap-2" onClick={handleLogout}>
               <LogOut size={16} />
               Выйти

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.db import SessionLocal, init_db
-from app.routers import auth, leaderboard, scenarios, sessions, users
+from app.routers import auth, certificates, leaderboard, scenarios, sessions, users
 from app.seeds.scenarios import seed_database
 from app.ws import session_ws
 
@@ -31,6 +31,7 @@ app.include_router(users.router)
 app.include_router(scenarios.router)
 app.include_router(sessions.router)
 app.include_router(leaderboard.router)
+app.include_router(certificates.router)
 app.include_router(session_ws.router)
 
 

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Eye, Radar, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, ShieldCheck, Trophy, Waypoints } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { ScenarioCard } from "@/components/scenario/ScenarioCard";
 import { getToken } from "@/lib/auth";
@@ -11,74 +10,12 @@ import { scenarioCatalog } from "@cyber-sim/shared";
 
 export const dynamic = "force-dynamic";
 
-const heroSlides = [
-  {
-    eyebrow: "Фишинговая сцена",
-    title: "Письмо выглядит правдоподобно, но домен выдает атаку.",
-    body: "Пользователь проходит через письмо, ссылку, чат и финальное безопасное действие, а интерфейс мгновенно показывает последствия выбора."
-  },
-  {
-    eyebrow: "Security HP",
-    title: "Ошибки стоят дорого, но обучение остается понятным и игровым.",
-    body: "Вместо сухого теста человек видит динамику риска, объяснение и понятный паттерн поведения на каждом шаге."
-  },
-  {
-    eyebrow: "Личный прогресс",
-    title: "Рейтинг, лига и история ошибок превращают знание в мотивацию.",
-    body: "Платформа фиксирует прогресс и помогает возвращаться к реальным уязвимым привычкам, а не к теории в вакууме."
-  }
-];
-
-const valueCards = [
-  {
-    icon: ShieldCheck,
-    title: "Обучение через сценарии",
-    description: "Вместо сухих инструкций платформа прогоняет пользователя через последовательность угроз и защитных решений."
-  },
-  {
-    icon: Radar,
-    title: "Мгновенная обратная связь",
-    description: "Каждая ошибка показывает не только правильный ответ, но и конкретное последствие для цифровой устойчивости."
-  },
-  {
-    icon: Trophy,
-    title: "Мотивация и прогресс",
-    description: "Лиги, рейтинг и личная статистика удерживают интерес и дают понятную картину роста навыков."
-  }
-];
-
-const processCards = [
-  {
-    step: "01",
-    title: "Войти и выбрать ветку",
-    text: "Пользователь попадает в сценарий, который визуально напоминает настоящий цифровой инцидент."
-  },
-  {
-    step: "02",
-    title: "Принять решение",
-    text: "Система предлагает несколько вариантов действий и сразу фиксирует влияние на Security HP и итоговый score."
-  },
-  {
-    step: "03",
-    title: "Закрепить паттерн",
-    text: "После завершения миссии остаются статистика, рейтинг и список ошибок, к которым можно вернуться."
-  }
-];
-
 export default function HomePage() {
-  const router = useRouter();
-  const [checkedAuth, setCheckedAuth] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
-    const token = getToken();
-
-    if (token) {
-      router.replace("/simulator");
-      return;
-    }
-
-    setCheckedAuth(true);
-  }, [router]);
+    setIsAuthed(Boolean(getToken()));
+  }, []);
 
   const showcase = useMemo(
     () =>
@@ -87,194 +24,109 @@ export default function HomePage() {
         title: scenario.title,
         theme: scenario.theme,
         difficulty: scenario.difficulty,
-        description: scenario.isPlayable
-          ? "Играбельная ветка с письмом от поддельной ИТ-поддержки, spoofed URL, кодом подтверждения и финальным incident response."
-          : "Подготовленный модуль для масштабирования платформы на домашние устройства и публичные сети.",
+        description:
+          scenario.slug === "office"
+            ? "Цепочка решений вокруг фишингового письма, подмены ссылки, запроса одноразового кода и фиксации инцидента."
+            : scenario.slug === "home"
+              ? "Сценарий о повторном использовании паролей, подозрительных уведомлениях и защите домашней цифровой среды."
+              : "Миссия про поддельные точки доступа, фальшивые captive portal и безопасную работу в общественной сети.",
         is_playable: scenario.isPlayable,
-        step_count: scenario.isPlayable ? 4 : 1
+        step_count: 4
       })),
     []
   );
 
-  if (!checkedAuth) {
-    return (
-      <div className="shell py-16">
-        <div className="glass-card mx-auto max-w-3xl p-10 text-center">
-          <p className="eyebrow">CyberSim</p>
-          <h1 className="mt-5 text-3xl font-semibold text-[var(--color-text-primary)]">Проверяем защищенную сессию</h1>
-          <p className="body-copy mt-4">Если пользователь уже вошел в систему, мы сразу перенаправим его в симулятор.</p>
-        </div>
-      </div>
-    );
-  }
+  const highlights = [
+    {
+      icon: ShieldCheck,
+      title: "Обучение через действие",
+      description: "Пользователь проходит знакомые цифровые ситуации как связный сценарий, а не как набор отвлеченных тестовых вопросов."
+    },
+    {
+      icon: Waypoints,
+      title: "Понятная фиксация прогресса",
+      description: "Каждое решение влияет на Security HP, статистику ошибок, рейтинг и готовность к выпуску сертификата."
+    },
+    {
+      icon: Trophy,
+      title: "Единый продуктовый контур",
+      description: "Сценарии, кабинет, лидерборд и сертификат работают как одна платформа цифровой устойчивости."
+    }
+  ];
 
   return (
-    <div className="shell space-y-12 pb-2 pt-10">
-      <section className="hero-grid">
-        <div className="glass-card landing-surface">
-          <div className="max-w-3xl space-y-7">
-            <div className="metric-badge">
-              <Sparkles size={16} />
-              <span>Платформа обучения цифровой устойчивости через сюжет и последствия</span>
-            </div>
-
-            <div className="space-y-5">
-              <p className="eyebrow">Premium cyber-glass platform</p>
-              <h1 className="section-heading">
-                Учим распознавать реальные цифровые угрозы так, будто они уже произошли.
-              </h1>
-              <p className="body-copy max-w-2xl text-lg">
-                CyberSim превращает фишинг, поддельные чаты, spoofed URL и ошибки повседневной цифровой гигиены в
-                красивый интерактивный опыт с измеримым прогрессом, личной статистикой и визуально понятной логикой
-                последствий.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <Link href="/login" className="primary-button">
-                Войти и начать миссию
-                <ArrowRight size={16} />
-              </Link>
-              <Link href="/login" className="secondary-button">
-                Открыть демо доступа
-              </Link>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <div className="metric-badge">
-                <BadgeCheck size={16} />
-                <span>1 играбельная ветка уже доступна</span>
-              </div>
-              <div className="metric-badge">
-                <Eye size={16} />
-                <span>Live feedback и WebSocket-обновления</span>
-              </div>
-            </div>
-          </div>
+    <div className="landing-page">
+      <section className="shell shell-wide landing-hero">
+        <div className="landing-copy">
+          <p className="eyebrow">CyberSim</p>
+          <h1 className="landing-title">Платформа обучения цифровой устойчивости для реальных пользовательских сценариев.</h1>
         </div>
 
-        <div className="glass-card landing-surface visual-stage">
-          {heroSlides.map((slide) => (
-            <article key={slide.eyebrow} className="visual-card">
-              <div className="visual-card-header">
-                <p className="eyebrow">{slide.eyebrow}</p>
-                <span className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                  Scenario View
-                </span>
-              </div>
-
-              <div className="visual-card-body">
-                <h2 className="text-2xl font-semibold leading-tight text-[var(--color-text-primary)]">{slide.title}</h2>
-                <p className="body-copy mt-4 text-sm">{slide.body}</p>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <div className="visual-stat">
-                    <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-text-muted)]">Security HP</p>
-                    <p className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">84</p>
-                  </div>
-                  <div className="visual-stat">
-                    <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-text-muted)]">Mission status</p>
-                    <p className="mt-2 text-2xl font-semibold text-[var(--color-accent)]">Active</p>
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-
-          <div className="floating-chip" style={{ left: "1rem", top: "1rem" }}>
-            <ShieldCheck size={15} />
-            <span>Готово для демонстрации жюри</span>
+        <div className="landing-aside">
+          <p className="landing-lead">
+            CyberSim моделирует рабочую почту, домашние сервисы и публичные сети так, чтобы пользователь отрабатывал
+            безопасные реакции в знакомом цифровом контексте. Ошибка не прячется в сухую отметку, а превращается в
+            объяснение последствий и правильный алгоритм действий.
+          </p>
+          <div className="landing-actions">
+            <Link href={isAuthed ? "/simulator" : "/login"} className="primary-button">
+              {isAuthed ? "Открыть симулятор" : "Войти"}
+              <ArrowRight size={16} />
+            </Link>
+            <a href="#capabilities" className="secondary-button">
+              Возможности платформы
+            </a>
           </div>
-          <div className="floating-chip" style={{ right: "1rem", bottom: "1rem", animationDelay: "1.4s" }}>
-            <Trophy size={15} />
-            <span>Личный рейтинг и сценарный прогресс</span>
+          <p className="landing-inline-note">
+            В платформе доступны сценарии, личный кабинет, лидерборд и сертификат с публичной верификацией.
+          </p>
+        </div>
+
+        <div className="landing-visual" aria-hidden="true">
+          <div className="landing-visual-grid" />
+          <div className="landing-visual-orb landing-visual-orb-left" />
+          <div className="landing-visual-orb landing-visual-orb-right" />
+          <div className="landing-visual-wave" />
+          <div className="landing-visual-wave landing-visual-wave-secondary" />
+          <div className="landing-visual-caption">
+            <span>3 narrative scenarios</span>
+            <span>Security HP + feedback</span>
+            <span>Leaderboard + certificate</span>
           </div>
         </div>
       </section>
 
-      <section className="page-section space-y-7">
-        <div className="space-y-3">
-          <p className="eyebrow">Почему это работает</p>
-          <h2 className="section-subheading">Платформа не объясняет угрозы отвлеченно, а ставит пользователя внутрь решения.</h2>
+      <section id="capabilities" className="shell shell-wide landing-section landing-scenarios">
+        <div className="landing-section-heading">
+          <p className="eyebrow">Ключевые возможности</p>
+          <h2 className="section-subheading">Платформа показывает не только контент обучения, но и измеримый путь пользователя от первого риска до закреплённого паттерна.</h2>
         </div>
 
-        <div className="feature-grid">
-          {valueCards.map(({ icon: Icon, title, description }) => (
-            <article key={title} className="glass-card feature-card">
+        <div className="landing-capability-grid">
+          {highlights.map(({ icon: Icon, title, description }) => (
+            <article key={title} className="glass-card landing-capability-card">
               <div className="feature-icon">
-                <Icon size={20} />
+                <Icon size={18} />
               </div>
               <h3 className="mt-5 text-xl font-semibold text-[var(--color-text-primary)]">{title}</h3>
               <p className="body-copy mt-3 text-sm">{description}</p>
             </article>
           ))}
         </div>
-      </section>
 
-      <section className="page-section grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="glass-card p-7">
-          <p className="eyebrow">Как проходит обучение</p>
-          <h2 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">От первого письма до финального safe decision.</h2>
-          <p className="body-copy mt-4">
-            Внутри CyberSim нет абстрактных вопросов “что бы вы сделали?”. Пользователь получает конкретный инцидент и
-            проходит его как цепочку реальных действий, где каждая ошибка влияет на итог.
-          </p>
+        <div className="landing-section-heading landing-section-heading-tight">
+          <p className="eyebrow">Сценарии</p>
+          <h2 className="section-subheading">Каждая миссия выглядит как реальная цифровая ситуация, где решение сразу связано с последствиями и обратной связью.</h2>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {processCards.map((item) => (
-            <article key={item.step} className="glass-card p-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">{item.step}</p>
-              <h3 className="mt-4 text-xl font-semibold text-[var(--color-text-primary)]">{item.title}</h3>
-              <p className="body-copy mt-3 text-sm">{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="page-section space-y-8">
-        <div className="space-y-3">
-          <p className="eyebrow">Narrative catalog</p>
-          <h2 className="section-subheading">Сценарные ветки, которые превращают цифровую безопасность в понятный продукт.</h2>
-          <p className="body-copy max-w-3xl">
-            Играбельная офисная ветка уже демонстрирует вертикальный срез платформы, а домашние сценарии и общественный
-            Wi-Fi подготовлены как следующий расширяемый слой.
-          </p>
-        </div>
-
         <div className="grid gap-6 lg:grid-cols-3">
           {showcase.map((scenario) => (
             <ScenarioCard
               key={scenario.slug}
               scenario={scenario}
-              actionHref={scenario.is_playable ? "/login" : undefined}
-              actionLabel={scenario.is_playable ? "Войти и открыть ветку" : undefined}
+              actionHref={scenario.is_playable ? (isAuthed ? "/simulator" : "/login") : undefined}
+              actionLabel={scenario.is_playable ? (isAuthed ? "Открыть миссию" : "Войти и начать") : undefined}
             />
           ))}
-        </div>
-      </section>
-
-      <section className="page-section pb-8">
-        <div className="glass-card landing-surface">
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="space-y-4">
-              <p className="eyebrow">Ready for launch</p>
-              <h2 className="section-subheading">Покажи пользователю красивый продукт, а не просто тест с вопросами.</h2>
-              <p className="body-copy max-w-2xl">
-                Вход открывает личный кабинет, симулятор, прогресс по веткам и рейтинг. Вся публичная часть ведет в один
-                и тот же визуальный язык продукта, чтобы маркетинг и само приложение выглядели как единая система.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4 lg:justify-end">
-              <Link href="/login" className="primary-button">
-                Войти
-              </Link>
-              <Link href="/login" className="secondary-button">
-                Перейти к регистрации
-              </Link>
-            </div>
-          </div>
         </div>
       </section>
     </div>

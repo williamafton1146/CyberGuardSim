@@ -18,4 +18,4 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     sessions = relationship("GameSession", back_populates="user", cascade="all, delete-orphan")
-
+    certificate = relationship("Certificate", back_populates="user", uselist=False, cascade="all, delete-orphan")

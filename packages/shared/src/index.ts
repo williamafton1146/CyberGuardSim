@@ -18,16 +18,16 @@ export const scenarioCatalog: ScenarioMeta[] = [
   },
   {
     slug: "home",
-    title: "Дом: смарт-устройства и пароли",
-    theme: "Брутфорс и слабая гигиена паролей",
+    title: "Дом: учетные записи и смарт-устройства",
+    theme: "Credential stuffing, парольная гигиена и вредоносные приложения",
     difficulty: "medium",
-    isPlayable: false
+    isPlayable: true
   },
   {
     slug: "public-wifi",
     title: "Общественный Wi-Fi",
-    theme: "Поддельные точки доступа и перехват трафика",
+    theme: "Поддельные точки доступа, captive portal и перехват трафика",
     difficulty: "medium",
-    isPlayable: false
+    isPlayable: true
   }
 ];

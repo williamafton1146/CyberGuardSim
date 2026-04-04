@@ -86,3 +86,28 @@ export type LeaderboardEntry = {
   completed_sessions: number;
 };
 
+export type IssuedCertificate = {
+  code: string;
+  display_name: string;
+  league: string;
+  security_rating: number;
+  issued_at: string;
+  verify_url: string;
+};
+
+export type CertificateStatus = {
+  status: "not_eligible" | "eligible" | "issued";
+  completed_scenarios: number;
+  required_scenarios: number;
+  certificate: IssuedCertificate | null;
+};
+
+export type CertificateVerification = {
+  code: string;
+  display_name: string;
+  league: string;
+  security_rating: number;
+  issued_at: string;
+  verify_url: string;
+  status: "valid";
+};

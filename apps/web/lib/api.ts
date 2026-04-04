@@ -2,6 +2,8 @@ import { scenarioCatalog } from "@cyber-sim/shared";
 
 import type {
   AnswerResult,
+  CertificateStatus,
+  CertificateVerification,
   LeaderboardEntry,
   ScenarioSummary,
   SessionState,
@@ -45,12 +47,6 @@ const demoStats: UserStats = {
   recent_mistakes: []
 };
 
-const demoLeaderboard: LeaderboardEntry[] = [
-  { rank: 1, display_name: "Security Owl", security_rating: 145, league: "Аналитик", completed_sessions: 6 },
-  { rank: 2, display_name: "Mail Hunter", security_rating: 98, league: "Охотник на фишинг", completed_sessions: 4 },
-  { rank: 3, display_name: "WiFi Scout", security_rating: 64, league: "Охотник на фишинг", completed_sessions: 2 }
-];
-
 function scenarioFallback(): ScenarioSummary[] {
   return scenarioCatalog.map((scenario) => ({
     slug: scenario.slug,
@@ -58,10 +54,10 @@ function scenarioFallback(): ScenarioSummary[] {
     theme: scenario.theme,
     difficulty: scenario.difficulty,
     description: scenario.isPlayable
-      ? "Играбельная демо-миссия с письмом от фальшивой ИТ-поддержки."
+      ? "Игровая ветка с пошаговой обратной связью, подсказками и фиксацией прогресса."
       : "Подготовленная ветка сценария для следующего этапа.",
     is_playable: scenario.isPlayable,
-    step_count: scenario.isPlayable ? 4 : 1
+    step_count: 4
   }));
 }
 
@@ -143,12 +139,27 @@ export async function submitAnswer(token: string, sessionId: number, optionId: n
   });
 }
 
-export async function getLeaderboard() {
-  try {
-    return await request<LeaderboardEntry[]>("/leaderboard");
-  } catch {
-    return demoLeaderboard;
-  }
+export async function getLeaderboard(token: string) {
+  return request<LeaderboardEntry[]>("/api/leaderboard", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function getCertificateStatus(token: string) {
+  return request<CertificateStatus>("/users/me/certificate", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function issueCertificate(token: string) {
+  return request<CertificateStatus>("/users/me/certificate", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export async function verifyCertificate(code: string) {
+  return request<CertificateVerification>(`/api/certificates/${code}`);
 }
 
 export { demoStats };

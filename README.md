@@ -1,8 +1,8 @@
-# CyberSim Prototype
+# CyberSim
 
 Образовательный веб-прототип симулятора цифровой безопасности с `Next.js + Tailwind` на фронтенде и `FastAPI + PostgreSQL + Redis` на бэкенде.
 
-Для локального запуска backend может работать на `SQLite`, а `Redis` используется как ускоритель и не является обязательным для демо-сценария: при его отсутствии лидерборд строится из БД, а WebSocket берет состояние сессии через fallback на БД.
+Для локального запуска backend может работать на `SQLite`, а `Redis` используется как ускоритель и не является обязательным для локального сценария: при его отсутствии лидерборд строится из БД, а WebSocket берет состояние сессии через fallback на БД.
 
 ## Что внутри
 
@@ -12,16 +12,17 @@
 - `infra` — Dockerfile, `Caddy` для локального reverse proxy и `nginx + certbot` для production
 - `docs` — ER-диаграмма, API summary и описание геймплея
 
-## Реализованный минимальный пример
+## Реализовано в текущей версии
 
 - Регистрация и логин с хэшированием пароля и JWT
-- 3 сюжетные линии в каталоге
-- 1 полностью играбельная миссия `office` на 4 шага
+- 3 играбельные сюжетные линии: `office`, `home`, `public-wifi`
 - `Security HP`, score, подсказки и последствия ошибок
 - Личный кабинет со статистикой и историей ошибок
-- Лидерборд с Redis-кэшем
+- Лидерборд с Redis-кэшем по маршруту `GET /api/leaderboard`
+- Верифицируемый сертификат с публичной страницей и QR-кодом
 - `WebSocket`-обновления состояния миссии
 - Swagger/OpenAPI на `/docs`
+- Публичная главная в едином стиле с приложением и переключением темы
 
 ## Структура
 
@@ -141,6 +142,7 @@ docker-compose -f docker-compose.prod.yml up --build -d
 - API проксируется тем же доменом
 - WebSocket идет через `wss://your-domain.com/ws/...`
 - `certbot` работает в отдельном контейнере и периодически выполняет `renew`
+- leaderboard API доступен по `https://your-domain.com/api/leaderboard`, а маршрут `/leaderboard` остается страницей фронтенда
 
 ### Обновление после изменений
 
@@ -155,13 +157,34 @@ curl -I https://your-domain.com
 curl https://your-domain.com/api/health
 ```
 
+### Smoke-check регистрации после deploy
+
+```bash
+chmod +x infra/deploy/smoke-auth.sh
+./infra/deploy/smoke-auth.sh
+```
+
+Скрипт проходит цепочку:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /users/me`
+- `GET /leaderboard` как HTML-страница
+- `GET /api/leaderboard` как защищенный JSON endpoint
+- прохождение всех 3 сценариев
+- `POST /users/me/certificate`
+- `GET /api/certificates/{code}` и `GET /certificates/{code}`
+
+Это позволяет быстро проверить auth flow, route contract leaderboard и happy-path сертификата через production-домен.
+
 ## Demo Flow
 
-1. Открыть `/login` и создать пользователя.
-2. Перейти в `/simulator`.
-3. Запустить сценарий `Офис: письмо от ИТ-поддержки`.
-4. Сделать один ошибочный выбор и увидеть подсказку и последствия.
-5. Завершить миссию и проверить обновленную статистику в `/dashboard`.
+1. Открыть `/` и перейти ко входу.
+2. Создать пользователя на `/login`.
+3. Перейти в `/simulator`.
+4. Пройти сценарии `office`, `home` и `public-wifi`.
+5. Открыть `/dashboard`, проверить статистику, рейтинг и выпустить сертификат.
+6. Открыть публичную страницу сертификата по QR или прямой ссылке.
 
 ## Тесты
 
@@ -182,18 +205,40 @@ pytest
 ## Что проверено локально
 
 - `GET /api/health` возвращает `200`
-- frontend-страницы `/`, `/login`, `/simulator` отвечают `200`
-- e2e flow: регистрация -> старт миссии -> ошибочный ответ -> WebSocket-апдейт -> завершение миссии -> статистика -> лидерборд
-- `pytest` для backend: `2 passed`
+- frontend-страницы `/`, `/login`, `/leaderboard`, `/simulator` собираются в production build
+- e2e flow: регистрация -> прохождение сценариев -> статистика -> лидерборд -> сертификат
 - production build фронтенда: `npm run build --workspace @cyber-sim/web`
 - `docker-compose up --build` поднимает `db`, `redis`, `api`, `web`, `caddy`
 - через Docker подтверждены `http://127.0.0.1:8000/api/health`, `http://127.0.0.1:3000`, `https://localhost`, `https://localhost/api/health`
 
 ## Ограничения текущего прототипа
 
-- Ветки `home` и `public-wifi` представлены как архитектурные заготовки.
 - Полноценный TLS 1.2+ для production не проверялся в этом окружении, но структура под reverse proxy подготовлена.
 - Контейнерный запуск проверен через `docker-compose`, но `docker compose` plugin на машине может отсутствовать, если установлен только отдельный пакет `docker-compose`.
+
+## Сверка С ТЗ
+
+Уже выполнено:
+
+- веб-прототип с `Next.js + FastAPI + PostgreSQL + Redis`
+- хранение пользователей и прогресса в БД, хэширование паролей
+- 3 сюжетные линии (`Офис`, `Дом`, `Общественный Wi-Fi`) с полным прохождением
+- 5+ типов угроз: фишинг, spoofed URL, социнженерия, credential stuffing, password reuse, malicious app, fake access point, captive portal phishing, MITM, payment skimming
+- модуль выбора действия с подсказками и последствиями
+- шкала прогресса `Security HP`, рейтинг и личный кабинет
+- сертификат с публичной верификацией
+- Docker Compose запуск, Swagger/OpenAPI и reverse proxy под TLS
+
+Выполнено частично:
+
+- UI ориентирован прежде всего на desktop-first сценарий
+- сертификат выпускается как веб-страница с QR-верификацией, без PDF/печатного режима
+
+Еще остается на дальнейшее развитие:
+
+- новые ветки атак и импорт актуальных внешних кейсов
+- углубление рейтинговой логики и градаций сертификата
+- дополнительные кейсы атак и импорт актуальных сценариев
 
 ## Troubleshooting Deploy
 

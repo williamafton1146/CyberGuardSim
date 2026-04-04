@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { CertificatePanel } from "@/components/certificate/CertificatePanel";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { StatsOverview } from "@/components/stats/StatsOverview";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { getMe, getScenarios, getStats, demoStats } from "@/lib/api";
+import { getCertificateStatus, getMe, getScenarios, getStats, issueCertificate, demoStats } from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import type { ScenarioSummary, UserProfile, UserStats } from "@/types";
+import type { CertificateStatus, ScenarioSummary, UserProfile, UserStats } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,9 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats>(demoStats);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [certificateStatus, setCertificateStatus] = useState<CertificateStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [issuingCertificate, setIssuingCertificate] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -24,14 +27,34 @@ export default function DashboardPage() {
       return;
     }
 
-    Promise.all([getMe(token), getStats(token), getScenarios()])
-      .then(([me, statsPayload, scenariosPayload]) => {
+    Promise.all([getMe(token), getStats(token), getScenarios(), getCertificateStatus(token)])
+      .then(([me, statsPayload, scenariosPayload, certificatePayload]) => {
         setProfile(me);
         setStats(statsPayload);
         setScenarios(scenariosPayload);
+        setCertificateStatus(certificatePayload);
       })
       .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить кабинет"));
   }, []);
+
+  async function handleIssueCertificate() {
+    const token = getToken();
+    if (!token) {
+      return;
+    }
+
+    setIssuingCertificate(true);
+    setError(null);
+
+    try {
+      const payload = await issueCertificate(token);
+      setCertificateStatus(payload);
+    } catch (issueError) {
+      setError(issueError instanceof Error ? issueError.message : "Не удалось выпустить сертификат");
+    } finally {
+      setIssuingCertificate(false);
+    }
+  }
 
   return (
     <RequireAuth>
@@ -84,6 +107,8 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : null}
+
+        <CertificatePanel status={certificateStatus} issuing={issuingCertificate} onIssue={handleIssueCertificate} />
 
         {error ? (
           <p className="rounded-[1.2rem] border border-[rgba(255,114,92,0.28)] bg-[var(--color-alert-soft)] px-4 py-3 text-sm text-[var(--color-alert)]">
