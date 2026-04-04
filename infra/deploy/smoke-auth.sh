@@ -45,7 +45,7 @@ curl_with_base() {
   fi
 }
 
-EMAIL="s$(date +%s)@e.test"
+EMAIL="s$(date +%s)@x.ru"
 PASSWORD="SmokePass-$(date +%s)-A1"
 DISPLAY_NAME="Smoke Analyst"
 

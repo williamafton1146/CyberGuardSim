@@ -518,14 +518,18 @@ smoke_test_registration() {
   local register_response=""
   local login_response=""
   local token=""
+  local register_status=""
+  local login_status=""
+  local response_file=""
 
   nonce="$(date +%s)-$(openssl rand -hex 3)"
-  email="s${nonce}@e.test"
+  email="s${nonce}@x.ru"
+  response_file="$(mktemp)"
 
   log "Running auth smoke test against production domain"
 
-  register_response="$(
-    curl -kfsS \
+  register_status="$(
+    curl -ksS -o "${response_file}" -w "%{http_code}" \
       --resolve "${domain}:443:127.0.0.1" \
       -H "Host: ${domain}" \
       "https://${domain}/auth/register" \
@@ -533,22 +537,33 @@ smoke_test_registration() {
       --data "{\"email\":\"${email}\",\"password\":\"${password}\",\"display_name\":\"Deploy Smoke\"}"
   )"
 
-  token="$(printf '%s' "${register_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
-  if [[ -z "${token}" ]]; then
-    echo "Smoke test failed: register response did not contain access_token."
+  register_response="$(cat "${response_file}")"
+
+  if [[ "${register_status}" != "201" ]]; then
+    echo "Smoke test failed: register returned HTTP ${register_status}."
     echo "Response: ${register_response}"
+    rm -f "${response_file}"
     print_compose_diagnostics
     exit 1
   fi
 
-  curl -kfsS \
+  token="$(printf '%s' "${register_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  if [[ -z "${token}" ]]; then
+    echo "Smoke test failed: register response did not contain access_token."
+    echo "Response: ${register_response}"
+    rm -f "${response_file}"
+    print_compose_diagnostics
+    exit 1
+  fi
+
+  curl -ksS \
     --resolve "${domain}:443:127.0.0.1" \
     -H "Host: ${domain}" \
     "https://${domain}/users/me" \
     -H "Authorization: Bearer ${token}" >/dev/null
 
-  login_response="$(
-    curl -kfsS \
+  login_status="$(
+    curl -ksS -o "${response_file}" -w "%{http_code}" \
       --resolve "${domain}:443:127.0.0.1" \
       -H "Host: ${domain}" \
       "https://${domain}/auth/login" \
@@ -556,19 +571,32 @@ smoke_test_registration() {
       --data "{\"email\":\"${email}\",\"password\":\"${password}\"}"
   )"
 
-  token="$(printf '%s' "${login_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
-  if [[ -z "${token}" ]]; then
-    echo "Smoke test failed: login response did not contain access_token."
+  login_response="$(cat "${response_file}")"
+
+  if [[ "${login_status}" != "200" ]]; then
+    echo "Smoke test failed: login returned HTTP ${login_status}."
     echo "Response: ${login_response}"
+    rm -f "${response_file}"
     print_compose_diagnostics
     exit 1
   fi
 
-  curl -kfsS \
+  token="$(printf '%s' "${login_response}" | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  if [[ -z "${token}" ]]; then
+    echo "Smoke test failed: login response did not contain access_token."
+    echo "Response: ${login_response}"
+    rm -f "${response_file}"
+    print_compose_diagnostics
+    exit 1
+  fi
+
+  curl -ksS \
     --resolve "${domain}:443:127.0.0.1" \
     -H "Host: ${domain}" \
     "https://${domain}/users/me" \
     -H "Authorization: Bearer ${token}" >/dev/null
+
+  rm -f "${response_file}"
 }
 
 open_site() {
