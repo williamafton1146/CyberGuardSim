@@ -425,8 +425,12 @@ ensure_certificate() {
   local live_dir="infra/letsencrypt/conf/live/${domain}"
   local renewal_file="infra/letsencrypt/conf/renewal/${domain}.conf"
 
-  if [[ -f "${live_dir}/fullchain.pem" && -f "${live_dir}/privkey.pem" && -f "${renewal_file}" ]]; then
-    log "Existing Let's Encrypt certificate found for ${domain}"
+  if [[ -f "${live_dir}/fullchain.pem" && -f "${live_dir}/privkey.pem" ]]; then
+    if [[ -f "${renewal_file}" ]]; then
+      log "Existing Let's Encrypt certificate found for ${domain}"
+    else
+      log "Existing TLS certificate files found for ${domain}; reusing current certificate without requesting a new one"
+    fi
     return
   fi
 

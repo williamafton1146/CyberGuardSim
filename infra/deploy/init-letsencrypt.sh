@@ -35,7 +35,7 @@ fi
 DOMAIN="$(grep '^DOMAIN=' .env | cut -d '=' -f2-)"
 EMAIL="$(grep '^LETSENCRYPT_EMAIL=' .env | cut -d '=' -f2-)"
 BOOTSTRAP_MARKER="infra/letsencrypt/conf/live/${DOMAIN}/.bootstrap"
-ARCHIVE_DIR="infra/letsencrypt/conf/archive/${DOMAIN}"
+LIVE_DIR="infra/letsencrypt/conf/live/${DOMAIN}"
 
 if [[ -z "${DOMAIN}" || -z "${EMAIL}" ]]; then
   echo "DOMAIN or LETSENCRYPT_EMAIL is empty in .env"
@@ -46,6 +46,11 @@ if ! docker_ok && run_root docker info >/dev/null 2>&1; then
   DOCKER_PREFIX=(sudo)
 fi
 
+if [[ -f "${LIVE_DIR}/fullchain.pem" && -f "${LIVE_DIR}/privkey.pem" ]]; then
+  echo "Existing certificate files detected for ${DOMAIN}; skipping new Let's Encrypt request."
+  exit 0
+fi
+
 trap cleanup_bootstrap_nginx EXIT
 
 compose --profile bootstrap up -d --no-deps nginx_bootstrap
@@ -53,14 +58,12 @@ compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
   -w /var/www/certbot \
   -d "${DOMAIN}" \
+  --cert-name "${DOMAIN}" \
+  --keep-until-expiring \
   --email "${EMAIL}" \
   --agree-tos \
   --no-eff-email
 
 if [[ -f "${BOOTSTRAP_MARKER}" ]]; then
   rm -f "${BOOTSTRAP_MARKER}"
-fi
-
-if [[ -d "${ARCHIVE_DIR}" && ! -f "infra/letsencrypt/conf/renewal/${DOMAIN}.conf" ]]; then
-  rm -rf "${ARCHIVE_DIR}"
 fi

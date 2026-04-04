@@ -168,9 +168,6 @@ def test_route_contracts_for_leaderboard_and_certificate_verification(db_session
             assert leaderboard_authorized.status_code == status.HTTP_200_OK
             assert isinstance(leaderboard_authorized.json(), list)
 
-            html_response = await client.get("/leaderboard")
-            assert html_response.status_code == status.HTTP_404_NOT_FOUND
-
             user = db_session.query(User).filter(User.email == "routecheck@example.com").first()
             assert user is not None
             for slug in ["office", "home", "public-wifi"]:

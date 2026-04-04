@@ -13,8 +13,9 @@ export function SiteFooter() {
     <footer className="shell shell-wide landing-footer">
       <div className="landing-footer-line" />
       <div className="landing-footer-meta">
+        <span>CyberSim</span>
         <span>Coffee &amp; Inconsistent</span>
-        <span>UMIRHack</span>
+        <span>Hackathon Build</span>
         <span>2026</span>
       </div>
       <p className="landing-footer-copy">Создано командой Coffee &amp; Inconsistent для UMIRHack 2026 в треке цифровой безопасности.</p>
