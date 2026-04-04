@@ -19,7 +19,33 @@ if [[ -z "${BASE_URL}" ]]; then
   BASE_URL="https://${DOMAIN}"
 fi
 
-EMAIL="smoke-$(date +%s)@example.test"
+BASE_HOST="$(python3 - "${BASE_URL}" <<'PY'
+import sys
+from urllib.parse import urlparse
+
+parsed = urlparse(sys.argv[1])
+print(parsed.hostname or "")
+PY
+)"
+BASE_SCHEME="$(python3 - "${BASE_URL}" <<'PY'
+import sys
+from urllib.parse import urlparse
+
+parsed = urlparse(sys.argv[1])
+print(parsed.scheme or "https")
+PY
+)"
+SMOKE_RESOLVE_IP="${SMOKE_RESOLVE_IP:-}"
+
+curl_with_base() {
+  if [[ -n "${SMOKE_RESOLVE_IP}" && "${BASE_SCHEME}" == "https" && -n "${BASE_HOST}" ]]; then
+    curl --resolve "${BASE_HOST}:443:${SMOKE_RESOLVE_IP}" "$@"
+  else
+    curl "$@"
+  fi
+}
+
+EMAIL="s$(date +%s)@e.test"
 PASSWORD="SmokePass-$(date +%s)-A1"
 DISPLAY_NAME="Smoke Analyst"
 
@@ -45,7 +71,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "[smoke-auth] Registering ${EMAIL} via ${BASE_URL}"
-register_status="$(curl -sS -o "${register_response}" -w "%{http_code}" \
+register_status="$(curl_with_base -sS -o "${register_response}" -w "%{http_code}" \
   -H "Content-Type: application/json" \
   -X POST "${BASE_URL}/auth/register" \
   -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\",\"display_name\":\"${DISPLAY_NAME}\"}")"
@@ -57,7 +83,7 @@ if [[ "${register_status}" != "201" ]]; then
 fi
 
 echo "[smoke-auth] Logging in ${EMAIL}"
-login_status="$(curl -sS -o "${login_response}" -w "%{http_code}" \
+login_status="$(curl_with_base -sS -o "${login_response}" -w "%{http_code}" \
   -H "Content-Type: application/json" \
   -X POST "${BASE_URL}/auth/login" \
   -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\"}")"
@@ -85,7 +111,7 @@ if [[ -z "${token}" ]]; then
 fi
 
 echo "[smoke-auth] Checking /users/me"
-me_status="$(curl -sS -o "${me_response}" -w "%{http_code}" \
+me_status="$(curl_with_base -sS -o "${me_response}" -w "%{http_code}" \
   -H "Authorization: Bearer ${token}" \
   "${BASE_URL}/users/me")"
 
@@ -112,7 +138,7 @@ if [[ "${returned_email}" != "${EMAIL}" ]]; then
 fi
 
 echo "[smoke-auth] Checking /leaderboard frontend route"
-leaderboard_page_headers="$(curl -sSI "${BASE_URL}/leaderboard")"
+leaderboard_page_headers="$(curl_with_base -sSI "${BASE_URL}/leaderboard")"
 if ! grep -qi "Content-Type: text/html" <<<"${leaderboard_page_headers}"; then
   echo "[smoke-auth] /leaderboard did not return an HTML page"
   printf '%s\n' "${leaderboard_page_headers}"
@@ -120,14 +146,14 @@ if ! grep -qi "Content-Type: text/html" <<<"${leaderboard_page_headers}"; then
 fi
 
 echo "[smoke-auth] Checking /api/leaderboard auth contract"
-leaderboard_unauthorized_status="$(curl -sS -o "${leaderboard_response}" -w "%{http_code}" "${BASE_URL}/api/leaderboard")"
+leaderboard_unauthorized_status="$(curl_with_base -sS -o "${leaderboard_response}" -w "%{http_code}" "${BASE_URL}/api/leaderboard")"
 if [[ "${leaderboard_unauthorized_status}" != "401" ]]; then
   echo "[smoke-auth] Expected /api/leaderboard without auth to return 401, got ${leaderboard_unauthorized_status}"
   cat "${leaderboard_response}"
   exit 1
 fi
 
-leaderboard_authorized_status="$(curl -sS -o "${leaderboard_response}" -w "%{http_code}" \
+leaderboard_authorized_status="$(curl_with_base -sS -o "${leaderboard_response}" -w "%{http_code}" \
   -H "Authorization: Bearer ${token}" \
   "${BASE_URL}/api/leaderboard")"
 
@@ -144,7 +170,7 @@ run_scenario() {
   local status_code=""
 
   echo "[smoke-auth] Starting scenario ${slug}"
-  status_code="$(curl -sS -o "${session_response}" -w "%{http_code}" \
+  status_code="$(curl_with_base -sS -o "${session_response}" -w "%{http_code}" \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/json" \
     -X POST "${BASE_URL}/sessions" \
@@ -195,7 +221,7 @@ PY
       exit 1
     fi
 
-    status_code="$(curl -sS -o "${session_response}" -w "%{http_code}" \
+    status_code="$(curl_with_base -sS -o "${session_response}" -w "%{http_code}" \
       -H "Authorization: Bearer ${token}" \
       -H "Content-Type: application/json" \
       -X POST "${BASE_URL}/sessions/${session_id}/answers" \
@@ -231,7 +257,7 @@ run_scenario \
   "Игнорировать QR-код и пользоваться только официальными каналами заведения или мобильным интернетом"
 
 echo "[smoke-auth] Checking certificate eligibility"
-certificate_status_code="$(curl -sS -o "${certificate_response}" -w "%{http_code}" \
+certificate_status_code="$(curl_with_base -sS -o "${certificate_response}" -w "%{http_code}" \
   -H "Authorization: Bearer ${token}" \
   "${BASE_URL}/users/me/certificate")"
 
@@ -258,7 +284,7 @@ if [[ "${certificate_state}" != "eligible" ]]; then
 fi
 
 echo "[smoke-auth] Issuing certificate"
-certificate_issue_code="$(curl -sS -o "${certificate_response}" -w "%{http_code}" \
+certificate_issue_code="$(curl_with_base -sS -o "${certificate_response}" -w "%{http_code}" \
   -H "Authorization: Bearer ${token}" \
   -X POST "${BASE_URL}/users/me/certificate")"
 
@@ -285,14 +311,14 @@ if [[ -z "${certificate_code}" ]]; then
   exit 1
 fi
 
-verify_status="$(curl -sS -o "${verify_response}" -w "%{http_code}" "${BASE_URL}/api/certificates/${certificate_code}")"
+verify_status="$(curl_with_base -sS -o "${verify_response}" -w "%{http_code}" "${BASE_URL}/api/certificates/${certificate_code}")"
 if [[ "${verify_status}" != "200" ]]; then
   echo "[smoke-auth] Public certificate verification API failed"
   cat "${verify_response}"
   exit 1
 fi
 
-certificate_page_headers="$(curl -sSI "${BASE_URL}/certificates/${certificate_code}")"
+certificate_page_headers="$(curl_with_base -sSI "${BASE_URL}/certificates/${certificate_code}")"
 if ! grep -qi "Content-Type: text/html" <<<"${certificate_page_headers}"; then
   echo "[smoke-auth] Public certificate page did not return HTML"
   printf '%s\n' "${certificate_page_headers}"

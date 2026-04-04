@@ -488,7 +488,10 @@ verify_deploy() {
   log "Verifying deployed services"
 
   while (( attempt <= max_attempts )); do
-    if curl -kfsS "https://${domain}/api/health" >/dev/null; then
+    if curl -kfsS \
+      --resolve "${domain}:443:127.0.0.1" \
+      -H "Host: ${domain}" \
+      "https://${domain}/api/health" >/dev/null; then
       return
     fi
 
@@ -496,7 +499,7 @@ verify_deploy() {
     attempt=$((attempt + 1))
   done
 
-  echo "Deployment verification failed: https://${domain}/api/health did not become ready in time."
+  echo "Deployment verification failed: local nginx proxy did not expose https://${domain}/api/health in time."
   echo "Check logs with: docker-compose -f docker-compose.prod.yml logs --tail=200 nginx api web"
   print_compose_diagnostics
   exit 1
@@ -517,12 +520,15 @@ smoke_test_registration() {
   local token=""
 
   nonce="$(date +%s)-$(openssl rand -hex 3)"
-  email="smoke-${nonce}@example.com"
+  email="s${nonce}@e.test"
 
   log "Running auth smoke test against production domain"
 
   register_response="$(
-    curl -kfsS "https://${domain}/auth/register" \
+    curl -kfsS \
+      --resolve "${domain}:443:127.0.0.1" \
+      -H "Host: ${domain}" \
+      "https://${domain}/auth/register" \
       -H "Content-Type: application/json" \
       --data "{\"email\":\"${email}\",\"password\":\"${password}\",\"display_name\":\"Deploy Smoke\"}"
   )"
@@ -535,11 +541,17 @@ smoke_test_registration() {
     exit 1
   fi
 
-  curl -kfsS "https://${domain}/users/me" \
+  curl -kfsS \
+    --resolve "${domain}:443:127.0.0.1" \
+    -H "Host: ${domain}" \
+    "https://${domain}/users/me" \
     -H "Authorization: Bearer ${token}" >/dev/null
 
   login_response="$(
-    curl -kfsS "https://${domain}/auth/login" \
+    curl -kfsS \
+      --resolve "${domain}:443:127.0.0.1" \
+      -H "Host: ${domain}" \
+      "https://${domain}/auth/login" \
       -H "Content-Type: application/json" \
       --data "{\"email\":\"${email}\",\"password\":\"${password}\"}"
   )"
@@ -552,7 +564,10 @@ smoke_test_registration() {
     exit 1
   fi
 
-  curl -kfsS "https://${domain}/users/me" \
+  curl -kfsS \
+    --resolve "${domain}:443:127.0.0.1" \
+    -H "Host: ${domain}" \
+    "https://${domain}/users/me" \
     -H "Authorization: Bearer ${token}" >/dev/null
 }
 
