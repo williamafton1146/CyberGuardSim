@@ -502,6 +502,11 @@ verify_deploy() {
   exit 1
 }
 
+post_deploy_cleanup() {
+  log "Cleaning temporary deploy artifacts and safe system caches"
+  bash ./infra/deploy/cleanup-system-artifacts.sh || true
+}
+
 smoke_test_registration() {
   local domain="$1"
   local nonce
@@ -585,6 +590,7 @@ main() {
   deploy_stack
   verify_deploy "${domain}"
   smoke_test_registration "${domain}"
+  post_deploy_cleanup
   open_site "${domain}"
 }
 
