@@ -32,7 +32,7 @@ def ensure_admin_user(db: Session) -> User:
     admin.display_name = admin.display_name or "Администратор"
     admin.role = "admin"
     admin.league = "Администратор"
-    if bootstrap_password:
+    if bootstrap_password and not admin.password_hash:
         admin.password_hash = hash_password(bootstrap_password)
 
     db.commit()

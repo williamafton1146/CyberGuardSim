@@ -87,7 +87,7 @@ export default function SimulatorPage() {
     try {
       const newSession = await startSession(token, slug);
       setSession(newSession);
-      socketRef.current = connectSessionSocket(newSession.session_id, (payload) => {
+      socketRef.current = connectSessionSocket(newSession.session_id, token, (payload) => {
         setSession((current) => (current?.session_id === payload.session_id ? payload : current));
       });
     } catch (launchError) {

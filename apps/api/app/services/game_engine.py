@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.redis_client import LEADERBOARD_KEY, delete_key, get_json, set_json, set_session_state
 from app.models.progress import UserScenarioProgress
@@ -14,6 +14,17 @@ from app.schemas.scenario import DecisionOptionPublic, ScenarioStepPublic
 from app.schemas.session import AnswerResult, SessionState
 from app.services.scenarios import scenario_is_live
 from app.services.stats import compute_league
+
+
+def _session_query(db: Session):
+    return (
+        db.query(GameSession)
+        .options(
+            selectinload(GameSession.scenario)
+            .selectinload(Scenario.steps)
+            .selectinload(ScenarioStep.decision_options)
+        )
+    )
 
 
 def serialize_step(step: ScenarioStep | None) -> ScenarioStepPublic | None:
@@ -146,24 +157,24 @@ def build_leaderboard(db: Session) -> list[LeaderboardEntry]:
     return entries
 
 
-def load_session_state(db: Session, session_id: int) -> SessionState | None:
-    session = (
-        db.query(GameSession)
-        .join(Scenario, Scenario.id == GameSession.scenario_id)
-        .filter(GameSession.id == session_id)
-        .first()
-    )
+def load_session_state(db: Session, session_id: int, *, user_id: int | None = None) -> SessionState | None:
+    session_query = _session_query(db).filter(GameSession.id == session_id)
+    if user_id is not None:
+        session_query = session_query.filter(GameSession.user_id == user_id)
+    session = session_query.first()
     if session is None:
         return None
 
-    _ = session.scenario.steps
-    for step in session.scenario.steps:
-        _ = step.decision_options
     return _session_payload(session)
 
 
 def start_session(db: Session, user: User, scenario_slug: str) -> SessionState:
-    scenario = db.query(Scenario).filter(Scenario.slug == scenario_slug).first()
+    scenario = (
+        db.query(Scenario)
+        .options(selectinload(Scenario.steps).selectinload(ScenarioStep.decision_options))
+        .filter(Scenario.slug == scenario_slug)
+        .first()
+    )
     if scenario is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сценарий не найден")
     if not scenario_is_live(scenario):
@@ -176,9 +187,9 @@ def start_session(db: Session, user: User, scenario_slug: str) -> SessionState:
     db.add(session)
     db.commit()
     db.refresh(session)
-    _ = session.scenario.steps
-    for step in session.scenario.steps:
-        _ = step.decision_options
+    session = _session_query(db).filter(GameSession.id == session.id).first()
+    if session is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Не удалось инициализировать игровую сессию")
 
     payload = _session_payload(session)
     set_session_state(session.id, payload.model_dump(mode="json"))
@@ -186,20 +197,11 @@ def start_session(db: Session, user: User, scenario_slug: str) -> SessionState:
 
 
 def submit_answer(db: Session, user: User, session_id: int, option_id: int) -> AnswerResult:
-    session = (
-        db.query(GameSession)
-        .join(Scenario, Scenario.id == GameSession.scenario_id)
-        .filter(GameSession.id == session_id, GameSession.user_id == user.id)
-        .first()
-    )
+    session = _session_query(db).filter(GameSession.id == session_id, GameSession.user_id == user.id).first()
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Игровая сессия не найдена")
     if session.status != "active":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Сессия уже завершена")
-
-    _ = session.scenario.steps
-    for step in session.scenario.steps:
-        _ = step.decision_options
 
     step = _get_step(session.scenario, session.current_step_order)
     if step is None:
@@ -229,14 +231,13 @@ def submit_answer(db: Session, user: User, session_id: int, option_id: int) -> A
     _apply_progress_update(db, user, session)
     db.commit()
     db.refresh(session)
-    _ = session.scenario.steps
-    for scenario_step in session.scenario.steps:
-        _ = scenario_step.decision_options
+    session = _session_query(db).filter(GameSession.id == session.id).first()
+    if session is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Игровая сессия потеряна после обновления")
 
     session_state = _session_payload(session)
     set_session_state(session.id, session_state.model_dump(mode="json"))
     delete_key(LEADERBOARD_KEY)
-    build_leaderboard(db)
 
     return AnswerResult(
         **session_state.model_dump(),

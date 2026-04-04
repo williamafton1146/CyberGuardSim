@@ -16,8 +16,9 @@ from app.schemas.auth import LoginRequest, RegisterRequest
 from app.schemas.session import StartSessionRequest
 from app.services.admin_bootstrap import ensure_admin_user
 from app.services.certificates import build_certificate_status, issue_certificate
-from app.services.game_engine import build_leaderboard, start_session, submit_answer
+from app.services.game_engine import build_leaderboard, load_session_state, start_session, submit_answer
 from app.services.stats import build_user_stats
+from app.core.security import verify_password
 from app.models.scenario import DecisionOption, Scenario, ScenarioStep
 from app.models.user import User
 
@@ -231,6 +232,31 @@ def test_admin_login_access_and_self_delete_protection(db_session: Session) -> N
         asyncio.run(exercise_routes())
     finally:
         app.dependency_overrides.clear()
+
+
+def test_admin_bootstrap_does_not_reset_existing_password(db_session: Session) -> None:
+    admin = ensure_admin_user(db_session)
+    original_hash = admin.password_hash
+
+    ensure_admin_user(db_session)
+    db_session.refresh(admin)
+
+    assert admin.password_hash == original_hash
+    assert verify_password(settings.admin_bootstrap_password, admin.password_hash)
+
+
+def test_session_state_is_restricted_to_session_owner(db_session: Session) -> None:
+    owner = create_user(db_session, email="ws-owner@example.com", password="supersecure123")
+    outsider = create_user(db_session, email="ws-outsider@example.com", password="supersecure123")
+
+    session_state = start_session(db_session, owner, "office")
+
+    owner_state = load_session_state(db_session, session_state.session_id, user_id=owner.id)
+    outsider_state = load_session_state(db_session, session_state.session_id, user_id=outsider.id)
+    assert owner_state is not None
+    assert owner_state.session_id == session_state.session_id
+    assert owner_state.scenario_slug == "office"
+    assert outsider_state is None
 
 
 def test_scheduled_scenarios_are_hidden_and_best_score_only_counts_once(db_session: Session) -> None:

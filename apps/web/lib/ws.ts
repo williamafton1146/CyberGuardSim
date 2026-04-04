@@ -23,9 +23,10 @@ function resolveWsUrl() {
 
 export function connectSessionSocket(
   sessionId: number,
+  token: string,
   onMessage: (payload: SessionState) => void
 ) {
-  const socket = new WebSocket(`${resolveWsUrl()}/ws/sessions/${sessionId}`);
+  const socket = new WebSocket(`${resolveWsUrl()}/ws/sessions/${sessionId}?token=${encodeURIComponent(token)}`);
   socket.onmessage = (event) => {
     const payload = JSON.parse(event.data) as SessionState;
     onMessage(payload);
