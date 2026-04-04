@@ -164,6 +164,7 @@ export default function AdminPage() {
     () => (selectedScenarioId === "new" ? null : scenarios.find((item) => item.id === selectedScenarioId) || null),
     [scenarios, selectedScenarioId]
   );
+  const scenarioLocked = Boolean(selectedScenario?.has_sessions);
   const adminSummary = useMemo(
     () => ({
       users: users.length,
@@ -173,6 +174,7 @@ export default function AdminPage() {
     }),
     [scenarios, users]
   );
+  const editorBusy = loading || savingScenario;
 
   async function reloadAdminData() {
     const token = getToken();
@@ -355,47 +357,49 @@ export default function AdminPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <div className="soft-tile admin-summary-card">
             <span className="admin-summary-label">Всего аккаунтов</span>
-            <strong className="admin-summary-value">{adminSummary.users}</strong>
+            <strong className="admin-summary-value">{loading ? "—" : adminSummary.users}</strong>
           </div>
           <div className="soft-tile admin-summary-card">
             <span className="admin-summary-label">Пользователи</span>
-            <strong className="admin-summary-value">{adminSummary.activeUsers}</strong>
+            <strong className="admin-summary-value">{loading ? "—" : adminSummary.activeUsers}</strong>
           </div>
           <div className="soft-tile admin-summary-card">
             <span className="admin-summary-label">Live-сценарии</span>
-            <strong className="admin-summary-value">{adminSummary.liveScenarios}</strong>
+            <strong className="admin-summary-value">{loading ? "—" : adminSummary.liveScenarios}</strong>
           </div>
           <div className="soft-tile admin-summary-card">
             <span className="admin-summary-label">Премьеры</span>
-            <strong className="admin-summary-value">{adminSummary.scheduledScenarios}</strong>
+            <strong className="admin-summary-value">{loading ? "—" : adminSummary.scheduledScenarios}</strong>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
-          <section className="glass-card p-6">
-            <div className="flex items-center gap-3">
-              <div className="feature-icon">
-                <Users size={18} />
-              </div>
-              <div>
-                <p className="eyebrow">Аккаунты</p>
-                <h2 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">Управление пользователями</h2>
+        <div className="admin-workspace">
+          <section className="glass-card admin-panel">
+            <div className="admin-panel-head">
+              <div className="admin-panel-heading">
+                <div className="feature-icon">
+                  <Users size={18} />
+                </div>
+                <div>
+                  <p className="eyebrow">Аккаунты</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">Управление пользователями</h2>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 space-y-3">
+            <div className="admin-panel-scroll admin-users-scroll">
               {loading ? (
-                <div className="soft-tile text-sm text-[var(--color-text-muted)]">Загружаем список аккаунтов.</div>
-              ) : (
+                <div className="soft-tile admin-empty-state">Загружаем список аккаунтов.</div>
+              ) : users.length ? (
                 users.map((user) => (
                   <div key={user.id} className="soft-tile admin-user-card">
-                    <div>
-                      <p className="font-semibold text-[var(--color-text-primary)]">{user.display_name}</p>
-                      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                    <div className="admin-user-copy">
+                      <p className="admin-user-name">{user.display_name}</p>
+                      <p className="admin-user-meta">
                         {user.role === "admin" ? `Логин: ${user.username || "Admin"}` : user.email}
                       </p>
-                      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--color-accent)]">
-                        Рейтинг {user.security_rating} • Завершено {user.completed_scenarios}
+                      <p className="admin-user-stats">
+                        Рейтинг {user.security_rating} • Завершено {user.completed_scenarios} • Сессий {user.total_sessions}
                       </p>
                     </div>
                     <button
@@ -409,13 +413,15 @@ export default function AdminPage() {
                     </button>
                   </div>
                 ))
+              ) : (
+                <div className="soft-tile admin-empty-state">Пока нет доступных аккаунтов для управления.</div>
               )}
             </div>
           </section>
 
-          <section className="glass-card p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+          <section className="glass-card admin-panel admin-cms-panel">
+            <div className="admin-panel-head admin-panel-head-split">
+              <div className="admin-panel-heading">
                 <div className="feature-icon">
                   <CalendarClock size={18} />
                 </div>
@@ -423,262 +429,322 @@ export default function AdminPage() {
                   <p className="eyebrow">Сценарии</p>
                   <h2 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">CMS обучающих кейсов</h2>
                 </div>
-              </div>
-              <button type="button" className="primary-button" onClick={() => setSelectedScenarioId("new")}>
+                  </div>
+              <button type="button" className="primary-button" onClick={() => setSelectedScenarioId("new")} disabled={loading}>
                 <Plus size={16} />
                 Новый сценарий
               </button>
             </div>
 
-            <div className="mt-6 admin-scenario-layout">
-              <div className="admin-scenario-list">
-                {scenarios.map((scenario) => (
-                  <button
-                    key={scenario.id}
-                    type="button"
-                    className={`soft-tile admin-scenario-list-item ${selectedScenarioId === scenario.id ? "admin-scenario-list-item-active" : ""}`}
-                    onClick={() => setSelectedScenarioId(scenario.id)}
-                  >
-                    <span className="admin-scenario-status">{scenario.status}</span>
-                    <strong className="admin-scenario-name">{scenario.title}</strong>
-                    <span className="admin-scenario-meta">
-                      {scenario.step_count} шага • {scenario.is_playable ? "доступен игрокам" : "скрыт"}
-                    </span>
-                  </button>
-                ))}
+            <div className="admin-scenario-layout">
+              <div className="admin-scenario-list-panel">
+                <div className="admin-panel-subhead">
+                  <p className="eyebrow">Каталог</p>
+                  <p className="admin-panel-subcopy">Черновики, премьеры и живые сценарии в одном списке.</p>
+                </div>
+                <div className="admin-scenario-list-scroll">
+                  <div className="admin-scenario-list">
+                    {loading ? (
+                      <div className="soft-tile admin-empty-state">Загружаем сценарии и их статусы.</div>
+                    ) : scenarios.length ? (
+                      scenarios.map((scenario) => (
+                        <button
+                          key={scenario.id}
+                          type="button"
+                          className={`soft-tile admin-scenario-list-item ${selectedScenarioId === scenario.id ? "admin-scenario-list-item-active" : ""}`}
+                          onClick={() => setSelectedScenarioId(scenario.id)}
+                        >
+                          <span className="admin-scenario-status">{scenario.status}</span>
+                          <strong className="admin-scenario-name">{scenario.title}</strong>
+                          <span className="admin-scenario-meta">
+                            {scenario.step_count} шага • {scenario.is_playable ? "доступен игрокам" : "скрыт"}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="soft-tile admin-empty-state">
+                        Сценарии ещё не созданы. Нажмите «Новый сценарий» и заполните ветку справа.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <form onSubmit={handleScenarioSubmit} className="admin-scenario-editor">
-                <div className="admin-editor-head">
-                  <div>
-                    <p className="eyebrow">{selectedScenario ? "Редактирование" : "Создание"}</p>
-                    <h3 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">
-                      {selectedScenario ? selectedScenario.title : "Новый сценарий"}
-                    </h3>
-                  </div>
-                  {selectedScenario ? (
-                    <button type="button" className="secondary-button" onClick={handleDeleteScenario}>
-                      <Trash2 size={16} />
-                      Удалить
-                    </button>
-                  ) : null}
-                </div>
-
-                {selectedScenario?.has_sessions ? (
-                  <div className="soft-tile admin-warning-card">
-                    У сценария уже есть пользовательские прохождения. Можно менять метаданные и расписание, но нельзя менять шаги и варианты ответов.
-                  </div>
-                ) : null}
-
-                <div className="admin-editor-grid">
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                    Slug
-                    <input
-                      value={form.slug}
-                      onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
-                      className="admin-input"
-                      required
-                      maxLength={100}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                    Сложность
-                    <input
-                      value={form.difficulty}
-                      onChange={(event) => setForm((current) => ({ ...current, difficulty: event.target.value }))}
-                      className="admin-input"
-                      required
-                      maxLength={50}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                    Название
-                    <input
-                      value={form.title}
-                      onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                      className="admin-input"
-                      required
-                      maxLength={255}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                    Тема
-                    <input
-                      value={form.theme}
-                      onChange={(event) => setForm((current) => ({ ...current, theme: event.target.value }))}
-                      className="admin-input"
-                      required
-                      maxLength={255}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                    Описание
-                    <textarea
-                      value={form.description}
-                      onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                      className="admin-input admin-textarea"
-                      required
-                      maxLength={1500}
-                    />
-                  </label>
-                  <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                    Дата и время премьеры
-                    <input type="datetime-local" value={releaseLocal} onChange={(event) => setReleaseLocal(event.target.value)} className="admin-input" />
-                  </label>
-                  <label className="admin-toggle">
-                    <input
-                      type="checkbox"
-                      checked={form.is_enabled}
-                      onChange={(event) => setForm((current) => ({ ...current, is_enabled: event.target.checked }))}
-                    />
-                    <span>Сценарий включён для публикации</span>
-                  </label>
-                </div>
-
-                <div className="admin-steps-head">
-                  <div>
-                    <p className="eyebrow">Шаги</p>
-                    <h4 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">Нарратив и варианты ответа</h4>
-                  </div>
-                  <button type="button" className="secondary-button" onClick={addStep}>
-                    <Plus size={16} />
-                    Добавить шаг
-                  </button>
-                </div>
-
-                <div className="mt-5 space-y-5">
-                  {form.steps.map((step, stepIndex) => (
-                    <div key={`${step.step_order}-${stepIndex}`} className="soft-tile admin-step-card">
-                      <div className="admin-step-head">
-                        <strong className="text-[var(--color-text-primary)]">Шаг {stepIndex + 1}</strong>
-                        <button type="button" className="secondary-button admin-inline-action" onClick={() => removeStep(stepIndex)}>
-                          <Trash2 size={16} />
-                          Удалить шаг
-                        </button>
+              <div className="admin-editor-panel">
+                <form onSubmit={handleScenarioSubmit} className="admin-scenario-editor">
+                  <div className="admin-editor-scroll">
+                    <div className="admin-editor-head admin-editor-sticky-head">
+                      <div>
+                        <p className="eyebrow">{selectedScenario ? "Редактирование" : "Создание"}</p>
+                        <h3 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">
+                          {selectedScenario ? selectedScenario.title : "Новый сценарий"}
+                        </h3>
                       </div>
+                      {selectedScenario ? (
+                        <button type="button" className="secondary-button" onClick={handleDeleteScenario} disabled={scenarioLocked || editorBusy}>
+                          <Trash2 size={16} />
+                          Удалить
+                        </button>
+                      ) : null}
+                    </div>
 
-                      <div className="admin-editor-grid mt-4">
-                        <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                          Prompt
-                          <textarea
-                            value={step.prompt}
-                            onChange={(event) => updateStep(stepIndex, { prompt: event.target.value })}
-                            className="admin-input admin-textarea"
-                            required
-                            maxLength={2000}
-                          />
-                        </label>
-                        <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                          Тип угрозы
+                    {scenarioLocked ? (
+                      <div className="soft-tile admin-warning-card">
+                        У сценария уже есть пользовательские прохождения. Можно менять метаданные и расписание, но шаги и варианты ответов зафиксированы.
+                      </div>
+                    ) : null}
+
+                      <div className="admin-editor-grid">
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                          Slug
                           <input
-                            value={step.threat_type}
-                            onChange={(event) => updateStep(stepIndex, { threat_type: event.target.value })}
+                            value={form.slug}
+                            onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))}
                             className="admin-input"
                             required
-                            maxLength={120}
+                            maxLength={100}
+                            disabled={editorBusy}
                           />
                         </label>
-                        <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                          Объяснение
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                          Сложность
+                          <input
+                            value={form.difficulty}
+                            onChange={(event) => setForm((current) => ({ ...current, difficulty: event.target.value }))}
+                            className="admin-input"
+                            required
+                            maxLength={50}
+                            disabled={editorBusy}
+                          />
+                        </label>
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                          Название
+                          <input
+                            value={form.title}
+                            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                            className="admin-input"
+                            required
+                            maxLength={255}
+                            disabled={editorBusy}
+                          />
+                        </label>
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                          Тема
+                          <input
+                            value={form.theme}
+                            onChange={(event) => setForm((current) => ({ ...current, theme: event.target.value }))}
+                            className="admin-input"
+                            required
+                            maxLength={255}
+                            disabled={editorBusy}
+                          />
+                        </label>
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                          Описание
                           <textarea
-                            value={step.explanation}
-                            onChange={(event) => updateStep(stepIndex, { explanation: event.target.value })}
+                            value={form.description}
+                            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                             className="admin-input admin-textarea"
                             required
-                            maxLength={3000}
+                            maxLength={1500}
+                            disabled={editorBusy}
                           />
+                        </label>
+                        <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                          Дата и время премьеры
+                          <input
+                            type="datetime-local"
+                            value={releaseLocal}
+                            onChange={(event) => setReleaseLocal(event.target.value)}
+                            className="admin-input"
+                            disabled={editorBusy}
+                          />
+                        </label>
+                        <label className="admin-toggle">
+                          <input
+                            type="checkbox"
+                            checked={form.is_enabled}
+                            onChange={(event) => setForm((current) => ({ ...current, is_enabled: event.target.checked }))}
+                            disabled={editorBusy}
+                          />
+                          <span>Сценарий включён для публикации</span>
                         </label>
                       </div>
 
-                      <div className="admin-options-head">
-                        <p className="eyebrow">Варианты ответа</p>
-                        <button type="button" className="secondary-button admin-inline-action" onClick={() => addOption(stepIndex)}>
-                          <Plus size={16} />
-                          Добавить вариант
-                        </button>
+                    <div className="admin-steps-head">
+                      <div>
+                        <p className="eyebrow">Шаги</p>
+                          <h4 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">Нарратив и варианты ответа</h4>
                       </div>
-
-                      <div className="mt-4 space-y-4">
-                        {step.options.map((option, optionIndex) => (
-                          <div key={`${stepIndex}-${optionIndex}`} className="admin-option-card">
-                            <div className="admin-option-head">
-                              <label className="admin-toggle">
-                                <input type="radio" checked={option.is_correct} onChange={() => updateOption(stepIndex, optionIndex, { is_correct: true })} />
-                                <span>Правильный ответ</span>
-                              </label>
-                              <button type="button" className="secondary-button admin-inline-action" onClick={() => removeOption(stepIndex, optionIndex)}>
-                                <Trash2 size={16} />
-                                Удалить
-                              </button>
-                            </div>
-
-                            <div className="admin-editor-grid mt-4">
-                              <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                                Текст варианта
-                                <textarea
-                                  value={option.label}
-                                  onChange={(event) => updateOption(stepIndex, optionIndex, { label: event.target.value })}
-                                  className="admin-input admin-textarea"
-                                  required
-                                  maxLength={255}
-                                />
-                              </label>
-                              <label className="grid gap-2 text-sm text-[var(--color-text-muted)]">
-                                HP delta
-                                <input
-                                  type="number"
-                                  value={option.hp_delta}
-                                  onChange={(event) => updateOption(stepIndex, optionIndex, { hp_delta: Number(event.target.value) })}
-                                  className="admin-input"
-                                  required
-                                />
-                              </label>
-                              <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                                Подсказка
-                                <textarea
-                                  value={option.hint ?? ""}
-                                  onChange={(event) => updateOption(stepIndex, optionIndex, { hint: event.target.value })}
-                                  className="admin-input admin-textarea"
-                                  maxLength={500}
-                                />
-                              </label>
-                              <label className="grid gap-2 text-sm text-[var(--color-text-muted)] admin-grid-span">
-                                Последствие
-                                <textarea
-                                  value={option.consequence_text}
-                                  onChange={(event) => updateOption(stepIndex, optionIndex, { consequence_text: event.target.value })}
-                                  className="admin-input admin-textarea"
-                                  required
-                                  maxLength={1500}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <button type="button" className="secondary-button" onClick={addStep} disabled={scenarioLocked || editorBusy}>
+                        <Plus size={16} />
+                        Добавить шаг
+                      </button>
                     </div>
-                  ))}
-                </div>
 
-                <div className="mt-6 flex flex-wrap gap-4">
-                  <button type="submit" className="primary-button" disabled={savingScenario}>
-                    <PencilLine size={16} />
-                    {savingScenario ? "Сохраняем..." : selectedScenario ? "Сохранить сценарий" : "Создать сценарий"}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => {
-                      setSelectedScenarioId("new");
-                      setInfo(null);
-                      setError(null);
-                    }}
-                  >
-                    <ShieldCheck size={16} />
-                    Очистить форму
-                  </button>
-                </div>
-              </form>
+                    <div className="mt-5 space-y-5">
+                      {form.steps.map((step, stepIndex) => (
+                        <div key={`${step.step_order}-${stepIndex}`} className="soft-tile admin-step-card">
+                          <div className="admin-step-head">
+                            <strong className="text-[var(--color-text-primary)]">Шаг {stepIndex + 1}</strong>
+                            <button
+                              type="button"
+                              className="secondary-button admin-inline-action"
+                              onClick={() => removeStep(stepIndex)}
+                              disabled={scenarioLocked || editorBusy}
+                            >
+                              <Trash2 size={16} />
+                              Удалить шаг
+                            </button>
+                          </div>
+
+                          <div className="admin-editor-grid mt-4">
+                            <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                              Prompt
+                              <textarea
+                                value={step.prompt}
+                                onChange={(event) => updateStep(stepIndex, { prompt: event.target.value })}
+                                className="admin-input admin-textarea"
+                                required
+                                maxLength={2000}
+                                disabled={scenarioLocked || editorBusy}
+                              />
+                            </label>
+                            <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                              Тип угрозы
+                              <input
+                                value={step.threat_type}
+                                onChange={(event) => updateStep(stepIndex, { threat_type: event.target.value })}
+                                className="admin-input"
+                                required
+                                maxLength={120}
+                                disabled={scenarioLocked || editorBusy}
+                              />
+                            </label>
+                            <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                              Объяснение
+                              <textarea
+                                value={step.explanation}
+                                onChange={(event) => updateStep(stepIndex, { explanation: event.target.value })}
+                                className="admin-input admin-textarea"
+                                required
+                                maxLength={3000}
+                                disabled={scenarioLocked || editorBusy}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="admin-options-head">
+                            <p className="eyebrow">Варианты ответа</p>
+                            <button
+                              type="button"
+                              className="secondary-button admin-inline-action"
+                              onClick={() => addOption(stepIndex)}
+                              disabled={scenarioLocked || editorBusy}
+                            >
+                              <Plus size={16} />
+                              Добавить вариант
+                            </button>
+                          </div>
+
+                          <div className="mt-4 space-y-4">
+                            {step.options.map((option, optionIndex) => (
+                              <div key={`${stepIndex}-${optionIndex}`} className="admin-option-card">
+                                <div className="admin-option-head">
+                                  <label className="admin-toggle">
+                                    <input
+                                      type="radio"
+                                      checked={option.is_correct}
+                                      onChange={() => updateOption(stepIndex, optionIndex, { is_correct: true })}
+                                      disabled={scenarioLocked || editorBusy}
+                                    />
+                                    <span>Правильный ответ</span>
+                                  </label>
+                                  <button
+                                    type="button"
+                                    className="secondary-button admin-inline-action"
+                                    onClick={() => removeOption(stepIndex, optionIndex)}
+                                    disabled={scenarioLocked || editorBusy}
+                                  >
+                                    <Trash2 size={16} />
+                                    Удалить
+                                  </button>
+                                </div>
+
+                                <div className="admin-editor-grid mt-4">
+                                  <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                                    Текст варианта
+                                    <textarea
+                                      value={option.label}
+                                      onChange={(event) => updateOption(stepIndex, optionIndex, { label: event.target.value })}
+                                      className="admin-input admin-textarea"
+                                      required
+                                      maxLength={255}
+                                      disabled={scenarioLocked || editorBusy}
+                                    />
+                                  </label>
+                                  <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)]">
+                                    HP delta
+                                    <input
+                                      type="number"
+                                      value={option.hp_delta}
+                                      onChange={(event) => updateOption(stepIndex, optionIndex, { hp_delta: Number(event.target.value) })}
+                                      className="admin-input"
+                                      required
+                                      disabled={scenarioLocked || editorBusy}
+                                    />
+                                  </label>
+                                  <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                                    Подсказка
+                                    <textarea
+                                      value={option.hint ?? ""}
+                                      onChange={(event) => updateOption(stepIndex, optionIndex, { hint: event.target.value })}
+                                      className="admin-input admin-textarea"
+                                      maxLength={500}
+                                      disabled={scenarioLocked || editorBusy}
+                                    />
+                                  </label>
+                                  <label className="grid gap-2.5 text-sm text-[var(--color-text-muted)] admin-grid-span">
+                                    Последствие
+                                    <textarea
+                                      value={option.consequence_text}
+                                      onChange={(event) => updateOption(stepIndex, optionIndex, { consequence_text: event.target.value })}
+                                      className="admin-input admin-textarea"
+                                      required
+                                      maxLength={1500}
+                                      disabled={scenarioLocked || editorBusy}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="admin-editor-footer">
+                    <button type="submit" className="primary-button" disabled={editorBusy}>
+                      <PencilLine size={16} />
+                      {savingScenario ? "Сохраняем..." : selectedScenario ? "Сохранить сценарий" : "Создать сценарий"}
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setSelectedScenarioId("new");
+                        setInfo(null);
+                        setError(null);
+                      }}
+                      disabled={editorBusy}
+                    >
+                      <ShieldCheck size={16} />
+                      Очистить форму
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </section>
         </div>

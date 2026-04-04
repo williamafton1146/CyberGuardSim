@@ -42,46 +42,46 @@ export default function LeaderboardPage() {
           description="Рейтинг отражает накопленный security rating, текущую лигу и количество завершенных сценариев для каждого участника."
         />
 
-        <div className="glass-card p-6">
-          <div className="grid grid-cols-[80px_1fr_150px_120px] gap-4 border-b border-[var(--color-border)] px-4 pb-4 text-xs uppercase tracking-[0.25em] text-[var(--color-text-muted)] md:grid-cols-[90px_1fr_180px_180px]">
-            <p>Место</p>
-            <p>Игрок</p>
-            <p>Лига</p>
-            <p>Рейтинг</p>
+        <div className="glass-card leaderboard-card p-6">
+          <div className="leaderboard-scroll-region">
+            {error ? (
+              <div className="soft-tile admin-empty-state border-[rgba(255,114,92,0.28)] bg-[var(--color-alert-soft)] text-[var(--color-alert)]">
+                {error}
+              </div>
+            ) : loading ? (
+              <div className="soft-tile admin-empty-state">Загружаем актуальный рейтинг и показатели участников.</div>
+            ) : entries.length ? (
+              <div className="leaderboard-table-shell">
+                <table className="leaderboard-table">
+                  <thead>
+                    <tr>
+                      <th>Место</th>
+                      <th>Игрок</th>
+                      <th>Лига</th>
+                      <th>Рейтинг</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map((entry) => (
+                      <tr key={entry.rank} className="leaderboard-row">
+                        <td className="leaderboard-rank">#{entry.rank}</td>
+                        <td>
+                          <div className="leaderboard-player">
+                            <p className="leaderboard-player-name">{entry.display_name}</p>
+                            <p className="leaderboard-player-meta">{entry.completed_sessions} завершенных миссий</p>
+                          </div>
+                        </td>
+                        <td>{entry.league}</td>
+                        <td className="leaderboard-rating">{entry.security_rating}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="soft-tile admin-empty-state">Рейтинг пока пуст. Он заполнится после первых завершенных миссий.</div>
+            )}
           </div>
-
-          {error ? (
-            <p className="mt-4 rounded-[1.2rem] border border-[rgba(255,114,92,0.28)] bg-[var(--color-alert-soft)] px-4 py-3 text-sm text-[var(--color-alert)]">
-              {error}
-            </p>
-          ) : null}
-
-          {loading ? (
-            <div className="mt-4 rounded-[1.35rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-6 text-sm text-[var(--color-text-muted)]">
-              Загружаем актуальный рейтинг и показатели участников.
-            </div>
-          ) : entries.length ? (
-            <div className="mt-4 space-y-3">
-              {entries.map((entry) => (
-                <div
-                  key={entry.rank}
-                  className="grid grid-cols-[80px_1fr_150px_120px] gap-4 rounded-[1.35rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-4 text-sm text-[var(--color-text-secondary)] md:grid-cols-[90px_1fr_180px_180px]"
-                >
-                  <p className="font-semibold text-[var(--color-accent)]">#{entry.rank}</p>
-                  <div>
-                    <p className="font-medium text-[var(--color-text-primary)]">{entry.display_name}</p>
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entry.completed_sessions} завершенных миссий</p>
-                  </div>
-                  <p>{entry.league}</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{entry.security_rating}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-4 rounded-[1.35rem] border border-[var(--color-border)] bg-[var(--color-bg-soft)] px-4 py-6 text-sm text-[var(--color-text-muted)]">
-              Рейтинг пока пуст. Он заполнится после первых завершенных миссий.
-            </div>
-          )}
         </div>
       </div>
     </RequireAuth>
