@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.redis_client import LEADERBOARD_KEY, delete_key, get_json, set_json, set_session_state
@@ -108,21 +109,37 @@ def build_leaderboard(db: Session) -> list[LeaderboardEntry]:
     if isinstance(cached, list):
         return [LeaderboardEntry(**row) for row in cached]
 
-    users = db.query(User).filter(User.role != "admin").order_by(User.security_rating.desc(), User.id.asc()).limit(10).all()
+    completed_counts = (
+        db.query(
+            UserScenarioProgress.user_id.label("user_id"),
+            func.count(UserScenarioProgress.id).label("completed_sessions"),
+        )
+        .filter(UserScenarioProgress.best_completed.is_(True))
+        .group_by(UserScenarioProgress.user_id)
+        .subquery()
+    )
+    users = (
+        db.query(
+            User.display_name,
+            User.security_rating,
+            User.league,
+            func.coalesce(completed_counts.c.completed_sessions, 0).label("completed_sessions"),
+        )
+        .outerjoin(completed_counts, completed_counts.c.user_id == User.id)
+        .filter(User.role != "admin")
+        .order_by(User.security_rating.desc(), User.id.asc())
+        .limit(10)
+        .all()
+    )
     entries: list[LeaderboardEntry] = []
     for index, user in enumerate(users, start=1):
-        completed_sessions = (
-            db.query(UserScenarioProgress)
-            .filter(UserScenarioProgress.user_id == user.id, UserScenarioProgress.best_completed.is_(True))
-            .count()
-        )
         entries.append(
             LeaderboardEntry(
                 rank=index,
                 display_name=user.display_name,
                 security_rating=user.security_rating,
                 league=user.league,
-                completed_sessions=completed_sessions,
+                completed_sessions=int(user.completed_sessions or 0),
             )
         )
     set_json(LEADERBOARD_KEY, [entry.model_dump() for entry in entries], ttl=300)

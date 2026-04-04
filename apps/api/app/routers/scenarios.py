@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import selectinload
 
 from app.core.db import get_db
 from app.core.security import get_current_admin_user
-from app.models.scenario import Scenario
+from app.models.scenario import Scenario, ScenarioStep
+from app.models.session import GameSession
 from app.models.user import User
 from app.schemas.scenario import AdminScenarioRead, AdminScenarioUpsert, ScenarioDetail, ScenarioListItem
 from app.services.scenarios import (
@@ -41,8 +44,22 @@ async def list_admin_scenarios(
     _: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ) -> list[AdminScenarioRead]:
-    scenarios = db.query(Scenario).order_by(Scenario.id).all()
-    return [serialize_admin_scenario(scenario, db) for scenario in scenarios]
+    has_sessions_rows = (
+        db.query(
+            GameSession.scenario_id.label("scenario_id"),
+            func.count(GameSession.id).label("session_count"),
+        )
+        .group_by(GameSession.scenario_id)
+        .all()
+    )
+    has_sessions_map = {scenario_id: session_count > 0 for scenario_id, session_count in has_sessions_rows}
+    scenarios = (
+        db.query(Scenario)
+        .options(selectinload(Scenario.steps).selectinload(ScenarioStep.decision_options))
+        .order_by(Scenario.id)
+        .all()
+    )
+    return [serialize_admin_scenario(scenario, db, has_sessions=has_sessions_map.get(scenario.id, False)) for scenario in scenarios]
 
 
 @admin_router.post("", response_model=AdminScenarioRead, status_code=status.HTTP_201_CREATED)

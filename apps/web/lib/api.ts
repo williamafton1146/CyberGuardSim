@@ -103,11 +103,7 @@ export async function getStats(token: string) {
 }
 
 export async function getScenarios() {
-  try {
-    return await request<ScenarioSummary[]>("/scenarios");
-  } catch {
-    return [];
-  }
+  return request<ScenarioSummary[]>("/scenarios");
 }
 
 export async function startSession(token: string, scenario_slug: string) {

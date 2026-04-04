@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Award, CheckCircle2, QrCode, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
 
 import { downloadNodeAsPdf } from "@/lib/pdf";
 import type { CertificateStatus } from "@/types";
@@ -37,6 +36,7 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
       }
 
       try {
+        const { default: QRCode } = await import("qrcode");
         const encoded = await QRCode.toDataURL(status.certificate.verify_url, {
           width: 180,
           margin: 1,

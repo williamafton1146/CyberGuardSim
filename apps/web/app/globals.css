@@ -201,40 +201,7 @@ input {
 .header-identity-cluster {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
-}
-
-.header-top-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-elevated);
-  backdrop-filter: blur(14px);
-}
-
-.brand-mark-compact {
-  height: 2.4rem;
-  width: 2.4rem;
-  border-radius: 0.85rem;
-  box-shadow: 0 12px 28px var(--color-shadow);
-}
-
-.header-top-brand-label {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.header-top-brand-meta {
-  margin: 0.08rem 0 0;
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+  gap: 0.55rem;
 }
 
 .header-avatar-chip {
@@ -392,7 +359,7 @@ input {
 [data-theme="light"] .guide-modal,
 [data-theme="light"] .admin-scenario-list-item,
 [data-theme="light"] .admin-option-card {
-  box-shadow: 0 8px 22px rgba(20, 36, 59, 0.06);
+  box-shadow: 0 6px 16px rgba(20, 36, 59, 0.045);
 }
 
 [data-theme="light"] .secondary-button,
@@ -420,7 +387,7 @@ input {
 }
 
 [data-theme="light"] .primary-button {
-  box-shadow: 0 6px 18px rgba(23, 119, 105, 0.12);
+  box-shadow: 0 5px 14px rgba(23, 119, 105, 0.1);
 }
 
 [data-theme="light"] .site-gradient {
@@ -992,7 +959,7 @@ input {
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(214, 226, 244, 0.44);
+  color: rgba(214, 226, 244, 0.4);
 }
 
 [data-theme="light"] .landing-footer-meta {
@@ -1001,11 +968,13 @@ input {
 
 .landing-footer-copy {
   margin: 0;
-  padding-top: 0.42rem;
+  max-width: 46rem;
+  padding-top: 0.55rem;
+  margin-inline: auto;
   text-align: center;
   font-size: 0.72rem;
   line-height: 1.6;
-  color: rgba(214, 226, 244, 0.38);
+  color: rgba(214, 226, 244, 0.34);
 }
 
 [data-theme="light"] .landing-footer-copy {

@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.scenario import DecisionOption, Scenario, ScenarioStep
 from app.models.session import GameSession
@@ -75,7 +76,13 @@ def serialize_scenario_detail(scenario: Scenario, now: datetime | None = None) -
     )
 
 
-def serialize_admin_scenario(scenario: Scenario, db: Session, now: datetime | None = None) -> AdminScenarioRead:
+def serialize_admin_scenario(
+    scenario: Scenario,
+    db: Session,
+    now: datetime | None = None,
+    *,
+    has_sessions: bool | None = None,
+) -> AdminScenarioRead:
     return AdminScenarioRead(
         id=scenario.id,
         slug=scenario.slug,
@@ -90,7 +97,7 @@ def serialize_admin_scenario(scenario: Scenario, db: Session, now: datetime | No
         step_count=len(scenario.steps),
         created_at=scenario.created_at,
         updated_at=scenario.updated_at,
-        has_sessions=scenario_has_sessions(db, scenario.id),
+        has_sessions=scenario_has_sessions(db, scenario.id) if has_sessions is None else has_sessions,
         steps=[
             AdminScenarioStepRead(
                 id=step.id,
@@ -116,16 +123,26 @@ def serialize_admin_scenario(scenario: Scenario, db: Session, now: datetime | No
 
 
 def list_live_scenarios(db: Session) -> list[Scenario]:
-    scenarios = db.query(Scenario).order_by(Scenario.id).all()
     now = utc_now()
-    return [scenario for scenario in scenarios if scenario_is_live(scenario, now)]
+    return (
+        db.query(Scenario)
+        .options(selectinload(Scenario.steps))
+        .filter(Scenario.is_enabled.is_(True))
+        .filter(or_(Scenario.release_at.is_(None), Scenario.release_at <= now))
+        .order_by(Scenario.id)
+        .all()
+    )
 
 
 def get_live_scenario_by_slug(db: Session, slug: str) -> Scenario | None:
-    scenario = db.query(Scenario).filter(Scenario.slug == slug).first()
-    if scenario is None:
-        return None
-    return scenario if scenario_is_live(scenario) else None
+    now = utc_now()
+    return (
+        db.query(Scenario)
+        .options(selectinload(Scenario.steps).selectinload(ScenarioStep.decision_options))
+        .filter(Scenario.slug == slug, Scenario.is_enabled.is_(True))
+        .filter(or_(Scenario.release_at.is_(None), Scenario.release_at <= now))
+        .first()
+    )
 
 
 def validate_scenario_payload(payload: AdminScenarioUpsert) -> None:

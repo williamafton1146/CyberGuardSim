@@ -1,7 +1,5 @@
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-
 export async function downloadNodeAsPdf(node: HTMLElement, filename: string) {
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
   const canvas = await html2canvas(node, {
     scale: 2,
     backgroundColor: null,

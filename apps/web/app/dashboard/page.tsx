@@ -18,7 +18,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<UserStats>(demoStats);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [certificateStatus, setCertificateStatus] = useState<CertificateStatus | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scenarioError, setScenarioError] = useState<string | null>(null);
   const [issuingCertificate, setIssuingCertificate] = useState(false);
 
   useEffect(() => {
@@ -27,14 +29,32 @@ export default function DashboardPage() {
       return;
     }
 
-    Promise.all([getMe(token), getStats(token), getScenarios(), getCertificateStatus(token)])
+    Promise.allSettled([getMe(token), getStats(token), getScenarios(), getCertificateStatus(token)])
       .then(([me, statsPayload, scenariosPayload, certificatePayload]) => {
-        setProfile(me);
-        setStats(statsPayload);
-        setScenarios(scenariosPayload);
-        setCertificateStatus(certificatePayload);
+        if (me.status === "rejected") {
+          throw me.reason;
+        }
+        if (statsPayload.status === "rejected") {
+          throw statsPayload.reason;
+        }
+        if (certificatePayload.status === "rejected") {
+          throw certificatePayload.reason;
+        }
+
+        setProfile(me.value);
+        setStats(statsPayload.value);
+        setCertificateStatus(certificatePayload.value);
+
+        if (scenariosPayload.status === "fulfilled") {
+          setScenarios(scenariosPayload.value);
+          setScenarioError(null);
+        } else {
+          setScenarios([]);
+          setScenarioError(scenariosPayload.reason instanceof Error ? scenariosPayload.reason.message : "Не удалось загрузить список сценариев");
+        }
       })
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить кабинет"));
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить кабинет"))
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleIssueCertificate() {
@@ -65,6 +85,10 @@ export default function DashboardPage() {
           description="Здесь собраны текущая лига, сценарный прогресс и последние ошибки, чтобы пользователь видел не только баллы, но и реальные зоны риска."
         />
 
+        {loading ? (
+          <div className="glass-card p-6 text-sm text-[var(--color-text-muted)]">Загружаем профиль, статистику и текущий статус программы.</div>
+        ) : null}
+
         {profile ? (
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="glass-card p-6">
@@ -85,6 +109,11 @@ export default function DashboardPage() {
 
             <div className="glass-card p-6">
               <p className="eyebrow">Следующие шаги</p>
+              {scenarioError ? (
+                <p className="mt-5 rounded-[1.2rem] border border-[rgba(255,114,92,0.28)] bg-[var(--color-alert-soft)] px-4 py-3 text-sm text-[var(--color-alert)]">
+                  {scenarioError}
+                </p>
+              ) : null}
               <div className="mt-5 grid gap-4 md:grid-cols-3">
                 {scenarios.map((scenario) => (
                   <div key={scenario.slug} className="soft-tile">
@@ -95,6 +124,11 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 ))}
+                {!scenarioError && !scenarios.length ? (
+                  <div className="soft-tile md:col-span-3">
+                    Опубликованные сценарии пока не найдены. Этот блок теперь показывает реальное состояние, а не молча маскирует отсутствие данных.
+                  </div>
+                ) : null}
               </div>
               <div className="mt-6 flex flex-wrap gap-4">
                 <Link href="/simulator" className="primary-button">

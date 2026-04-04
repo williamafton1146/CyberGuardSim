@@ -35,6 +35,7 @@ function buildImpactTimeline(feedback: AnswerResult) {
 export default function SimulatorPage() {
   const [token, setToken] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [scenariosLoading, setScenariosLoading] = useState(true);
   const [session, setSession] = useState<SessionState | null>(null);
   const [feedback, setFeedback] = useState<AnswerResult | null>(null);
   const [criticalPhase, setCriticalPhase] = useState<"idle" | "breaking" | "impact">("idle");
@@ -45,7 +46,16 @@ export default function SimulatorPage() {
   useEffect(() => {
     const currentToken = getToken();
     setToken(currentToken);
-    getScenarios().then(setScenarios);
+    getScenarios()
+      .then((payload) => {
+        setScenarios(payload);
+        setError(null);
+      })
+      .catch((loadError) => {
+        setScenarios([]);
+        setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить сценарии");
+      })
+      .finally(() => setScenariosLoading(false));
 
     return () => socketRef.current?.close();
   }, []);
@@ -122,9 +132,17 @@ export default function SimulatorPage() {
 
         <div className="grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
           <div className="space-y-6">
+            {scenariosLoading ? (
+              <div className="glass-card p-6 text-sm text-[var(--color-text-muted)]">Загружаем игровые миссии и их текущий статус публикации.</div>
+            ) : null}
             {scenarios.map((scenario) => (
               <ScenarioCard key={scenario.slug} scenario={scenario} onStart={launchScenario} />
             ))}
+            {!scenariosLoading && !scenarios.length && !error ? (
+              <div className="glass-card p-6 text-sm text-[var(--color-text-muted)]">
+                Сейчас нет доступных сценариев. Когда администратор опубликует новую ветку, она появится в этом списке.
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-6">

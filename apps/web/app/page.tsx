@@ -14,10 +14,21 @@ export const dynamic = "force-dynamic";
 export default function HomePage() {
   const [isAuthed, setIsAuthed] = useState(false);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [scenariosLoading, setScenariosLoading] = useState(true);
+  const [scenariosError, setScenariosError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsAuthed(Boolean(getToken()));
-    getScenarios().then(setScenarios);
+    getScenarios()
+      .then((payload) => {
+        setScenarios(payload);
+        setScenariosError(null);
+      })
+      .catch((loadError) => {
+        setScenarios([]);
+        setScenariosError(loadError instanceof Error ? loadError.message : "Не удалось загрузить список сценариев");
+      })
+      .finally(() => setScenariosLoading(false));
   }, []);
 
   const showcase = useMemo(
@@ -75,11 +86,10 @@ export default function HomePage() {
       <section className="shell shell-wide landing-hero">
         <div className="landing-hero-copy">
           <div className="landing-hero-topline">
-            <span className="landing-hero-pill">CyberSim Platform</span>
-            <span className="landing-hero-note">Интерактивная подготовка к цифровым инцидентам</span>
+            <span className="landing-hero-pill">Платформа цифровой устойчивости</span>
           </div>
           <h1 className="landing-title">CyberSim</h1>
-          <p className="landing-tagline">Тренировка цифровой устойчивости через реалистичные сценарии, рейтинг и подтверждаемый результат.</p>
+          <p className="landing-tagline">Сценарная подготовка к цифровым инцидентам с понятным прогрессом, рейтингом и подтверждаемым результатом.</p>
           <p className="landing-lead">
             Платформа показывает, как пользователь действует внутри настоящих бытовых и рабочих атак: от фишинговых писем и кодов
             подтверждения до небезопасных общественных сетей. Всё обучение собирается в единый маршрут с кабинетом, лидербордом и сертификатом.
@@ -132,6 +142,22 @@ export default function HomePage() {
         </div>
 
         <div className="landing-scenario-grid">
+          {scenariosError ? (
+            <article className="landing-scenario-card">
+              <h3 className="landing-scenario-title">Сценарии временно недоступны</h3>
+              <p className="landing-scenario-description">
+                Не удалось получить список миссий с сервера. Это состояние больше не маскируется пустым экраном: проверьте доступность API и повторите запрос.
+              </p>
+            </article>
+          ) : null}
+          {scenariosLoading ? (
+            <article className="landing-scenario-card">
+              <h3 className="landing-scenario-title">Загружаем сценарии</h3>
+              <p className="landing-scenario-description">
+                Получаем актуальные игровые ветки и их статус публикации, чтобы показать только реальные доступные миссии.
+              </p>
+            </article>
+          ) : null}
           {showcase.map((scenario) => (
             <article key={scenario.slug} className="landing-scenario-card">
               <div className="landing-scenario-head">
@@ -150,11 +176,11 @@ export default function HomePage() {
               </Link>
             </article>
           ))}
-          {!showcase.length ? (
+          {!scenariosLoading && !scenariosError && !showcase.length ? (
             <article className="landing-scenario-card">
-              <h3 className="landing-scenario-title">Сценарии загружаются</h3>
+              <h3 className="landing-scenario-title">Пока нет опубликованных сценариев</h3>
               <p className="landing-scenario-description">
-                Как только backend ответит, здесь появятся актуальные игровые ветки и их текущий статус публикации.
+                Как только администратор опубликует новую ветку обучения, она появится здесь вместе с её статусом и структурой прохождения.
               </p>
             </article>
           ) : null}
@@ -203,9 +229,9 @@ export default function HomePage() {
       <section className="shell shell-wide landing-section">
         <div className="landing-section-heading">
           <p className="eyebrow">Для пользователей</p>
-          <h2 className="section-subheading">Понятные бытовые рекомендации без длинных инструкций и сухих памяток.</h2>
+          <h2 className="section-subheading">Памятки и карточки действий для тех, кто хочет быстро проверить бытовые правила безопасности.</h2>
           <p className="body-copy landing-section-copy">
-            Внутри раздела собраны короткие карточки о кодах подтверждения, фишинге, публичном Wi‑Fi, подозрительных приложениях и QR-кодах с объяснением последствий ошибки.
+            В разделе собраны короткие бытовые рекомендации: коды подтверждения, фишинг, публичный Wi‑Fi, подозрительные приложения и QR-коды с объяснением последствий ошибки.
           </p>
         </div>
 

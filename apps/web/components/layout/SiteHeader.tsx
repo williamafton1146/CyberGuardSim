@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, LogOut, Shield, UserRound } from "lucide-react";
+import { ArrowRight, LogOut, UserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -108,16 +108,6 @@ export function SiteHeader() {
 
           {isAuthed && storedUser ? (
             <div className="header-identity-cluster">
-              <div className="header-top-brand" aria-hidden="true">
-                <div className="brand-mark brand-mark-compact">
-                  <Shield size={16} />
-                </div>
-                <div>
-                  <p className="header-top-brand-label">CyberSim</p>
-                  <p className="header-top-brand-meta">Secure mode</p>
-                </div>
-              </div>
-
               <div className="header-avatar-chip">
                 <div className="header-avatar-badge">{getInitials(storedUser.display_name)}</div>
                 <div className="header-avatar-meta">
