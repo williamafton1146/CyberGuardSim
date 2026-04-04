@@ -4,6 +4,7 @@ import {
   AlertCircle,
   AlertTriangle,
   CheckCircle,
+  CircleGauge,
   Lock,
   Mail,
   MessageCircle,
@@ -53,7 +54,9 @@ function getWorkspaceMeta(step: ScenarioStep | null) {
       icon: <Mail size={16} />,
       label: "Входящие",
       sender: "Служба безопасности",
-      note: "Внешнее письмо требует срочной реакции"
+      note: "Внешнее письмо требует срочной реакции",
+      watchLabel: "Проверить домен и источник",
+      context: "Письмо пытается провести вас к следующему действию через спешку и подмену доверия."
     };
   }
   if (threat.includes("social") || threat.includes("соц")) {
@@ -61,7 +64,9 @@ function getWorkspaceMeta(step: ScenarioStep | null) {
       icon: <MessageCircle size={16} />,
       label: "Корпоративный чат",
       sender: "Внутренний мессенджер",
-      note: "Запрос выглядит как обычное рабочее сообщение"
+      note: "Запрос выглядит как обычное рабочее сообщение",
+      watchLabel: "Проверить личность собеседника",
+      context: "Социальная инженерия маскируется под обычную операционную коммуникацию."
     };
   }
   if (threat.includes("wifi") || threat.includes("portal") || threat.includes("captive")) {
@@ -69,19 +74,39 @@ function getWorkspaceMeta(step: ScenarioStep | null) {
       icon: <Wifi size={16} />,
       label: "Сеть и портал",
       sender: "Public Wi-Fi",
-      note: "Подключение к общественной сети и captive portal"
+      note: "Подключение к общественной сети и captive portal",
+      watchLabel: "Сверить сеть и маршрут",
+      context: "Даже правдоподобный портал может вести на поддельную форму входа."
     };
   }
   return {
     icon: <Shield size={16} />,
     label: "Рабочий контекст",
     sender: "CyberSim",
-    note: "Контекст миссии и сигналы риска"
+    note: "Контекст миссии и сигналы риска",
+    watchLabel: "Остановиться и проверить запрос",
+    context: "Сценарий построен так, чтобы показать риск в привычном интерфейсе, а не в оторванном тесте."
   };
 }
 
-function buildModalNarrative(feedback: AnswerResult) {
-  return [
+function getThreatChecklist(threatType?: string | null) {
+  const threat = threatType?.toLowerCase() ?? "";
+
+  if (threat.includes("phishing") || threat.includes("фиш")) {
+    return ["Проверить домен и адрес отправителя", "Не открывать вложение и ссылку из письма", "Подтвердить запрос через официальный канал"];
+  }
+  if (threat.includes("social") || threat.includes("соц")) {
+    return ["Не действовать под давлением срочности", "Подтвердить личность через независимый канал", "Не передавать коды и доступ в чате"];
+  }
+  if (threat.includes("wifi") || threat.includes("portal") || threat.includes("captive")) {
+    return ["Уточнить правильное имя сети", "Проверить домен captive portal", "Не вводить рабочий пароль и коды на сетевом портале"];
+  }
+
+  return ["Проверить источник запроса", "Не сообщать коды и пароли", "Возвращаться в сервис только через официальный маршрут"];
+}
+
+function buildModalNarrative(feedback: AnswerResult, threatType?: string | null) {
+  const baseSteps = [
     {
       title: "Что произошло",
       text: feedback.consequence_text
@@ -93,6 +118,14 @@ function buildModalNarrative(feedback: AnswerResult) {
     {
       title: "Как действовать правильно",
       text: feedback.hint || "Остановить действие, проверить источник запроса и вернуться к сервису только через официальный канал."
+    }
+  ];
+
+  return [
+    ...baseSteps,
+    {
+      title: "На что смотреть в этом типе атаки",
+      text: getThreatChecklist(threatType).join(". ") + "."
     }
   ];
 }
@@ -113,26 +146,41 @@ function getScoreEncouragement(score: number, maxScore: number, status: string) 
 function IncomingMessage({ step }: { step: ScenarioStep | null }) {
   const meta = getWorkspaceMeta(step);
   const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const checklist = getThreatChecklist(step?.threat_type);
 
   return (
     <div className="incoming-message">
+      <div className="incoming-message-banner">
+        <span>{meta.label}</span>
+        <span>{meta.watchLabel}</span>
+      </div>
       <div className="flex items-start gap-3">
-        <div className="message-avatar">
-          {meta.icon}
-        </div>
+        <div className="message-avatar">{meta.icon}</div>
         <div className="flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="font-semibold text-[var(--color-text-primary)]">{meta.sender}</span>
+            <div className="incoming-message-identity">
+              <span className="font-semibold text-[var(--color-text-primary)]">{meta.sender}</span>
+              <span className="incoming-message-context">{meta.context}</span>
+            </div>
             <span className="text-xs text-[var(--color-text-muted)]">{time}</span>
           </div>
-          <div className="mt-2 rounded-[1.15rem] border border-[var(--color-border-weak)] bg-[var(--color-bg-soft)] p-4">
+          <div className="incoming-message-bubble">
             <p className="text-sm leading-7 text-[var(--color-text-secondary)] whitespace-pre-wrap">{step?.prompt}</p>
             <div className="incoming-message-note">
               <span>{meta.label}</span>
               <span>{meta.note}</span>
+              <span>{step?.threat_type}</span>
             </div>
           </div>
         </div>
+      </div>
+      <div className="incoming-message-checklist">
+        {checklist.map((item) => (
+          <div key={item} className="incoming-message-check">
+            <Shield size={14} />
+            <span>{item}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -181,8 +229,16 @@ function ConsequenceAnimationOverlay({ type }: { type: ConsequenceAnimation }) {
   );
 }
 
-function FeedbackModal({ feedback, onClose }: { feedback: AnswerResult; onClose: () => void }) {
-  const timeline = buildModalNarrative(feedback);
+function FeedbackModal({
+  feedback,
+  threatType,
+  onClose
+}: {
+  feedback: AnswerResult;
+  threatType?: string | null;
+  onClose: () => void;
+}) {
+  const timeline = buildModalNarrative(feedback, threatType);
   return (
     <div className="simulator-feedback-modal-backdrop" onClick={(event) => event.stopPropagation()}>
       <div className="simulator-feedback-modal">
@@ -196,6 +252,11 @@ function FeedbackModal({ feedback, onClose }: { feedback: AnswerResult; onClose:
               {feedback.severity === "critical" ? "Атаку нужно срочно останавливать" : "Решение требует корректировки"}
             </h3>
           </div>
+        </div>
+
+        <div className="simulator-feedback-alert-bar">
+          <span>{feedback.severity === "critical" ? "Сценарий заблокирован до подтверждения" : "Разбор шага открыт поверх рабочей сцены"}</span>
+          <span>{threatType ?? "Атака требует внимательной проверки"}</span>
         </div>
 
         <div className="mt-6 space-y-3">
@@ -230,6 +291,7 @@ export default function SimulatorPage() {
   const [animationType, setAnimationType] = useState<ConsequenceAnimation>(null);
   const [pendingCriticalFeedback, setPendingCriticalFeedback] = useState<AnswerResult | null>(null);
   const [modalFeedback, setModalFeedback] = useState<AnswerResult | null>(null);
+  const [criticalThreatType, setCriticalThreatType] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
@@ -292,6 +354,7 @@ export default function SimulatorPage() {
     setPendingCriticalFeedback(null);
     setCriticalPhase("idle");
     setAnimationType(null);
+    setCriticalThreatType(null);
     socketRef.current?.close();
 
     try {
@@ -313,6 +376,7 @@ export default function SimulatorPage() {
     }
 
     const selectedOption = session.current_step?.options.find((option) => option.id === optionId);
+    const currentThreatType = session.current_step?.threat_type ?? null;
     setLoading(true);
     setError(null);
 
@@ -324,10 +388,14 @@ export default function SimulatorPage() {
       if (!result.is_correct) {
         if (result.severity === "critical") {
           setAnimationType(getAnimationFromAction(selectedOption?.label ?? "", result));
+          setCriticalThreatType(currentThreatType);
           setPendingCriticalFeedback(result);
         } else {
+          setCriticalThreatType(currentThreatType);
           setModalFeedback(result);
         }
+      } else {
+        setCriticalThreatType(null);
       }
     } catch (answerError) {
       setError(answerError instanceof Error ? answerError.message : "Не удалось отправить решение");
@@ -338,15 +406,43 @@ export default function SimulatorPage() {
 
   const currentStep = session?.current_step ?? null;
   const workspaceMeta = getWorkspaceMeta(currentStep);
+  const simulatorHighlights = [
+    {
+      label: "Фокус проверки",
+      value: currentStep ? workspaceMeta.watchLabel : "Выберите миссию",
+      icon: <Shield size={15} />
+    },
+    {
+      label: "Прогресс",
+      value: session ? `${Math.min(session.step_number, session.total_steps)} / ${session.total_steps}` : "Ожидание",
+      icon: <CircleGauge size={15} />
+    },
+    {
+      label: "Статус",
+      value: session ? (session.current_step ? "Сценарий активен" : "Подводим итог") : "Нет активной сессии",
+      icon: <Sparkles size={15} />
+    }
+  ];
 
   return (
     <RequireAuth>
       <div className="desktop-shell min-h-screen bg-[url('/grid.svg')] bg-repeat">
         <div className="shell space-y-10 py-12">
           <div className="desktop-taskbar">
-            <div className="flex items-center gap-3">
+            <div className="desktop-taskbar-title">
               <ShieldAlert className="text-[var(--color-accent)]" size={22} />
               <span className="text-sm font-mono text-[var(--color-text-secondary)]">КИБЕРПОЛИГОН • РЕЖИМ ТРЕНИРОВКИ</span>
+            </div>
+            <div className="desktop-taskbar-metrics">
+              {simulatorHighlights.map((item) => (
+                <div key={item.label} className="desktop-taskbar-metric">
+                  <span className="desktop-taskbar-metric-icon">{item.icon}</span>
+                  <div>
+                    <span className="desktop-taskbar-metric-label">{item.label}</span>
+                    <strong className="desktop-taskbar-metric-value">{item.value}</strong>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -397,16 +493,19 @@ export default function SimulatorPage() {
                       {currentStep ? (
                         <div className={`simulator-stage-content ${criticalPhase === "breaking" ? "simulator-stage-content-muted" : ""}`}>
                           <IncomingMessage step={currentStep} />
-                          <div className="mt-6 rounded-[1.2rem] border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4">
+                          <div className="simulator-decision-surface">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div>
                                 <p className="eyebrow">{session.scenario_title}</p>
                                 <h3 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">Выберите следующее действие</h3>
                               </div>
-                              <span className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                              <span className="simulator-threat-chip">
                                 {currentStep.threat_type}
                               </span>
                             </div>
+                            <p className="simulator-decision-copy">
+                              Не спешите с выбором: смотрите на источник запроса, маршрут перехода и то, какие данные у вас пытаются получить именно на этом шаге.
+                            </p>
                             <div className="action-buttons-grid mt-6">
                               <DecisionPanel options={currentStep.options} disabled={stageLocked} onSelect={handleAnswer} />
                             </div>
@@ -442,20 +541,21 @@ export default function SimulatorPage() {
 
                   {feedback && feedback.is_correct ? (
                     <div className="glass-card p-5">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle size={22} className="mt-0.5 shrink-0 text-[var(--color-safe)]" />
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.26em] text-[var(--color-text-muted)]">{positiveFeedbackLabel}</p>
-                          <p className="mt-3 font-medium text-[var(--color-text-primary)]">{feedback.consequence_text}</p>
-                          <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">{feedback.explanation}</p>
+                        <div className="flex items-start gap-3">
+                          <CheckCircle size={22} className="mt-0.5 shrink-0 text-[var(--color-safe)]" />
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.26em] text-[var(--color-text-muted)]">{positiveFeedbackLabel}</p>
+                            <p className="mt-3 font-medium text-[var(--color-text-primary)]">{feedback.consequence_text}</p>
+                            <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">{feedback.explanation}</p>
+                            <div className="simulator-inline-feedback-note">Безопасный паттерн закреплён. Можно переходить к следующему шагу сценария.</div>
+                          </div>
                         </div>
-                      </div>
                     </div>
                   ) : feedback && !feedback.is_correct ? (
                     <div className="glass-card p-5">
-                      <div className="flex items-start gap-3">
-                        <XCircle size={22} className="mt-0.5 shrink-0 text-[var(--color-alert)]" />
-                        <div>
+                        <div className="flex items-start gap-3">
+                          <XCircle size={22} className="mt-0.5 shrink-0 text-[var(--color-alert)]" />
+                          <div>
                           <p className="text-xs uppercase tracking-[0.26em] text-[var(--color-text-muted)]">
                             {feedback.severity === "critical" ? "Критическая ошибка" : "Нужна корректировка"}
                           </p>
@@ -463,6 +563,7 @@ export default function SimulatorPage() {
                           <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">
                             Разбор открыт в модальном окне и блокирует прохождение, пока вы не подтвердите следующий шаг.
                           </p>
+                          <div className="simulator-inline-feedback-note simulator-inline-feedback-note-alert">Сначала разберите ошибку, затем вернитесь к сцене и продолжите прохождение.</div>
                         </div>
                       </div>
                     </div>
@@ -487,7 +588,16 @@ export default function SimulatorPage() {
         </div>
 
         <ConsequenceAnimationOverlay type={animationType} />
-        {modalFeedback ? <FeedbackModal feedback={modalFeedback} onClose={() => setModalFeedback(null)} /> : null}
+        {modalFeedback ? (
+          <FeedbackModal
+            feedback={modalFeedback}
+            threatType={criticalThreatType ?? session?.current_step?.threat_type}
+            onClose={() => {
+              setModalFeedback(null);
+              setCriticalThreatType(null);
+            }}
+          />
+        ) : null}
       </div>
     </RequireAuth>
   );

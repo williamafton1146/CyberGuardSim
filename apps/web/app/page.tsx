@@ -1,23 +1,26 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Award, ShieldCheck, Trophy, Waypoints } from "lucide-react";
+import { ArrowRight, Award, ShieldCheck, Sparkles, Trophy, Waypoints } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { getScenarios } from "@/lib/api";
-import { getToken } from "@/lib/auth";
-import type { ScenarioSummary } from "@/types";
+import { getStoredUser, getToken } from "@/lib/auth";
+import type { ScenarioSummary, UserProfile } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   const [isAuthed, setIsAuthed] = useState(false);
+  const [storedUser, setStoredUser] = useState<UserProfile | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [scenariosLoading, setScenariosLoading] = useState(true);
   const [scenariosError, setScenariosError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsAuthed(Boolean(getToken()));
+    setStoredUser(getStoredUser<UserProfile>());
     getScenarios()
       .then((payload) => {
         setScenarios(payload);
@@ -75,10 +78,17 @@ export default function HomePage() {
 
   const signalCards = [
     { label: "3 сценария", value: "Офис, дом и публичная сеть" },
-    { label: "Лидерборд", value: "Общий рейтинг цифровой устойчивости" },
-    { label: "Симулятор", value: "Пошаговые решения и последствия" },
+    { label: "Рейтинг", value: "Лучший результат по каждому кейсу" },
+    { label: "Симулятор", value: "Пошаговые решения и разбор ошибок" },
     { label: "Сертификат", value: "Публичная верификация по QR" }
   ];
+
+  const heroHref = isAuthed ? (storedUser?.role === "admin" ? "/admin" : "/simulator") : "/login";
+  const heroActionLabel = isAuthed
+    ? storedUser?.role === "admin"
+      ? "Открыть админку"
+      : "Открыть симулятор"
+    : "Войти и начать";
 
   return (
     <div className="landing-page">
@@ -86,47 +96,46 @@ export default function HomePage() {
         <div className="landing-hero-surface">
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
-              <h1 className="landing-title">KiberSim</h1>
-              <p className="landing-tagline">Минималистичная платформа для тренировки цифровой устойчивости в бытовых и рабочих сценариях.</p>
+              <p className="eyebrow">Цифровая устойчивость без перегруза</p>
+              <h1 className="landing-title landing-title-balanced">CyberSim</h1>
+              <p className="landing-tagline">Интерактивная платформа, которая учит замечать атаку до того, как ошибка превращается в реальный инцидент.</p>
               <p className="landing-lead">
-                Пользователь проходит кибер-инциденты как понятный маршрут: принимает решения, видит последствия, повышает рейтинг и закрепляет безопасный паттерн.
+                Пользователь проходит знакомые рабочие и бытовые ситуации как понятный маршрут: видит контекст, выбирает действие, получает объяснение последствий и закрепляет безопасный паттерн.
               </p>
+              <div className="landing-actions landing-actions-hero">
+                <Link href={heroHref} className="primary-button">
+                  {heroActionLabel}
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+              <div className="landing-hero-notes">
+                <div className="landing-note-card">
+                  <Sparkles size={16} />
+                  <span>Живой симулятор вместо сухого теста</span>
+                </div>
+                <div className="landing-note-card">
+                  <ShieldCheck size={16} />
+                  <span>Разбор причин ошибки и безопасного действия</span>
+                </div>
+              </div>
             </div>
 
             <div className="landing-hero-stage">
-              <div className="landing-stage-frame landing-stage-frame-device">
-                <div className="landing-device-grid" aria-hidden="true" />
-                <div className="landing-device-monitor">
-                  <div className="landing-device-screen">
-                    <div className="landing-device-screen-top">
-                      <span className="landing-device-dot" />
-                      <span className="landing-device-dot" />
-                      <span className="landing-device-dot" />
-                    </div>
-                    <div className="landing-device-screen-body">
-                      <div className="landing-device-panel">
-                        <span className="landing-device-panel-kicker">Realtime check</span>
-                        <strong>Threat score 96%</strong>
-                        <span>Подозрительный запрос на код подтверждения</span>
-                      </div>
-                      <div className="landing-device-response-card">
-                        <span className="landing-device-response-kicker">Следующий шаг</span>
-                        <strong>Остановить действие и проверить источник</strong>
-                        <span>Официальный канал и повторная проверка защищают от подмены ссылки и кода.</span>
-                      </div>
-                      <div className="landing-device-sidecards">
-                        <div className="landing-device-sidecard">
-                          <span className="landing-device-sidecard-label">Firewall</span>
-                          <span className="landing-device-sidecard-value">Secure</span>
-                        </div>
-                        <div className="landing-device-sidecard">
-                          <span className="landing-device-sidecard-label">Session</span>
-                          <span className="landing-device-sidecard-value">Verified</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="landing-device-stand" aria-hidden="true" />
+              <div className="landing-hero-asset-shell">
+                <div className="landing-hero-asset-copy">
+                  <span className="landing-hero-asset-kicker">Интерфейс тренировки</span>
+                  <strong>Письма, сообщения, QR и public Wi-Fi в одном маршруте.</strong>
+                  <span>Пользователь видит риск, а не угадывает правильный ответ в отрыве от контекста.</span>
+                </div>
+                <div className="landing-hero-asset-frame">
+                  <Image
+                    src="/hero-cyber-event.svg"
+                    alt="Интерфейс CyberSim с устройством, карточками угроз и защитными действиями"
+                    width={1600}
+                    height={1200}
+                    priority
+                    className="landing-hero-asset-image"
+                  />
                 </div>
               </div>
             </div>
@@ -183,9 +192,6 @@ export default function HomePage() {
                 <span>{scenario.step_count} шага</span>
                 <span>{scenario.is_playable ? "Доступно сейчас" : "Скоро"}</span>
               </div>
-              <Link href={scenario.is_playable ? (isAuthed ? "/simulator" : "/login") : "/login"} className="secondary-button landing-scenario-action">
-                {scenario.is_playable ? (isAuthed ? "Открыть миссию" : "Войти и начать") : "Смотреть подробнее"}
-              </Link>
             </article>
           ))}
           {!scenariosLoading && !scenariosError && !showcase.length ? (
