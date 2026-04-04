@@ -348,11 +348,6 @@ export default function SimulatorPage() {
               <ShieldAlert className="text-[var(--color-accent)]" size={22} />
               <span className="text-sm font-mono text-[var(--color-text-secondary)]">КИБЕРПОЛИГОН • РЕЖИМ ТРЕНИРОВКИ</span>
             </div>
-            <div className="desktop-taskbar-lights" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
           </div>
 
           <SectionTitle
@@ -395,11 +390,6 @@ export default function SimulatorPage() {
                       <div className="flex items-center gap-2">
                         {workspaceMeta.icon}
                         <span className="text-xs font-mono">{workspaceMeta.label}</span>
-                      </div>
-                      <div className="desktop-taskbar-lights desktop-taskbar-lights-muted" aria-hidden="true">
-                        <span />
-                        <span />
-                        <span />
                       </div>
                     </div>
 

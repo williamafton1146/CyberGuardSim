@@ -198,6 +198,14 @@ input {
   flex-wrap: wrap;
 }
 
+.header-primary-actions,
+.header-secondary-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .header-identity-cluster {
   display: inline-flex;
   align-items: center;
@@ -208,11 +216,21 @@ input {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  min-height: 3rem;
   padding: 0.45rem 0.8rem 0.45rem 0.48rem;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-elevated);
   backdrop-filter: blur(14px);
+}
+
+.header-top-action,
+.header-logout-button {
+  min-height: 3rem;
+}
+
+.header-logout-button {
+  padding: 0.78rem 1rem;
 }
 
 .header-avatar-badge {
@@ -346,7 +364,6 @@ input {
 }
 
 [data-theme="light"] .brand-mark,
-[data-theme="light"] .primary-button,
 [data-theme="light"] .glass-card,
 [data-theme="light"] .landing-stage-frame,
 [data-theme="light"] .landing-scenario-card,
@@ -359,13 +376,14 @@ input {
 [data-theme="light"] .guide-modal,
 [data-theme="light"] .admin-scenario-list-item,
 [data-theme="light"] .admin-option-card {
-  box-shadow: 0 6px 16px rgba(20, 36, 59, 0.045);
+  box-shadow: 0 10px 24px rgba(20, 36, 59, 0.035);
 }
 
 [data-theme="light"] .secondary-button,
 [data-theme="light"] .icon-button,
 [data-theme="light"] .nav-pills,
-[data-theme="light"] .soft-tile {
+[data-theme="light"] .soft-tile,
+[data-theme="light"] .primary-button {
   box-shadow: none;
 }
 
@@ -387,7 +405,7 @@ input {
 }
 
 [data-theme="light"] .primary-button {
-  box-shadow: 0 5px 14px rgba(23, 119, 105, 0.1);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
 }
 
 [data-theme="light"] .site-gradient {
@@ -585,36 +603,13 @@ input {
   padding: 0.9rem 1rem;
   border-radius: 1.6rem;
   border: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgba(6, 12, 21, 0.82), rgba(6, 12, 21, 0.58));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), var(--color-bg-elevated));
   backdrop-filter: blur(16px);
 }
 
-.desktop-taskbar-lights {
-  display: flex;
-  gap: 0.45rem;
-}
-
-.desktop-taskbar-lights span {
-  width: 0.72rem;
-  height: 0.72rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.desktop-taskbar-lights span:nth-child(1) {
-  background: rgba(255, 114, 92, 0.88);
-}
-
-.desktop-taskbar-lights span:nth-child(2) {
-  background: rgba(255, 186, 73, 0.88);
-}
-
-.desktop-taskbar-lights span:nth-child(3) {
-  background: rgba(92, 205, 145, 0.88);
-}
-
-.desktop-taskbar-lights-muted span {
-  opacity: 0.72;
+[data-theme="light"] .desktop-taskbar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.84));
+  box-shadow: 0 8px 24px rgba(20, 36, 59, 0.03);
 }
 
 .desktop-window {
@@ -628,7 +623,11 @@ input {
   gap: 1rem;
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .window-titlebar {
+  background: rgba(248, 251, 255, 0.92);
 }
 
 .window-content {
@@ -644,7 +643,7 @@ input {
 .incoming-message {
   border-radius: 1.5rem;
   border: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(8, 17, 27, 0.84));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), var(--color-bg-elevated));
   padding: 1rem;
 }
 
@@ -691,7 +690,7 @@ input {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(6, 12, 21, 0.72);
   backdrop-filter: blur(8px);
   animation: fadeIn 0.2s ease;
 }
@@ -703,7 +702,11 @@ input {
   background: var(--color-bg-elevated);
   padding: 2rem;
   text-align: center;
-  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.64);
+  box-shadow: 0 20px 35px -10px var(--color-shadow);
+}
+
+[data-theme="light"] .consequence-overlay {
+  background: rgba(233, 239, 248, 0.66);
 }
 
 .encrypt-progress-bar {
@@ -717,7 +720,7 @@ input {
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(6, 16, 26, 0.74);
+  background: rgba(6, 16, 26, 0.72);
   backdrop-filter: blur(12px);
 }
 
@@ -725,10 +728,14 @@ input {
   width: min(760px, 100%);
   border-radius: 1.85rem;
   border: 1px solid var(--color-border);
-  background: linear-gradient(180deg, rgba(11, 20, 34, 0.97), rgba(6, 11, 18, 0.98));
+  background: linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
   padding: 1.8rem;
-  box-shadow: 0 36px 80px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 36px 80px var(--color-shadow);
   animation: fadeInUp 220ms ease;
+}
+
+[data-theme="light"] .simulator-feedback-modal-backdrop {
+  background: rgba(233, 239, 248, 0.72);
 }
 
 .simulator-feedback-modal-head {
@@ -893,7 +900,7 @@ input {
     radial-gradient(circle at 86% 10%, rgba(120, 158, 255, 0.1), transparent 24%),
     linear-gradient(180deg, rgba(11, 20, 34, 0.96), rgba(7, 13, 21, 0.94));
   border: 1px solid var(--color-border);
-  box-shadow: 0 28px 90px rgba(4, 10, 18, 0.28);
+  box-shadow: 0 28px 90px rgba(4, 10, 18, 0.22);
 }
 
 .landing-hero-bar {
@@ -1097,10 +1104,10 @@ input {
   place-items: center;
   padding: 2rem;
   background:
-    linear-gradient(rgba(25, 94, 61, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(25, 94, 61, 0.08) 1px, transparent 1px),
-    radial-gradient(circle at 15% 12%, rgba(120, 230, 164, 0.34), transparent 22%),
-    linear-gradient(180deg, #eef8f1 0%, #e4f3e8 100%);
+    linear-gradient(rgba(23, 119, 105, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 119, 105, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 15% 12%, rgba(107, 212, 196, 0.22), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(243, 247, 252, 0.92) 100%);
   background-size: 28px 28px, 28px 28px, auto, auto;
 }
 
@@ -1108,8 +1115,8 @@ input {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 78% 24%, rgba(111, 214, 146, 0.2), transparent 16%),
-    radial-gradient(circle at 24% 78%, rgba(84, 170, 113, 0.12), transparent 18%);
+    radial-gradient(circle at 78% 24%, rgba(107, 212, 196, 0.16), transparent 16%),
+    radial-gradient(circle at 24% 78%, rgba(107, 212, 196, 0.09), transparent 18%);
   pointer-events: none;
 }
 
@@ -1123,11 +1130,11 @@ input {
   position: relative;
   padding: 1rem;
   border-radius: 1.8rem;
-  border: 1px solid rgba(27, 89, 56, 0.14);
-  background: linear-gradient(180deg, #103523 0%, #0b281b 100%);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface-strong) 0%, var(--color-bg-elevated) 100%);
   box-shadow:
-    0 28px 60px rgba(12, 43, 27, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 28px 60px rgba(20, 36, 59, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .landing-device-screen-top {
@@ -1140,7 +1147,7 @@ input {
   height: 0.5rem;
   width: 0.5rem;
   border-radius: 999px;
-  background: rgba(221, 255, 230, 0.42);
+  background: var(--color-border-strong);
 }
 
 .landing-device-screen-body {
@@ -1151,9 +1158,9 @@ input {
   padding: 1rem;
   border-radius: 1.35rem;
   background:
-    linear-gradient(rgba(108, 200, 138, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(108, 200, 138, 0.08) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(15, 52, 34, 0.86), rgba(8, 33, 22, 0.96));
+    linear-gradient(rgba(107, 212, 196, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(107, 212, 196, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), var(--color-bg-soft));
   background-size: 24px 24px, 24px 24px, auto;
 }
 
@@ -1163,9 +1170,9 @@ input {
   align-self: start;
   padding: 1rem;
   border-radius: 1.2rem;
-  background: rgba(214, 255, 227, 0.08);
-  border: 1px solid rgba(169, 248, 197, 0.12);
-  color: rgba(242, 255, 246, 0.92);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .landing-device-panel strong {
@@ -1181,7 +1188,7 @@ input {
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(195, 253, 215, 0.68);
+  color: var(--color-text-muted);
 }
 
 .landing-device-response-card {
@@ -1190,16 +1197,16 @@ input {
   align-self: start;
   padding: 1rem 1.05rem;
   border-radius: 1.2rem;
-  border: 1px solid rgba(123, 170, 255, 0.18);
-  background: linear-gradient(180deg, rgba(120, 158, 255, 0.12), rgba(10, 24, 40, 0.9));
-  color: #ebf2ff;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(120, 158, 255, 0.14), var(--color-bg-soft));
+  color: var(--color-text-primary);
 }
 
 .landing-device-response-kicker {
   font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(214, 226, 255, 0.72);
+  color: var(--color-text-muted);
 }
 
 .landing-device-shield-cluster {
@@ -1243,16 +1250,49 @@ input {
   gap: 0.34rem;
   padding: 0.9rem 1rem;
   border-radius: 1rem;
-  background: rgba(214, 255, 227, 0.06);
-  border: 1px solid rgba(169, 248, 197, 0.12);
-  color: rgba(241, 255, 245, 0.88);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .landing-device-sidecard-label {
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(198, 251, 216, 0.62);
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .landing-hero-surface {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(107, 212, 196, 0.12), transparent 28%),
+    radial-gradient(circle at 86% 10%, rgba(120, 158, 255, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 247, 252, 0.92));
+  box-shadow: 0 16px 42px rgba(20, 36, 59, 0.05);
+}
+
+[data-theme="light"] .landing-rail-card,
+[data-theme="light"] .landing-scenario-card,
+[data-theme="light"] .landing-flow-step,
+[data-theme="light"] .landing-highlight-card,
+[data-theme="light"] .guide-hero-card,
+[data-theme="light"] .guide-card,
+[data-theme="light"] .guide-modal {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.92)),
+    linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
+}
+
+[data-theme="light"] .landing-highlight-points span {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .guide-modal-backdrop {
+  background: rgba(233, 239, 248, 0.7);
+}
+
+[data-theme="light"] .certificate-qr-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.9));
 }
 
 .landing-device-sidecard-value {

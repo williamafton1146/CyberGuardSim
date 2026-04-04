@@ -70,78 +70,82 @@ export function SiteHeader() {
         </Link>
 
         <div className="header-actions">
-          {isAuthed && isAppRoute ? (
-            <nav className="nav-pills">
-              {isAdmin ? (
-                <Link href="/admin" className="nav-pill">
-                  Админка
+          <div className="header-primary-actions">
+            {isAuthed && isAppRoute ? (
+              <nav className="nav-pills">
+                {isAdmin ? (
+                  <Link href="/admin" className="nav-pill">
+                    Админка
+                  </Link>
+                ) : null}
+                <Link href="/simulator" className="nav-pill">
+                  Симулятор
                 </Link>
-              ) : null}
-              <Link href="/simulator" className="nav-pill">
-                Симулятор
+                <Link href="/dashboard" className="nav-pill">
+                  Кабинет
+                </Link>
+                <Link href="/leaderboard" className="nav-pill">
+                  Лидерборд
+                </Link>
+                <Link href="/for-users" className="nav-pill">
+                  Для пользователей
+                </Link>
+              </nav>
+            ) : null}
+
+            {!isAuthed && !isLanding ? (
+              <Link href="/" className="nav-pill">
+                На главную
               </Link>
-              <Link href="/dashboard" className="nav-pill">
-                Кабинет
-              </Link>
-              <Link href="/leaderboard" className="nav-pill">
-                Лидерборд
-              </Link>
+            ) : null}
+
+            {!isAuthed || !isAppRoute ? (
               <Link href="/for-users" className="nav-pill">
                 Для пользователей
               </Link>
-            </nav>
-          ) : null}
+            ) : null}
+          </div>
 
-          {!isAuthed && !isLanding ? (
-            <Link href="/" className="nav-pill">
-              На главную
-            </Link>
-          ) : null}
+          <div className="header-secondary-actions">
+            <ThemeToggle />
 
-          {!isAuthed || !isAppRoute ? (
-            <Link href="/for-users" className="nav-pill">
-              Для пользователей
-            </Link>
-          ) : null}
-
-          <ThemeToggle />
-
-          {isAuthed && storedUser ? (
-            <div className="header-identity-cluster">
-              <div className="header-avatar-chip">
-                <div className="header-avatar-badge">{getInitials(storedUser.display_name)}</div>
-                <div className="header-avatar-meta">
-                  <p className="header-avatar-name">{storedUser.display_name}</p>
-                  <p className="header-avatar-league">
-                    <UserRound size={13} />
-                    {isAdmin ? "Администратор" : storedUser.league}
-                  </p>
+            {isAuthed && storedUser ? (
+              <div className="header-identity-cluster">
+                <div className="header-avatar-chip">
+                  <div className="header-avatar-badge">{getInitials(storedUser.display_name)}</div>
+                  <div className="header-avatar-meta">
+                    <p className="header-avatar-name">{storedUser.display_name}</p>
+                    <p className="header-avatar-league">
+                      <UserRound size={13} />
+                      {isAdmin ? "Администратор" : storedUser.league}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {isAuthed && isLanding ? (
-            <Link href={isAdmin ? "/admin" : "/simulator"} className="primary-button">
-              {isAdmin ? "Открыть админку" : "Открыть симулятор"}
-              <ArrowRight size={16} />
-            </Link>
-          ) : null}
+            {isAuthed && isLanding ? (
+              <Link href={isAdmin ? "/admin" : "/simulator"} className="primary-button">
+                {isAdmin ? "Открыть админку" : "Открыть симулятор"}
+                <ArrowRight size={16} />
+              </Link>
+            ) : null}
 
-          {isAuthed && !isLanding ? (
-            <button type="button" className="secondary-button inline-flex items-center gap-2" onClick={handleLogout}>
-              <LogOut size={16} />
-              Выйти
-            </button>
-          ) : isLogin ? (
-            <Link href="/" className="secondary-button">
-              О проекте
-            </Link>
-          ) : (
-            <Link href="/login" className="primary-button">
-              Войти
-            </Link>
-          )}
+            {isAuthed && !isLanding ? (
+              <button type="button" className="secondary-button header-logout-button" onClick={handleLogout}>
+                <LogOut size={16} />
+                Выйти
+              </button>
+            ) : isLogin ? (
+              <Link href="/" className="secondary-button header-top-action">
+                О проекте
+              </Link>
+            ) : (
+              <Link href="/login" className="primary-button header-top-action">
+                Войти
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>
