@@ -86,7 +86,7 @@ export default function HomePage() {
   const heroHref = isAuthed ? (storedUser?.role === "admin" ? "/admin" : "/simulator") : "/login";
   const heroActionLabel = isAuthed
     ? storedUser?.role === "admin"
-      ? "Открыть админку"
+      ? "Открыть кабинет"
       : "Открыть симулятор"
     : "Войти и начать";
 

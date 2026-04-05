@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, LogOut, Menu, UserRound, X } from "lucide-react";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -181,12 +181,6 @@ export function SiteHeader() {
 
               {isAuthed ? (
                 <>
-                  {isLanding ? (
-                    <Link href={isAdmin ? "/admin" : "/simulator"} className="primary-button header-mobile-cta">
-                      {isAdmin ? "Открыть админку" : "Открыть симулятор"}
-                      <ArrowRight size={16} />
-                    </Link>
-                  ) : null}
                   <button type="button" className="secondary-button header-mobile-logout" onClick={handleLogout}>
                     <LogOut size={16} />
                     Выйти
