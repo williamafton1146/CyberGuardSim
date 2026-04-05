@@ -16,6 +16,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   padding: 1rem 1.15rem;
+  animation: fadeInUp 240ms ease both;
 }
 
 .statusMetric {
@@ -49,6 +50,7 @@
   min-height: 26rem;
   align-content: center;
   padding: 2rem;
+  animation: fadeInUp 260ms ease both;
 }
 
 .summaryKicker {
@@ -138,6 +140,7 @@
     radial-gradient(circle at top left, rgba(107, 212, 196, 0.1), transparent 18%),
     linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
   box-shadow: var(--shadow-card);
+  animation: fadeInUp 320ms ease both;
 }
 
 .environmentToolbar {
@@ -319,7 +322,8 @@
 .chatToastInteractive:hover:not(:disabled),
 .paymentCardInteractive:hover:not(:disabled),
 .sceneActionButton:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
 }
 
 .mailUnreadDot {
@@ -390,6 +394,7 @@
   display: block;
   width: min(100%, 20rem);
   height: auto;
+  animation: illustrationFloat 8.5s ease-in-out infinite;
 }
 
 .mailMessageCard,
@@ -818,6 +823,7 @@
   padding: 1.5rem;
   background: rgba(6, 16, 26, 0.72);
   backdrop-filter: blur(12px);
+  animation: fadeIn 220ms ease both;
 }
 
 .feedbackModal,
@@ -920,6 +926,7 @@
   padding: 1.5rem;
   background: rgba(6, 12, 21, 0.72);
   backdrop-filter: blur(8px);
+  animation: fadeIn 220ms ease both;
 }
 
 .consequenceContent {
@@ -930,6 +937,7 @@
   padding: 2.65rem;
   text-align: center;
   box-shadow: var(--shadow-card);
+  animation: fadeInUp 260ms ease both;
 }
 
 .consequenceBar {
@@ -961,12 +969,31 @@
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes criticalHold {
   from {
     width: 0;
   }
   to {
     width: 100%;
+  }
+}
+
+@keyframes illustrationFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
   }
 }
 

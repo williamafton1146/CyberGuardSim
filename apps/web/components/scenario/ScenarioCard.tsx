@@ -34,7 +34,7 @@ export function ScenarioCard({
   const disabled = actionDisabled ?? !scenario.is_playable;
 
   return (
-    <article className="glass-card h-full p-5 sm:p-6">
+    <article className="glass-card scenario-card-motion h-full p-5 sm:p-6">
       <div className="flex h-full flex-col">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">

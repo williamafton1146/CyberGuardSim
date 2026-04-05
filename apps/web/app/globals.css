@@ -77,6 +77,68 @@ body {
   background: transparent;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes motionRiseFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motionPanelDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motionSoftFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes motionSoftPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(107, 212, 196, 0);
+  }
+  50% {
+    box-shadow: 0 18px 40px rgba(107, 212, 196, 0.12);
+  }
+}
+
+@keyframes motionSheen {
+  from {
+    transform: translateX(-150%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -253,6 +315,17 @@ input {
   background: var(--color-bg-elevated);
   backdrop-filter: blur(14px);
   box-shadow: var(--shadow-soft);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.header-avatar-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
 }
 
 .header-top-action,
@@ -329,6 +402,8 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
   border-radius: 999px;
   padding: 0.74rem 0.9rem;
   color: var(--color-text-secondary);
@@ -344,6 +419,27 @@ input {
   background: var(--color-accent-soft);
 }
 
+.nav-pill::after,
+.icon-button::after,
+.primary-button::after,
+.secondary-button::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -24%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-pill:hover::after,
+.icon-button:hover::after,
+.primary-button:hover::after,
+.secondary-button:hover::after {
+  opacity: 1;
+  animation: motionSheen 560ms ease;
+}
+
 .icon-button,
 .primary-button,
 .secondary-button {
@@ -351,6 +447,8 @@ input {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
   border-radius: 999px;
   border: 1px solid transparent;
   font-size: 0.95rem;
@@ -499,6 +597,26 @@ input {
   border: 1px solid var(--color-border-strong);
   background: var(--color-accent-soft);
   color: var(--color-accent);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.header-menu-button svg {
+  transition:
+    transform 220ms ease,
+    opacity 180ms ease;
+}
+
+.header-menu-button[aria-expanded="true"] {
+  border-color: var(--color-border-strong);
+  background: var(--color-accent-soft);
+  box-shadow: var(--shadow-button);
+}
+
+.header-menu-button[aria-expanded="true"] svg {
+  transform: rotate(90deg) scale(1.02);
 }
 
 .password-field-shell {
@@ -1249,6 +1367,7 @@ input {
     linear-gradient(180deg, rgba(11, 20, 34, 0.95), rgba(7, 13, 21, 0.92));
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-hero);
+  animation: motionRiseFade 520ms ease both;
 }
 
 .landing-hero-grid {
@@ -1262,6 +1381,31 @@ input {
   display: grid;
   gap: 1.45rem;
   max-width: 31rem;
+}
+
+.landing-hero-copy > * {
+  opacity: 0;
+  animation: motionRiseFade 580ms ease both;
+}
+
+.landing-hero-copy > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.landing-hero-copy > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.landing-hero-copy > *:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+.landing-hero-copy > *:nth-child(4) {
+  animation-delay: 280ms;
+}
+
+.landing-hero-copy > *:nth-child(5) {
+  animation-delay: 340ms;
 }
 
 .landing-title {
@@ -1324,6 +1468,31 @@ input {
   font-size: 0.84rem;
   line-height: 1.5;
   box-shadow: var(--shadow-soft);
+  opacity: 0;
+  animation: motionRiseFade 520ms ease forwards;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.landing-note-card:nth-child(1) {
+  animation-delay: 360ms;
+}
+
+.landing-note-card:nth-child(2) {
+  animation-delay: 430ms;
+}
+
+.landing-note-card:nth-child(3) {
+  animation-delay: 500ms;
+}
+
+.landing-note-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
 }
 
 .landing-hero-stage {
@@ -1343,6 +1512,8 @@ input {
   border-radius: 1.4rem;
   border: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  animation: motionRiseFade 560ms ease 180ms both;
 }
 
 .landing-hero-asset-kicker {
@@ -1372,6 +1543,8 @@ input {
     radial-gradient(circle at 18% 18%, rgba(107, 212, 196, 0.1), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(6, 12, 21, 0.22));
   box-shadow: var(--shadow-card);
+  opacity: 0;
+  animation: motionPanelDrop 640ms cubic-bezier(0.2, 0.7, 0.2, 1) 240ms both;
 }
 
 .landing-hero-asset-stack {
@@ -1385,6 +1558,7 @@ input {
   width: 100%;
   height: auto;
   border-radius: 1.45rem;
+  animation: motionSoftFloat 10s ease-in-out 0.4s infinite;
 }
 
 .landing-hero-asset-image-light {
@@ -1701,6 +1875,16 @@ input {
   border: 1px solid var(--color-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(8, 17, 27, 0.78));
   box-shadow: var(--shadow-soft);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.landing-rail-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
 }
 
 .landing-rail-label {
@@ -1748,6 +1932,16 @@ input {
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(9, 17, 28, 0.88)),
     linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
   box-shadow: var(--shadow-card);
+  transition:
+    transform 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.landing-scenario-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 30px 80px rgba(5, 10, 18, 0.26);
 }
 
 .landing-scenario-head {
@@ -2617,6 +2811,25 @@ input {
   display: none;
 }
 
+.scenario-card-motion {
+  transition:
+    transform 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
+  animation: motionRiseFade 420ms ease both;
+}
+
+.scenario-card-motion:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.scenario-card-motion:hover .feature-icon {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--shadow-button);
+}
+
 .leaderboard-scroll-region {
   max-height: min(170svh, 52rem);
   min-height: 14rem;
@@ -2719,12 +2932,15 @@ input {
   cursor: pointer;
   transition:
     transform 180ms ease,
-    border-color 180ms ease;
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  animation: motionRiseFade 420ms ease both;
 }
 
 .guide-card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-4px);
   border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
 }
 
 .guide-card-index,
@@ -2766,6 +2982,7 @@ input {
   background: rgba(6, 16, 26, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  animation: fadeIn 220ms ease both;
 }
 
 .guide-modal {
@@ -2775,6 +2992,7 @@ input {
   border: 1px solid var(--color-border);
   background: linear-gradient(180deg, rgba(11, 20, 34, 0.96), rgba(6, 11, 18, 0.98));
   padding: 1.8rem;
+  animation: motionPanelDrop 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .guide-modal-close {
@@ -2974,6 +3192,8 @@ input {
 
   .header-mobile-panel-shell {
     padding-bottom: 0.95rem;
+    transform-origin: top center;
+    animation: motionRiseFade 260ms ease both;
   }
 
   .header-mobile-panel {
@@ -2984,12 +3204,43 @@ input {
     border-radius: 1.4rem;
     background: var(--color-bg-elevated);
     box-shadow: var(--shadow-soft);
+    animation: motionPanelDrop 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 
   .header-mobile-nav,
   .header-mobile-panel-actions {
     display: grid;
     gap: 0.7rem;
+  }
+
+  .header-mobile-nav > *,
+  .header-mobile-panel-actions > * {
+    opacity: 0;
+    animation: motionRiseFade 320ms ease forwards;
+  }
+
+  .header-mobile-nav > *:nth-child(1) {
+    animation-delay: 50ms;
+  }
+
+  .header-mobile-nav > *:nth-child(2) {
+    animation-delay: 100ms;
+  }
+
+  .header-mobile-nav > *:nth-child(3) {
+    animation-delay: 150ms;
+  }
+
+  .header-mobile-nav > *:nth-child(4) {
+    animation-delay: 200ms;
+  }
+
+  .header-mobile-panel-actions > *:nth-child(1) {
+    animation-delay: 190ms;
+  }
+
+  .header-mobile-panel-actions > *:nth-child(2) {
+    animation-delay: 240ms;
   }
 
   .header-mobile-nav-pill,
@@ -3059,6 +3310,10 @@ input {
     gap: 1.6rem;
     padding: 1rem;
     border-radius: 1.6rem;
+  }
+
+  .landing-hero-asset-image {
+    animation-duration: 12s;
   }
 
   .landing-hero-grid,
@@ -3161,6 +3416,27 @@ input {
     display: grid;
     gap: 0.55rem;
     padding: 1rem 1.05rem;
+    animation: motionRiseFade 360ms ease both;
+  }
+
+  .leaderboard-mobile-entry:nth-child(1) {
+    animation-delay: 40ms;
+  }
+
+  .leaderboard-mobile-entry:nth-child(2) {
+    animation-delay: 90ms;
+  }
+
+  .leaderboard-mobile-entry:nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  .leaderboard-mobile-entry:nth-child(4) {
+    animation-delay: 190ms;
+  }
+
+  .leaderboard-mobile-entry:nth-child(5) {
+    animation-delay: 240ms;
   }
 
   .leaderboard-mobile-head {
