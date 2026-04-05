@@ -503,12 +503,15 @@ export default function AdminPage() {
                           {selectedScenario ? selectedScenario.title : "Новый сценарий"}
                         </h3>
                       </div>
-                      {selectedScenario ? (
-                        <button type="button" className="secondary-button" onClick={handleDeleteScenario} disabled={scenarioLocked || editorBusy}>
-                          <Trash2 size={16} />
-                          Удалить
-                        </button>
-                      ) : null}
+                      <div className="admin-editor-head-actions">
+                        {scenarioLocked ? <span className="admin-lock-chip">Структура зафиксирована</span> : null}
+                        {selectedScenario && !scenarioLocked ? (
+                          <button type="button" className="secondary-button" onClick={handleDeleteScenario} disabled={editorBusy}>
+                            <Trash2 size={16} />
+                            Удалить
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
                     {scenarioLocked ? (
@@ -599,10 +602,12 @@ export default function AdminPage() {
                         <p className="eyebrow">Шаги</p>
                           <h4 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">Нарратив и варианты ответа</h4>
                       </div>
-                      <button type="button" className="secondary-button" onClick={addStep} disabled={scenarioLocked || editorBusy}>
-                        <Plus size={16} />
-                        Добавить шаг
-                      </button>
+                      {!scenarioLocked ? (
+                        <button type="button" className="secondary-button" onClick={addStep} disabled={editorBusy}>
+                          <Plus size={16} />
+                          Добавить шаг
+                        </button>
+                      ) : null}
                     </div>
 
                     <div className="mt-5 space-y-5">
@@ -610,15 +615,17 @@ export default function AdminPage() {
                         <div key={`${step.step_order}-${stepIndex}`} className="soft-tile admin-step-card">
                           <div className="admin-step-head">
                             <strong className="text-[var(--color-text-primary)]">Шаг {stepIndex + 1}</strong>
-                            <button
-                              type="button"
-                              className="secondary-button admin-inline-action"
-                              onClick={() => removeStep(stepIndex)}
-                              disabled={scenarioLocked || editorBusy}
-                            >
-                              <Trash2 size={16} />
-                              Удалить шаг
-                            </button>
+                            {!scenarioLocked ? (
+                              <button
+                                type="button"
+                                className="secondary-button admin-inline-action"
+                                onClick={() => removeStep(stepIndex)}
+                                disabled={editorBusy}
+                              >
+                                <Trash2 size={16} />
+                                Удалить шаг
+                              </button>
+                            ) : null}
                           </div>
 
                           <div className="admin-editor-grid mt-4">
@@ -659,20 +666,22 @@ export default function AdminPage() {
 
                           <div className="admin-options-head">
                             <p className="eyebrow">Варианты ответа</p>
-                            <button
-                              type="button"
-                              className="secondary-button admin-inline-action"
-                              onClick={() => addOption(stepIndex)}
-                              disabled={scenarioLocked || editorBusy}
-                            >
-                              <Plus size={16} />
-                              Добавить вариант
-                            </button>
+                            {!scenarioLocked ? (
+                              <button
+                                type="button"
+                                className="secondary-button admin-inline-action"
+                                onClick={() => addOption(stepIndex)}
+                                disabled={editorBusy}
+                              >
+                                <Plus size={16} />
+                                Добавить вариант
+                              </button>
+                            ) : null}
                           </div>
 
                           <div className="mt-4 space-y-4">
                             {step.options.map((option, optionIndex) => (
-                              <div key={`${stepIndex}-${optionIndex}`} className="admin-option-card">
+                              <div key={`${stepIndex}-${optionIndex}`} className="soft-tile admin-option-card">
                                 <div className="admin-option-head">
                                   <label className="admin-toggle">
                                     <input
@@ -683,15 +692,17 @@ export default function AdminPage() {
                                     />
                                     <span>Правильный ответ</span>
                                   </label>
-                                  <button
-                                    type="button"
-                                    className="secondary-button admin-inline-action"
-                                    onClick={() => removeOption(stepIndex, optionIndex)}
-                                    disabled={scenarioLocked || editorBusy}
-                                  >
-                                    <Trash2 size={16} />
-                                    Удалить
-                                  </button>
+                                  {!scenarioLocked ? (
+                                    <button
+                                      type="button"
+                                      className="secondary-button admin-inline-action"
+                                      onClick={() => removeOption(stepIndex, optionIndex)}
+                                      disabled={editorBusy}
+                                    >
+                                      <Trash2 size={16} />
+                                      Удалить
+                                    </button>
+                                  ) : null}
                                 </div>
 
                                 <div className="admin-editor-grid mt-4">
