@@ -45,7 +45,7 @@ curl_with_base() {
 }
 
 EMAIL="s$(date +%s)@x.ru"
-PASSWORD="SmokePass-$(date +%s)-A1"
+PASSWORD="Qz!7$(openssl rand -hex 8)Lm#9"
 DISPLAY_NAME="Smoke Analyst"
 
 register_response="$(mktemp)"
