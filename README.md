@@ -176,8 +176,7 @@ npm run build --workspace @cyberguardsim/web
 ## Важные замечания
 
 - Проект сейчас `desktop-first`, но мобильный интерфейс и адаптивные сценарии тоже поддерживаются.
-- Production TLS настраивается шаблоном `infra/nginx/app.conf.template` и ограничен `TLSv1.2 TLSv1.3`.
-- В репозитории могут появляться локальные runtime-артефакты вроде `*.db`, `.next`, `.pytest_cache`; они не должны коммититься и уже исключены через `.gitignore` и `.dockerignore`.
+- Production TLS настраивается шаблоном `infra/nginx/app.conf.template` и ограничен `TLSv1.2/TLSv1.3`.
 - Корневые SQLite-файлы вроде `cyberguardsim.db` или `cybersec.db` считаются локальными артефактами разработки, а не частью исходного кода.
 
 ## Структура и чистота репозитория
