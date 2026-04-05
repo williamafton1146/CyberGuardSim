@@ -125,108 +125,101 @@ export default function SimulatorHubPage() {
           </p>
         ) : null}
 
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
-          <section className="glass-card p-6 md:p-7">
-            <p className="eyebrow">Среды</p>
-            <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--color-text-primary)]">Выберите миссию и откройте нужную среду</h2>
-            <p className="body-copy mt-4 max-w-3xl">
-              Каждая карточка ведёт в отдельную цифровую среду. Внутри миссии остаётся один читаемый активный объект на шаг, без слепых кликов и лишнего шума.
-            </p>
-
-            <div className="mt-8 grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
-              {loading ? (
-                <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
-                  Загружаем миссии, их статус публикации и маршруты запуска.
-                </div>
-              ) : enrichedScenarios.length ? (
-                enrichedScenarios.map((scenario) => (
-                  <div key={scenario.slug} className="h-full">
-                    <ScenarioCard
-                      scenario={scenario}
-                      actionHref={scenario.perfectRun ? undefined : scenario.visual.route}
-                      visualIcon={scenario.visual.icon}
-                      visualTitle={scenario.visual.environment}
-                      visualDescription={scenario.visual.description}
-                      actionLabel={
-                        !scenario.is_playable
-                          ? "Скоро откроется"
-                          : scenario.perfectRun
-                            ? "Пройдено"
-                            : scenario.hasProgress
-                              ? "Перепройти"
-                              : "Пройти"
-                      }
-                      actionDisabled={!scenario.is_playable || scenario.perfectRun}
-                      statusText={
-                        scenario.perfectRun
-                          ? "Максимальный результат"
-                          : scenario.hasProgress
-                            ? "Есть сохранённый прогресс"
-                            : scenario.is_playable
-                              ? "Готово к запуску"
-                              : "Скоро"
-                      }
-                      progressNote={
-                        scenario.hasProgress || scenario.perfectRun
-                          ? `Лучший результат: ${scenario.bestScore} из ${scenario.max_score} очков`
-                          : `Максимум за миссию: ${scenario.max_score} очков`
-                      }
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
-                  Сейчас нет доступных миссий. Когда администратор опубликует новую ветку, она появится в этом каталоге.
-                </div>
-              )}
-            </div>
-          </section>
-
-          <aside className="glass-card p-6 md:p-7">
-            <p className="eyebrow">Как это устроено</p>
-            <div className="mt-6 space-y-4">
-              <div className="soft-tile">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">1. Вход в привычную среду</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  Миссия открывается как обычный интерфейс: почта, домашняя панель безопасности или страница подключения к сети.
-                </p>
-              </div>
-              <div className="soft-tile">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">2. Один значимый интерактивный объект</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  Нужный объект выделяется естественно: новым письмом, служебным сообщением, подозрительной сетью или recovery-действием.
-                </p>
-              </div>
-              <div className="soft-tile">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">3. Разбор последствий без потери контекста</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  После выбора последствия и правильный алгоритм показываются прямо внутри среды, чтобы безопасный паттерн закреплялся через действие.
-                </p>
-              </div>
+        <section className="glass-card p-6 md:p-7">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="eyebrow">Среды</p>
+              <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--color-text-primary)]">Выберите миссию и откройте нужную среду</h2>
+              <p className="body-copy mt-4">
+                Каждая карточка ведёт в отдельную цифровую среду. Внутри миссии остаётся один читаемый активный объект на шаг, без слепых кликов и лишнего шума.
+              </p>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 xl:max-w-[26rem] xl:justify-end">
               <Link href="/for-users" className="primary-button">
                 Открыть материалы
                 <ArrowRight size={16} />
               </Link>
-            </div>
-
-            <div className="soft-tile mt-6">
-              <div className="flex items-start gap-3">
+              <div className="soft-tile flex items-start gap-3 px-4 py-3 text-sm text-[var(--color-text-muted)] xl:max-w-[18rem]">
                 <div className="feature-icon shrink-0">
                   <Shield size={18} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">Безопасная симуляция</p>
-                  <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                    Все среды и переходы работают только как учебные локальные макеты. Приложение не открывает реальные опасные ссылки и не использует настоящие внешние сервисы.
-                  </p>
+                  Все среды и переходы работают только как учебные локальные макеты.
                 </div>
               </div>
             </div>
-          </aside>
-        </div>
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {loading ? (
+              <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
+                Загружаем миссии, их статус публикации и маршруты запуска.
+              </div>
+            ) : enrichedScenarios.length ? (
+              enrichedScenarios.map((scenario) => (
+                <div key={scenario.slug} className="h-full">
+                  <ScenarioCard
+                    scenario={scenario}
+                    actionHref={scenario.perfectRun ? undefined : scenario.visual.route}
+                    visualIcon={scenario.visual.icon}
+                    visualTitle={scenario.visual.environment}
+                    visualDescription={scenario.visual.description}
+                    actionLabel={
+                      !scenario.is_playable
+                        ? "Скоро откроется"
+                        : scenario.perfectRun
+                          ? "Пройдено"
+                          : scenario.hasProgress
+                            ? "Перепройти"
+                            : "Пройти"
+                    }
+                    actionDisabled={!scenario.is_playable || scenario.perfectRun}
+                    statusText={
+                      scenario.perfectRun
+                        ? "Максимальный результат"
+                        : scenario.hasProgress
+                          ? "Есть сохранённый прогресс"
+                          : scenario.is_playable
+                            ? "Готово к запуску"
+                            : "Скоро"
+                    }
+                    progressNote={
+                      scenario.hasProgress || scenario.perfectRun
+                        ? `Лучший результат: ${scenario.bestScore} из ${scenario.max_score} очков`
+                        : `Максимум за миссию: ${scenario.max_score} очков`
+                    }
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
+                Сейчас нет доступных миссий. Когда администратор опубликует новую ветку, она появится в этом каталоге.
+              </div>
+            )}
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="soft-tile">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">1. Вход в привычную среду</p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                Миссия открывается как обычный интерфейс: почта, домашняя панель безопасности или страница подключения к сети.
+              </p>
+            </div>
+            <div className="soft-tile">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">2. Один значимый интерактивный объект</p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                Нужный объект выделяется естественно: новым письмом, служебным сообщением, подозрительной сетью или recovery-действием.
+              </p>
+            </div>
+            <div className="soft-tile">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">3. Разбор последствий без потери контекста</p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
+                После выбора последствия и правильный алгоритм показываются прямо внутри среды, чтобы безопасный паттерн закреплялся через действие.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     </RequireAuth>
   );

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.models.user import User
 
 
@@ -32,7 +32,7 @@ def ensure_admin_user(db: Session) -> User:
     admin.display_name = admin.display_name or "Администратор"
     admin.role = "admin"
     admin.league = "Администратор"
-    if bootstrap_password and not admin.password_hash:
+    if bootstrap_password and (not admin.password_hash or not verify_password(bootstrap_password, admin.password_hash)):
         admin.password_hash = hash_password(bootstrap_password)
 
     db.commit()

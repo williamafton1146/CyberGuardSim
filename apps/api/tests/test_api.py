@@ -19,7 +19,7 @@ from app.services.admin_bootstrap import ensure_admin_user
 from app.services.certificates import build_certificate_status, issue_certificate
 from app.services.game_engine import build_leaderboard, load_session_state, start_session, submit_answer
 from app.services.stats import build_user_stats
-from app.core.security import verify_password
+from app.core.security import hash_password, verify_password
 from app.models.scenario import DecisionOption, Scenario, ScenarioStep
 from app.models.user import User
 
@@ -330,14 +330,14 @@ def test_admin_login_access_and_self_delete_protection(db_session: Session) -> N
         app.dependency_overrides.clear()
 
 
-def test_admin_bootstrap_does_not_reset_existing_password(db_session: Session) -> None:
+def test_admin_bootstrap_syncs_existing_password_to_settings(db_session: Session) -> None:
     admin = ensure_admin_user(db_session)
-    original_hash = admin.password_hash
+    admin.password_hash = hash_password("DifferentAdminPass123")
+    db_session.commit()
 
     ensure_admin_user(db_session)
     db_session.refresh(admin)
 
-    assert admin.password_hash == original_hash
     assert verify_password(settings.admin_bootstrap_password, admin.password_hash)
 
 
