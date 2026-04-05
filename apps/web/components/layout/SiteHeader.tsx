@@ -114,7 +114,7 @@ export function SiteHeader() {
             {isAuthed ? (
               <button type="button" className="secondary-button header-logout-button" onClick={handleLogout}>
                 <LogOut size={16} />
-                Выйти
+                <span className="header-logout-label">Выйти</span>
               </button>
             ) : isLogin ? (
               <Link href="/" className="secondary-button header-top-action">
