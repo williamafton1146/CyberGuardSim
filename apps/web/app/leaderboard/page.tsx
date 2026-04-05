@@ -51,33 +51,51 @@ export default function LeaderboardPage() {
             ) : loading ? (
               <div className="soft-tile admin-empty-state">Загружаем актуальный рейтинг и показатели участников.</div>
             ) : entries.length ? (
-              <div className="leaderboard-table-shell">
-                <table className="leaderboard-table">
-                  <thead>
-                    <tr>
-                      <th>Место</th>
-                      <th>Игрок</th>
-                      <th>Лига</th>
-                      <th>Рейтинг</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry) => (
-                      <tr key={entry.rank} className="leaderboard-row">
-                        <td className="leaderboard-rank">#{entry.rank}</td>
-                        <td>
-                          <div className="leaderboard-player">
-                            <p className="leaderboard-player-name">{entry.display_name}</p>
-                            <p className="leaderboard-player-meta">{entry.completed_sessions} завершенных миссий</p>
-                          </div>
-                        </td>
-                        <td>{entry.league}</td>
-                        <td className="leaderboard-rating">{entry.security_rating}</td>
+              <>
+                <div className="leaderboard-mobile-list">
+                  {entries.map((entry) => (
+                    <article key={`mobile-${entry.rank}`} className="soft-tile leaderboard-mobile-entry">
+                      <div className="leaderboard-mobile-head">
+                        <span className="leaderboard-mobile-rank">#{entry.rank}</span>
+                        <span className="leaderboard-mobile-rating">{entry.security_rating}</span>
+                      </div>
+                      <p className="leaderboard-mobile-name">{entry.display_name}</p>
+                      <div className="leaderboard-mobile-meta">
+                        <span>{entry.league}</span>
+                        <span>{entry.completed_sessions} миссий</span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="leaderboard-table-shell">
+                  <table className="leaderboard-table">
+                    <thead>
+                      <tr>
+                        <th>Место</th>
+                        <th>Игрок</th>
+                        <th>Лига</th>
+                        <th>Рейтинг</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {entries.map((entry) => (
+                        <tr key={entry.rank} className="leaderboard-row">
+                          <td className="leaderboard-rank">#{entry.rank}</td>
+                          <td>
+                            <div className="leaderboard-player">
+                              <p className="leaderboard-player-name">{entry.display_name}</p>
+                              <p className="leaderboard-player-meta">{entry.completed_sessions} завершенных миссий</p>
+                            </div>
+                          </td>
+                          <td>{entry.league}</td>
+                          <td className="leaderboard-rating">{entry.security_rating}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             ) : (
               <div className="soft-tile admin-empty-state">Рейтинг пока пуст. Он заполнится после первых завершенных миссий.</div>
             )}

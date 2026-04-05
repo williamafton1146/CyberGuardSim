@@ -376,7 +376,7 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
         </div>
         <div className={styles.environmentToolbarMeta}>
           <span>Входящие</span>
-          <span>Служебные уведомления</span>
+          <span>Уведомления</span>
           <span>Поддержка</span>
         </div>
       </div>
@@ -1019,7 +1019,7 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
         <div className={styles.pageTopBar}>
           <Link href="/simulator" className="secondary-button">
             <ArrowLeft size={16} />
-            Назад к миссиям
+            К миссиям
           </Link>
         </div>
 
