@@ -558,6 +558,26 @@ input {
   opacity: 0.6;
 }
 
+[data-theme="light"] .admin-panel,
+[data-theme="light"] .admin-scenario-list-panel,
+[data-theme="light"] .admin-editor-panel,
+[data-theme="light"] .admin-summary-card,
+[data-theme="light"] .admin-user-card,
+[data-theme="light"] .admin-step-card,
+[data-theme="light"] .admin-option-card,
+[data-theme="light"] .admin-scenario-list-item,
+[data-theme="light"] .admin-warning-card {
+  box-shadow: none;
+}
+
+[data-theme="light"] .admin-panel,
+[data-theme="light"] .admin-scenario-list-panel,
+[data-theme="light"] .admin-editor-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.92)),
+    linear-gradient(180deg, var(--color-surface-strong), var(--color-bg-elevated));
+}
+
 .eyebrow {
   margin: 0;
   font-size: 0.75rem;

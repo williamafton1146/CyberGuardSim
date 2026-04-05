@@ -81,6 +81,21 @@ function fromDateTimeLocal(value: string) {
   return new Date(value).toISOString();
 }
 
+function formatScenarioStatus(status: AdminScenario["status"]) {
+  switch (status) {
+    case "draft":
+      return "Черновик";
+    case "scheduled":
+      return "Премьера по расписанию";
+    case "live":
+      return "Опубликован";
+    case "disabled":
+      return "Отключён";
+    default:
+      return status;
+  }
+}
+
 function scenarioToInput(scenario: AdminScenario): AdminScenarioInput {
   return {
     slug: scenario.slug,
@@ -477,7 +492,7 @@ export default function AdminPage() {
                           className={`soft-tile admin-scenario-list-item ${selectedScenarioId === scenario.id ? "admin-scenario-list-item-active" : ""}`}
                           onClick={() => setSelectedScenarioId(scenario.id)}
                         >
-                          <span className="admin-scenario-status">{scenario.status}</span>
+                          <span className="admin-scenario-status">{formatScenarioStatus(scenario.status)}</span>
                           <strong className="admin-scenario-name">{scenario.title}</strong>
                           <span className="admin-scenario-meta">
                             {scenario.step_count} шага • {scenario.is_playable ? "доступен игрокам" : "скрыт"}

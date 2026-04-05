@@ -92,7 +92,7 @@ export default function LoginPage() {
     <div className="shell py-12">
       <div className="auth-layout">
         <section className="glass-card landing-surface">
-          <p className="eyebrow">CyberGuardSim access</p>
+          <p className="eyebrow">Доступ к CyberGuardSim</p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-[var(--color-text-primary)]">{title}</h1>
           <p className="body-copy mt-4 max-w-xl">
             После авторизации доступны сценарии, личная статистика, рейтинг цифровой устойчивости, раздел с пользовательскими материалами и выпуск сертификата.

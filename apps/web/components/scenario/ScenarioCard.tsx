@@ -18,6 +18,19 @@ type ScenarioCardProps = {
   visualDescription?: string;
 };
 
+function formatDifficultyLabel(value: string) {
+  switch (value) {
+    case "easy":
+      return "Лёгкий";
+    case "medium":
+      return "Средний";
+    case "hard":
+      return "Сложный";
+    default:
+      return value;
+  }
+}
+
 export function ScenarioCard({
   scenario,
   onStart,
@@ -42,7 +55,7 @@ export function ScenarioCard({
             <h3 className="mt-3 text-xl font-semibold leading-tight text-[var(--color-text-primary)] sm:text-2xl">{scenario.title}</h3>
           </div>
           <span className="shrink-0 rounded-full border border-[var(--color-border)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-            {scenario.difficulty}
+            {formatDifficultyLabel(scenario.difficulty)}
           </span>
         </div>
 

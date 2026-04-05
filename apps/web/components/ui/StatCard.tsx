@@ -12,7 +12,7 @@ export function StatCard({ label, value, accent = "muted" }: StatCardProps) {
   }[accent];
 
   return (
-    <div className={`rounded-[1.6rem] border p-5 shadow-ambient ${accentClass}`}>
+    <div className={`rounded-[1.6rem] border p-5 ${accentClass}`}>
       <p className="text-xs uppercase tracking-[0.22em] text-current/70">{label}</p>
       <p className="mt-4 text-3xl font-semibold leading-none">{value}</p>
     </div>

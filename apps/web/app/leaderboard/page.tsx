@@ -37,9 +37,9 @@ export default function LeaderboardPage() {
     <RequireAuth>
       <div className="shell space-y-10 py-12">
         <SectionTitle
-          eyebrow="Leaderboard"
+          eyebrow="Рейтинг"
           title="Рейтинг цифровой устойчивости"
-          description="Рейтинг отражает накопленный security rating, текущую лигу и количество завершенных сценариев для каждого участника."
+          description="Рейтинг отражает накопленный рейтинг безопасности, текущую лигу и количество завершённых сценариев у каждого участника."
         />
 
         <div className="glass-card leaderboard-card p-6">

@@ -80,7 +80,7 @@ export default function DashboardPage() {
     <RequireAuth>
       <div className="shell space-y-10 py-12">
         <SectionTitle
-          eyebrow="Dashboard"
+          eyebrow="Кабинет"
           title={profile ? `Добро пожаловать, ${profile.display_name}` : "Личный кабинет защитника"}
           description="Здесь собраны текущая лига, сценарный прогресс и последние ошибки, чтобы пользователь видел не только баллы, но и реальные зоны риска."
         />
@@ -99,7 +99,7 @@ export default function DashboardPage() {
                   Лига: <span className="font-semibold text-[var(--color-text-primary)]">{profile.league}</span>
                 </div>
                 <div className="soft-tile">
-                  Security Rating: <span className="font-semibold text-[var(--color-text-primary)]">{profile.security_rating}</span>
+                  Рейтинг безопасности: <span className="font-semibold text-[var(--color-text-primary)]">{profile.security_rating}</span>
                 </div>
                 <div className="soft-tile">
                   Email: <span className="font-semibold text-[var(--color-text-primary)]">{profile.email}</span>

@@ -1,76 +1,101 @@
 # CyberGuardSim
 
-Образовательный веб-прототип симулятора цифровой безопасности с `Next.js + Tailwind` на фронтенде и `FastAPI + PostgreSQL + Redis` на бэкенде.
+Образовательный веб-прототип симулятора цифровой безопасности: интерактивные сценарии, личный кабинет, рейтинг, сертификат и административное управление контентом.
 
-Проект соответствует базовым требованиям ТЗ:
-- веб-формат с one-command запуском через `docker-compose up`
-- TLS 1.2/1.3 в production
-- модульная архитектура
-- Swagger/OpenAPI и ER-диаграмма
-- 3 сюжетных сценария, рейтинг, кабинет, лидерборд, сертификат и раздел `Для пользователей`
+Стек проекта:
+- `TypeScript + Next.js + React + Tailwind CSS` на фронтенде
+- `FastAPI + SQLAlchemy + PostgreSQL + Redis` на бэкенде
+- `Docker Compose + nginx + WebSockets` для локального и production-окружения
 
-## Что внутри
+Проект закрывает базовые требования `TZ.txt`:
+- 3 сценария: `office`, `home`, `public-wifi`
+- 5+ типов атак и пошаговый разбор последствий ошибки
+- HP/score, рейтинг, кабинет, сертификат, админка
+- OpenAPI/Swagger и ER-диаграмма
+- one-command запуск через Compose
+- `TLSv1.2/TLSv1.3` в production-конфиге `nginx`
 
-- `apps/web` — интерфейс симулятора, личный кабинет, лидерборд, админка и раздел `Для пользователей`
-- `apps/api` — FastAPI API, аутентификация, игровая логика, статистика, Swagger и admin endpoints
-- `infra` — Dockerfile, `nginx`, `certbot` и deploy-скрипты
-- `docs` — ER-диаграмма, API summary и описание геймплея
+## Что есть в репозитории
 
-## Реализовано
+- `apps/web` — интерфейс, симулятор, кабинет, рейтинг, сертификаты, админка, раздел `Для пользователей`
+- `apps/api` — API, аутентификация, игровая логика, статистика, admin endpoints, WebSocket
+- `infra` — Dockerfile, `nginx`, deploy-скрипты, Let's Encrypt и cleanup-утилиты
+- `docs` — API summary, ERD и заметки по геймплею
 
-- Регистрация и логин с хэшированием пароля и JWT, включая вход администратора по логину
-- 3 играбельные сюжетные линии: `office`, `home`, `public-wifi`
-- `Security HP`, score, подсказки и последствия ошибок
-- Блокирующее модальное объяснение ошибок в симуляторе и итоговый экран сценария
-- Личный кабинет со статистикой и историей ошибок
-- Админ-панель `/admin` с управлением пользователями и сценариями
-- Публикация сценариев по расписанию: `draft`, `scheduled`, `live`, `disabled`
-- Рейтинг на основе лучшего результата по каждому сценарию
-- Лидерборд с Redis-кэшем по маршруту `GET /api/leaderboard`
-- Верифицируемый сертификат с публичной страницей, QR-кодом и скачиванием в PDF
-- Публичный раздел `Для пользователей` с интерактивными карточками рекомендаций на основе материалов Kaspersky и публичных антифрод-памяток Минцифры
-- `WebSocket`-обновления состояния миссии
+## Реализованные возможности
+
+- Регистрация и логин с хэшированием пароля и JWT
+- Отдельный вход администратора по логину `Admin`
+- 3 игровые среды: офисная почта, домашняя цифровая среда, общественный Wi‑Fi
+- `Security HP`, очки, блокирующий разбор ошибки и итоговый экран сценария
+- Прогресс по веткам, рейтинг, лиги и личный кабинет
+- Лидерборд как HTML-страница `/leaderboard` и API-маршрут `/api/leaderboard`
+- Выпуск и публичная проверка сертификата с QR-кодом
+- Раздел `Для пользователей` с карточками по фишингу, QR-фишингу, кодам из SMS, дипфейкам, поддельным приложениям и реакции на инцидент
+- Админка для пользователей и сценариев
+- Публикация сценариев по статусам: `draft`, `scheduled`, `live`, `disabled`
 - Swagger/OpenAPI на `/docs`
 
-## Локальный запуск через Docker Compose
+## Быстрый локальный запуск
 
-One-command путь по ТЗ:
+Поддерживаются обе формы команды:
+
+```bash
+docker compose up --build
+```
+
+или
 
 ```bash
 docker-compose up --build
 ```
 
-После запуска:
-- приложение доступно по `http://localhost`
-- API доступен через тот же reverse proxy, например `http://localhost/api/health`
-- Swagger доступен по `http://localhost/docs`
+После запуска доступны:
+- приложение: `http://localhost`
+- healthcheck API: `http://localhost/api/health`
+- Swagger: `http://localhost/docs`
 
-Локальный стек поднимает `db`, `redis`, `api`, `web`, `nginx`.
+Локальный стек поднимает:
+- `db`
+- `redis`
+- `api`
+- `web`
+- `nginx`
+
+Локальный reverse proxy работает по `HTTP`, без локального TLS.
+
+### Локальные dev-значения по умолчанию
+
+В локальном Compose используются dev-значения из `docker-compose.yml`:
+- admin login: `Admin`
+- admin password: `AdminCyber12`
+
+Эти значения нужны только для локальной разработки и не должны использоваться в production.
 
 ## Локальный запуск без Docker
 
-### API
-
-```bash
-cd apps/api
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Web
+### Frontend
 
 ```bash
 npm install
 npm run dev:web
 ```
 
-Для production-like запуска фронтенда локально:
+Production-like сборка фронтенда:
 
 ```bash
 npm run build --workspace @cyberguardsim/web
 npm run start --workspace @cyberguardsim/web -- --hostname 127.0.0.1 --port 3000
+```
+
+### Backend
+
+```bash
+cd apps/api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=. uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ## Production deploy
@@ -78,87 +103,95 @@ npm run start --workspace @cyberguardsim/web -- --hostname 127.0.0.1 --port 3000
 Основной путь:
 
 ```bash
-chmod +x infra/deploy/deploy.sh
 ./infra/deploy/deploy.sh
 ```
 
 Скрипт:
-- проверяет и ставит системные зависимости `docker`, compose, `curl`, `openssl`
+- проверяет Docker/Compose и базовые утилиты
 - создаёт или обновляет `.env`
-- валидирует base compose и production override
-- при повторном деплое безопасно чистит project/system мусор от проекта
-- для слабых серверов адаптивно добавляет `/swapfile-cyberguardsim`, если текущего swap не хватает
-- получает или переиспользует сертификат Let's Encrypt
-- поднимает production-стек через `docker-compose.yml + docker-compose.prod.yml`
+- валидирует base и production compose-конфиги
+- при повторном деплое запускает безопасную cleanup-фазу
+- при необходимости добавляет adaptive swap через `/swapfile-cyberguardsim`
+- выпускает или переиспользует сертификат Let's Encrypt
+- поднимает стек через `docker-compose.yml + docker-compose.prod.yml`
 - проверяет `https://<domain>/api/health`
-- прогоняет auth smoke test
-- печатает bootstrap-пароль администратора `Admin`
+- запускает auth smoke test
+- печатает bootstrap-пароль администратора, если он реально совпадает с текущим admin-аккаунтом
 
-### Низкоуровневый выпуск сертификата
+Дополнительные команды:
 
 ```bash
-chmod +x infra/deploy/init-letsencrypt.sh
 ./infra/deploy/init-letsencrypt.sh
+./infra/deploy/smoke-auth.sh https://your-domain.com
 ```
 
-### Ручной запуск production-стека
+Ручной запуск production-стека:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
-### Проверка production
+## Проверенные локально команды
+
+В рамках финального repo+local аудита подтверждены:
 
 ```bash
-curl -I https://your-domain.com
-curl https://your-domain.com/api/health
+docker compose -f docker-compose.yml config
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+docker-compose -f docker-compose.yml config
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml config
+npm run build --workspace @cyberguardsim/web
+PYTHONPATH=apps/api apps/api/.venv/bin/pytest -q
+bash -n infra/deploy/deploy.sh
+bash -n infra/deploy/init-letsencrypt.sh
+bash -n infra/deploy/smoke-auth.sh
 ```
 
-### Smoke-check после deploy
+Также локально подтверждён импорт backend entrypoint:
 
 ```bash
-chmod +x infra/deploy/smoke-auth.sh
-SMOKE_RESOLVE_IP=127.0.0.1 ./infra/deploy/smoke-auth.sh https://your-domain.com
+apps/api/.venv/bin/python -c "import sys; sys.path.insert(0, 'apps/api'); import app.main; print('api-import-ok')"
 ```
-
-Smoke test проверяет:
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /users/me`
-- `GET /leaderboard` как HTML-страницу
-- `GET /api/leaderboard` как защищённый JSON endpoint
-- прохождение всех 3 сценариев
-- `POST /users/me/certificate`
-- `GET /api/certificates/{code}` и `GET /certificates/{code}`
 
 ## Документация
 
-- API summary: [docs/api.md](/home/Flany/hack/docs/api.md)
-- ER-диаграмма: [docs/erd.md](/home/Flany/hack/docs/erd.md)
-- Gameplay notes: [docs/gameplay.md](/home/Flany/hack/docs/gameplay.md)
+- API summary: `docs/api.md`
+- ER-диаграмма: `docs/erd.md`
+- Gameplay notes: `docs/gameplay.md`
 
 ## Тесты
 
 Backend:
 
 ```bash
-cd apps/api
-pytest
+PYTHONPATH=apps/api apps/api/.venv/bin/pytest -q
 ```
 
-Frontend production build:
+Frontend build:
 
 ```bash
 npm run build --workspace @cyberguardsim/web
 ```
 
-## Локальные артефакты
+## Важные замечания
 
-В git и docker build context не должны попадать:
+- Проект сейчас `desktop-first`, но мобильный интерфейс и адаптивные сценарии тоже поддерживаются.
+- Production TLS настраивается шаблоном `infra/nginx/app.conf.template` и ограничен `TLSv1.2 TLSv1.3`.
+- В репозитории могут появляться локальные runtime-артефакты вроде `*.db`, `.next`, `.pytest_cache`; они не должны коммититься и уже исключены через `.gitignore` и `.dockerignore`.
+- Корневые SQLite-файлы вроде `cyberguardsim.db` или `cybersec.db` считаются локальными артефактами разработки, а не частью исходного кода.
+
+## Структура и чистота репозитория
+
+Для защиты build context и git-истории исключены:
 - `node_modules`, `.next`, `dist`, `build`, `coverage`
 - `.venv`, `.pytest_cache`, `__pycache__`, `*.pyc`
 - локальные `.env` файлы, кроме `.env.example`
-- временные SQLite-файлы вроде `*.db`, `*.sqlite`, `*.sqlite3`
-- runtime-артефакты letsencrypt и deploy-state
+- временные SQLite-файлы: `*.db`, `*.sqlite`, `*.sqlite3`
+- runtime-артефакты `letsencrypt` и deploy-state
 
-Для этого настроены [.gitignore](/home/Flany/hack/.gitignore) и [.dockerignore](/home/Flany/hack/.dockerignore).
+Если нужно вручную почистить локальные артефакты проекта:
+
+```bash
+./infra/deploy/cleanup-temp.sh
+./infra/deploy/cleanup-system-artifacts.sh
+```

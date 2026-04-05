@@ -11,6 +11,19 @@ import type { ScenarioSummary, UserProfile } from "@/types";
 
 export const dynamic = "force-dynamic";
 
+function formatDifficultyLabel(value: string) {
+  switch (value) {
+    case "easy":
+      return "Лёгкий";
+    case "medium":
+      return "Средний";
+    case "hard":
+      return "Сложный";
+    default:
+      return value;
+  }
+}
+
 export default function HomePage() {
   const [isAuthed, setIsAuthed] = useState(false);
   const [storedUser, setStoredUser] = useState<UserProfile | null>(null);
@@ -39,7 +52,7 @@ export default function HomePage() {
         slug: scenario.slug,
         title: scenario.title,
         theme: scenario.theme,
-        difficulty: scenario.difficulty,
+        difficulty: formatDifficultyLabel(scenario.difficulty),
         hook:
           scenario.slug === "office"
             ? "Почта, мессенджер, подтверждение доступа"
@@ -126,7 +139,7 @@ export default function HomePage() {
               <div className="landing-hero-asset-shell">
                 <div className="landing-hero-asset-copy">
                   <span className="landing-hero-asset-kicker">Интерфейс тренировки</span>
-                  <strong>Письма, сообщения, QR и public Wi-Fi в одном маршруте.</strong>
+                  <strong>Письма, сообщения, QR и публичный Wi-Fi в одном маршруте.</strong>
                   <span>Пользователь видит риск, а не угадывает правильный ответ в отрыве от контекста.</span>
                 </div>
                 <div className="landing-hero-asset-frame">

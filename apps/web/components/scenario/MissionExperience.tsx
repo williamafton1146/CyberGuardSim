@@ -604,7 +604,7 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               <div className={styles.securityChecklist}>
                 <span>Почта — тот же пароль</span>
                 <span>Камера — тот же пароль</span>
-                <span>Smart home — тот же пароль</span>
+                <span>Умный дом — тот же пароль</span>
               </div>
             </div>
           ) : null}
@@ -614,7 +614,7 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
               <p className={styles.portalTitle}>Разрешения приложения</p>
               <div className={styles.securityChecklist}>
                 <span>Чтение SMS и уведомлений</span>
-                <span>Доступ к экрану и special access</span>
+                <span>Доступ к экрану и специальным возможностям</span>
                 <span>Полный доступ к файлам устройства</span>
               </div>
             </div>

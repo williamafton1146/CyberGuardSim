@@ -5,6 +5,19 @@ type StatsOverviewProps = {
   stats: UserStats;
 };
 
+function formatProgressStatus(status: string) {
+  switch (status) {
+    case "completed":
+      return "Пройдено";
+    case "in_progress":
+      return "Есть прогресс";
+    case "not_started":
+      return "Ещё не начато";
+    default:
+      return status;
+  }
+}
+
 export function StatsOverview({ stats }: StatsOverviewProps) {
   return (
     <div className="space-y-8">
@@ -23,9 +36,9 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
               <div key={item.slug} className="soft-tile flex items-center justify-between gap-4">
                 <div>
                   <p className="font-medium text-[var(--color-text-primary)]">{item.title}</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">{item.status}</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{formatProgressStatus(item.status)}</p>
                 </div>
-                <span className="text-sm font-semibold text-[var(--color-accent)]">{item.best_score} pts</span>
+                <span className="text-sm font-semibold text-[var(--color-accent)]">{item.best_score} очков</span>
               </div>
             ))}
           </div>
