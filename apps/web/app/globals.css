@@ -2526,6 +2526,35 @@ input {
   color: var(--color-text-primary);
 }
 
+.admin-publish-toggle {
+  align-items: flex-start;
+  min-height: auto;
+  line-height: 1.6;
+}
+
+.admin-publish-toggle input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.admin-publish-toggle span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.admin-publish-toggle strong {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.admin-publish-toggle small {
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+}
+
 .admin-warning-card {
   line-height: 1.75;
   color: var(--color-text-secondary);
@@ -2726,12 +2755,13 @@ input {
 .guide-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 1.5rem;
   background: rgba(6, 16, 26, 0.7);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .guide-modal {

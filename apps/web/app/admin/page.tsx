@@ -586,14 +586,17 @@ export default function AdminPage() {
                             disabled={editorBusy}
                           />
                         </label>
-                        <label className="admin-toggle">
+                        <label className="admin-toggle admin-grid-span admin-publish-toggle">
                           <input
                             type="checkbox"
                             checked={form.is_enabled}
                             onChange={(event) => setForm((current) => ({ ...current, is_enabled: event.target.checked }))}
                             disabled={editorBusy}
                           />
-                          <span>Сценарий включён для публикации</span>
+                          <span>
+                            <strong>Опубликовать сценарий</strong>
+                            <small>Если сценарий включён, он появится по расписанию и станет доступен игрокам после даты премьеры.</small>
+                          </span>
                         </label>
                       </div>
 

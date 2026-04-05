@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertTriangle, ShieldCheck, Smartphone, Wifi, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { SectionTitle } from "@/components/ui/SectionTitle";
 
@@ -30,9 +31,9 @@ const guideCards: GuideCard[] = [
   },
   {
     id: "deepfake-voice",
-    kicker: "Deepfake / voice scam",
-    title: "Голос и видео уже нельзя считать доказательством подлинности",
-    summary: "Deepfake-ролик или подделанный голос могут имитировать руководителя, родственника или сотрудника банка достаточно убедительно, чтобы человек действовал на эмоциях.",
+    kicker: "Дипфейк и поддельный звонок",
+    title: "Голос и видео уже нельзя считать надёжным доказательством подлинности",
+    summary: "Дипфейк-ролик или поддельный голос могут убедительно имитировать руководителя, родственника или сотрудника банка и заставить человека действовать на эмоциях.",
     mechanism:
       "Для атаки хватает короткой записи голоса или открытых видео. Затем мошенник накладывает синтез речи, копирует манеру разговора и пытается выбить срочное действие: перевод денег, код подтверждения или запуск файла.",
     safeAction:
@@ -42,11 +43,11 @@ const guideCards: GuideCard[] = [
   },
   {
     id: "quishing",
-    kicker: "QR и подмена маршрута",
-    title: "Quishing: QR-код может вести не туда, куда обещает",
+    kicker: "QR-фишинг",
+    title: "Поддельный QR-код может вести не туда, куда обещает",
     summary: "QR-код удобен тем, что вы не видите адрес заранее. Этим пользуются для подмены оплаты, логина и перехода на фишинговые формы.",
     mechanism:
-      "Поддельный QR-код клеят поверх настоящего или присылают в сообщении. После сканирования открывается не меню и не Wi‑Fi, а страница логина, оплаты или загрузки приложения с подменённым доменом.",
+      "Поддельный QR-код клеят поверх настоящего или присылают в сообщении. После сканирования открывается не меню и не страница доступа к Wi‑Fi, а форма входа, оплаты или загрузки приложения с подменённым доменом.",
     safeAction:
       "Смотрите на итоговый адрес перед открытием, проверяйте контекст и не вводите пароль, карту или рабочую почту, если QR ведёт на незнакомый домен.",
     riskResult:
@@ -55,7 +56,7 @@ const guideCards: GuideCard[] = [
   {
     id: "spear-phishing",
     kicker: "Точечный фишинг",
-    title: "Spear phishing опаснее массового спама",
+    title: "Точечный фишинг опаснее массового спама",
     summary: "Такие письма и сообщения выглядят убедительнее, потому что подстроены под вашу роль, компанию, проект или недавние события.",
     mechanism:
       "Атакующий собирает публичную информацию: должность, коллег, проекты, поставщиков. После этого письмо или сообщение выглядит почти как обычная рабочая коммуникация и давит на срочность.",
@@ -66,11 +67,11 @@ const guideCards: GuideCard[] = [
   },
   {
     id: "public-wifi-portal",
-    kicker: "Публичный интернет",
-    title: "Опасность не только в открытом Wi‑Fi, но и в фальшивом captive portal",
+    kicker: "Публичная сеть",
+    title: "Опасность не только в открытом Wi‑Fi, но и в поддельной странице входа",
     summary: "Даже если сама сеть кажется настоящей, портал авторизации может быть подделан и собирать ваши данные.",
     mechanism:
-      "Пользователь подключается к точке доступа и попадает на страницу “входа в сеть”. Поддельный портал может попросить рабочую почту, пароль, номер карты или код из SMS под видом бесплатного интернета.",
+      "Пользователь подключается к точке доступа и попадает на страницу “входа в сеть”. Поддельная страница может попросить рабочую почту, пароль, номер карты или код из SMS под видом бесплатного интернета.",
     safeAction:
       "Уточняйте название сети у сотрудников, не вводите рабочий пароль на сетевых порталах и используйте мобильный интернет, если портал требует слишком много данных.",
     riskResult:
@@ -78,8 +79,8 @@ const guideCards: GuideCard[] = [
   },
   {
     id: "fake-security-app",
-    kicker: "Поддельные приложения",
-    title: "“Защитное” приложение тоже может быть атакой",
+    kicker: "Поддельное приложение",
+    title: "“Защитное” приложение тоже может быть инструментом атаки",
     summary: "Мошенники нередко распространяют утилиты, которые якобы проверяют устройство, защищают банк или ставят сертификат безопасности.",
     mechanism:
       "Такое приложение просит доступ к SMS, экрану, файлам, спецвозможностям и уведомлениям. Под видом защиты оно получает ровно те полномочия, которые нужны для перехвата кодов, паролей и платёжных действий.",
@@ -94,7 +95,7 @@ const guideCards: GuideCard[] = [
     title: "Повтор пароля превращает одну утечку в цепочку взломов",
     summary: "Когда один и тот же пароль живёт в почте, магазине, облаке и соцсетях, злоумышленнику достаточно одной базы утечек.",
     mechanism:
-      "После утечки старых логинов и паролей боты автоматически проверяют эти пары на других популярных сервисах. Это называется credential stuffing и работает именно за счёт повторного использования пароля.",
+      "После утечки старых логинов и паролей боты автоматически проверяют эти пары на других популярных сервисах. Такой перебор по утёкшим данным называют credential stuffing, и он работает именно за счёт повторного использования пароля.",
     safeAction:
       "Используйте уникальные длинные пароли и менеджер паролей. Для ключевых сервисов обязательно включайте второй фактор.",
     riskResult:
@@ -154,14 +155,33 @@ export const dynamic = "force-dynamic";
 
 export default function ForUsersPage() {
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const activeGuide = useMemo(() => guideCards.find((card) => card.id === activeGuideId) || null, [activeGuideId]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!activeGuideId) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeGuideId]);
 
   return (
     <div className="shell shell-wide space-y-10 py-12">
       <SectionTitle
         eyebrow="Для пользователей"
         title="Практические правила цифровой безопасности с объяснением механики атак"
-        description="Раздел опирается на рекомендации Kaspersky Resource Center, публичные антифрод-памятки Минцифры и прикладные разборы типовых атак: здесь есть и механизм атаки, и короткий безопасный порядок действий."
+        description="Здесь собраны понятные разборы типовых атак: как именно работает схема, по каким признакам её заметить и что безопаснее сделать в первые минуты."
       />
 
       <div className="guide-hero-card">
@@ -189,46 +209,49 @@ export default function ForUsersPage() {
         ))}
       </div>
 
-      {activeGuide ? (
-        <div className="guide-modal-backdrop" onClick={() => setActiveGuideId(null)}>
-          <div className="guide-modal" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="icon-button guide-modal-close" onClick={() => setActiveGuideId(null)}>
-              <X size={18} />
-            </button>
-            <p className="eyebrow">{activeGuide.kicker}</p>
-            <h2 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">{activeGuide.title}</h2>
-            <p className="body-copy mt-4 text-sm">{activeGuide.summary}</p>
+      {isClient && activeGuide
+        ? createPortal(
+            <div className="guide-modal-backdrop" onClick={() => setActiveGuideId(null)}>
+              <div className="guide-modal" onClick={(event) => event.stopPropagation()}>
+                <button type="button" className="icon-button guide-modal-close" onClick={() => setActiveGuideId(null)}>
+                  <X size={18} />
+                </button>
+                <p className="eyebrow">{activeGuide.kicker}</p>
+                <h2 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">{activeGuide.title}</h2>
+                <p className="body-copy mt-4 text-sm">{activeGuide.summary}</p>
 
-            <article className="soft-tile mt-6 guide-modal-mechanism">
-              <div className="feature-icon">
-                <Smartphone size={18} />
-              </div>
-              <div>
-                <h3 className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">Как работает атака</h3>
-                <p className="body-copy mt-3 text-sm">{activeGuide.mechanism}</p>
-              </div>
-            </article>
+                <article className="soft-tile mt-6 guide-modal-mechanism">
+                  <div className="feature-icon">
+                    <Smartphone size={18} />
+                  </div>
+                  <div>
+                    <h3 className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">Как работает атака</h3>
+                    <p className="body-copy mt-3 text-sm">{activeGuide.mechanism}</p>
+                  </div>
+                </article>
 
-            <div className="guide-modal-grid">
-              <article className="soft-tile guide-modal-tile">
-                <div className="feature-icon">
-                  <ShieldCheck size={18} />
+                <div className="guide-modal-grid">
+                  <article className="soft-tile guide-modal-tile">
+                    <div className="feature-icon">
+                      <ShieldCheck size={18} />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Что делать</h3>
+                    <p className="body-copy mt-3 text-sm">{activeGuide.safeAction}</p>
+                  </article>
+
+                  <article className="soft-tile guide-modal-tile guide-modal-tile-alert">
+                    <div className="feature-icon guide-modal-alert-icon">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Что будет, если нарушить правило</h3>
+                    <p className="body-copy mt-3 text-sm">{activeGuide.riskResult}</p>
+                  </article>
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Что делать</h3>
-                <p className="body-copy mt-3 text-sm">{activeGuide.safeAction}</p>
-              </article>
-
-              <article className="soft-tile guide-modal-tile guide-modal-tile-alert">
-                <div className="feature-icon guide-modal-alert-icon">
-                  <AlertTriangle size={18} />
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">Что будет, если нарушить правило</h3>
-                <p className="body-copy mt-3 text-sm">{activeGuide.riskResult}</p>
-              </article>
-            </div>
-          </div>
-        </div>
-      ) : null}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="soft-tile">
