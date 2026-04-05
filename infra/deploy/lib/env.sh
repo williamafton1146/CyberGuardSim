@@ -182,7 +182,13 @@ ensure_env_file() {
   set_env_var NEXT_PUBLIC_API_URL "https://${domain}"
   set_env_var NEXT_PUBLIC_WS_URL "wss://${domain}"
   set_env_var ADMIN_USERNAME "Admin"
-  ADMIN_BOOTSTRAP_PASSWORD_VALUE="$(generate_admin_password)"
-  set_env_var ADMIN_BOOTSTRAP_PASSWORD "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
+  local current_admin_bootstrap
+  current_admin_bootstrap="$(get_env_value ADMIN_BOOTSTRAP_PASSWORD .env || true)"
+  if [[ -z "${current_admin_bootstrap}" || "${current_admin_bootstrap}" == "change-me-admin-password" ]]; then
+    ADMIN_BOOTSTRAP_PASSWORD_VALUE="$(generate_admin_password)"
+    set_env_var ADMIN_BOOTSTRAP_PASSWORD "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
+  else
+    ADMIN_BOOTSTRAP_PASSWORD_VALUE=""
+  fi
   validate_env_file
 }

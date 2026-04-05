@@ -61,7 +61,7 @@ def build_user_stats(db: Session, user: User) -> UserStats:
             best_score = progress.best_score
         else:
             best_score = 0
-            status = scenario_status_value(scenario)
+            status = "not_started" if scenario_is_live(scenario) else scenario_status_value(scenario)
 
         scenario_cards.append(
             ScenarioProgress(

@@ -97,7 +97,9 @@ export default function HomePage() {
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
               <p className="eyebrow">Цифровая устойчивость без перегруза</p>
-              <h1 className="landing-title landing-title-balanced">CyberGuardSim</h1>
+              <h1 className="landing-title landing-title-balanced">
+                CyberGuard<wbr />Sim
+              </h1>
               <p className="landing-tagline">Интерактивная платформа, которая учит замечать атаку до того, как ошибка превращается в реальный инцидент.</p>
               <p className="landing-lead">
                 Пользователь проходит знакомые рабочие и бытовые ситуации как понятный маршрут: видит контекст, выбирает действие, получает объяснение последствий и закрепляет безопасный паттерн.

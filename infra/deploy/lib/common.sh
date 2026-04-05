@@ -83,12 +83,18 @@ prompt_value() {
 }
 
 generate_admin_password() {
-  local generated=""
+  local lower upper digits mixed generated=""
 
-  while [[ ${#generated} -lt 12 ]]; do
-    generated="$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9' | head -c 12)"
+  lower="$(openssl rand -base64 8 | tr -dc 'a-z' | head -c 5)"
+  upper="$(openssl rand -base64 8 | tr -dc 'A-Z' | head -c 4)"
+  digits="$(openssl rand -base64 8 | tr -dc '0-9' | head -c 4)"
+  mixed="${lower}${upper}${digits}"
+
+  while [[ ${#mixed} -lt 16 ]]; do
+    mixed="${mixed}$(openssl rand -base64 6 | tr -dc 'A-Za-z0-9' | head -c 2)"
   done
 
+  generated="$(printf '%s' "${mixed}" | fold -w1 | shuf | tr -d '\n' | head -c 16)"
   printf '%s' "${generated}"
 }
 

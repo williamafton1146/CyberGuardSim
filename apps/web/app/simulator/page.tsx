@@ -95,7 +95,7 @@ export default function SimulatorHubPage() {
       scenarios.map((scenario) => {
         const progress = progressBySlug.get(scenario.slug);
         const bestScore = progress?.best_score ?? 0;
-        const hasProgress = Boolean(progress) && (bestScore > 0 || progress?.status !== "not_started");
+        const hasProgress = Boolean(progress) && (bestScore > 0 || progress?.status === "in_progress" || progress?.status === "completed");
         const perfectRun = Boolean(progress) && progress?.status === "completed" && bestScore >= scenario.max_score;
 
         return {

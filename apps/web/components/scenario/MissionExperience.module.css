@@ -6,23 +6,9 @@
   flex-wrap: nowrap;
 }
 
-.routeBadge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-elevated);
-  padding: 0.58rem 0.95rem;
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
 .runtimeStack {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .statusStrip {
@@ -145,6 +131,7 @@
   position: relative;
   overflow: hidden;
   min-width: 0;
+  min-height: min(76vh, 52rem);
   border-radius: 1.85rem;
   border: 1px solid var(--color-border);
   background:
@@ -177,6 +164,7 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 .environmentToolbarMeta {
@@ -200,8 +188,8 @@
 
 .mailLayout {
   display: grid;
-  grid-template-columns: minmax(9rem, 10.75rem) minmax(15.5rem, 18rem) minmax(0, 1fr);
-  min-height: clamp(35rem, 70vh, 44rem);
+  grid-template-columns: minmax(9rem, 10rem) minmax(16rem, 18.5rem) minmax(24rem, 1fr);
+  min-height: clamp(34rem, 68vh, 43rem);
 }
 
 .mailSidebar,
@@ -384,6 +372,24 @@
   font-size: 0.92rem;
   line-height: 1.8;
   color: var(--color-text-muted);
+}
+
+.sceneIllustration {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border-radius: 1.2rem;
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at top left, var(--color-accent-soft), transparent 28%),
+    rgba(255, 255, 255, 0.03);
+  padding: 0.8rem;
+}
+
+.sceneIllustrationSvg {
+  display: block;
+  width: min(100%, 20rem);
+  height: auto;
 }
 
 .mailMessageCard,
@@ -577,9 +583,9 @@
 
 .homeGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-  gap: 1rem;
-  min-height: clamp(34rem, 68vh, 42rem);
+  grid-template-columns: minmax(24rem, 1.12fr) minmax(19rem, 0.88fr);
+  gap: 1.1rem;
+  min-height: clamp(34rem, 66vh, 41rem);
   padding: 1rem;
 }
 
@@ -672,9 +678,9 @@
 .wifiStage,
 .qrStage {
   display: grid;
-  grid-template-columns: minmax(17rem, 0.92fr) minmax(0, 1.08fr);
-  gap: 1rem;
-  min-height: clamp(33rem, 66vh, 40rem);
+  grid-template-columns: minmax(18rem, 0.96fr) minmax(24rem, 1.04fr);
+  gap: 1.1rem;
+  min-height: clamp(33rem, 64vh, 39rem);
   padding: 1rem;
 }
 
@@ -864,13 +870,31 @@
 }
 
 .consequenceContent {
-  max-width: 22rem;
+  max-width: 28rem;
   border-radius: 1.8rem;
   border: 1px solid var(--color-border);
   background: var(--color-bg-elevated);
-  padding: 2rem;
+  padding: 2.4rem;
   text-align: center;
   box-shadow: var(--shadow-card);
+}
+
+.consequenceBar {
+  width: 100%;
+  height: 0.5rem;
+  margin-top: 1.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.consequenceBarFill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-alert), #ffba49);
+  animation: criticalHold 4.1s linear forwards;
 }
 
 @keyframes fadeInUp {
@@ -881,6 +905,15 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes criticalHold {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
   }
 }
 
@@ -952,7 +985,39 @@
 }
 
 @media (max-width: 1180px) {
-  .pageTopBar,
+  .mailLayout {
+    grid-template-columns: minmax(8rem, 9rem) minmax(13.5rem, 15rem) minmax(0, 1fr);
+  }
+
+  .homeGrid {
+    grid-template-columns: minmax(0, 1.02fr) minmax(18rem, 0.98fr);
+  }
+
+  .wifiStage,
+  .qrStage {
+    grid-template-columns: minmax(17rem, 0.94fr) minmax(0, 1.06fr);
+  }
+
+  .environmentShell {
+    min-height: auto;
+  }
+
+  .environmentToolbarMeta {
+    gap: 0.5rem;
+  }
+
+  .mailSidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mailList {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 980px) {
   .environmentToolbar {
     flex-wrap: wrap;
   }
@@ -967,16 +1032,6 @@
 
   .environmentToolbarMeta {
     justify-content: flex-start;
-  }
-
-  .mailSidebar {
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .mailList {
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
   }
 }
 
@@ -995,6 +1050,10 @@
   }
 
   .homeStatRow {
+    grid-template-columns: 1fr;
+  }
+
+  .statusStrip {
     grid-template-columns: 1fr;
   }
 

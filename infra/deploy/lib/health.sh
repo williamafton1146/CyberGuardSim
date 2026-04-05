@@ -70,6 +70,9 @@ open_site() {
   if [[ -n "${ADMIN_BOOTSTRAP_PASSWORD_VALUE:-}" ]]; then
     printf '\n[deploy] Admin login: Admin\n'
     printf '[deploy] Admin password: %s\n' "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
+  else
+    printf '\n[deploy] Admin login: Admin\n'
+    printf '[deploy] Admin password: unchanged from existing deployment\n'
   fi
 
   if require_command xdg-open; then

@@ -86,6 +86,18 @@ def test_register_login_and_profile(db_session: Session) -> None:
     assert stats_response.total_sessions == 0
 
 
+def test_fresh_user_progress_defaults_to_not_started(db_session: Session) -> None:
+    user = create_user(db_session, email="fresh-progress@example.com", password="strongpass123")
+
+    stats_response = build_user_stats(db_session, user)
+    progress_by_slug = {item.slug: item for item in stats_response.scenario_progress}
+
+    assert progress_by_slug
+    assert set(progress_by_slug) == {"office", "home", "public-wifi"}
+    assert all(item.status == "not_started" for item in progress_by_slug.values())
+    assert all(item.best_score == 0 for item in progress_by_slug.values())
+
+
 def test_auth_normalization_and_length_limits(db_session: Session) -> None:
     token_response = asyncio.run(
         register(

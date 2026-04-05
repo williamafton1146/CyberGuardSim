@@ -153,6 +153,9 @@ function ConsequenceAnimationOverlay({ type }: { type: ConsequenceAnimation }) {
           <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">
             Неверное действие дало злоумышленнику время закрепиться и перейти к следующему этапу.
           </p>
+          <div className={styles.consequenceBar}>
+            <span className={styles.consequenceBarFill} />
+          </div>
         </div>
       </div>
     );
@@ -167,6 +170,9 @@ function ConsequenceAnimationOverlay({ type }: { type: ConsequenceAnimation }) {
           <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">
             Фальшивый портал или страница перевели атаку в активную фазу до настоящей проверки безопасности.
           </p>
+          <div className={styles.consequenceBar}>
+            <span className={styles.consequenceBarFill} />
+          </div>
         </div>
       </div>
     );
@@ -180,6 +186,9 @@ function ConsequenceAnimationOverlay({ type }: { type: ConsequenceAnimation }) {
         <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">
           Код, пароль или платёжные данные ушли туда, куда не должны были попасть.
         </p>
+        <div className={styles.consequenceBar}>
+          <span className={styles.consequenceBarFill} />
+        </div>
       </div>
     </div>
   );
@@ -293,6 +302,53 @@ type EnvironmentProps = {
   locked: boolean;
   onHotspot: () => void;
 };
+
+function SmsIllustration() {
+  return (
+    <div className={styles.sceneIllustration}>
+      <svg viewBox="0 0 320 180" className={styles.sceneIllustrationSvg} aria-hidden="true">
+        <rect x="90" y="10" width="140" height="160" rx="22" fill="var(--color-bg-soft)" stroke="var(--color-border)" />
+        <rect x="110" y="28" width="100" height="14" rx="7" fill="var(--color-accent-soft)" />
+        <rect x="104" y="58" width="104" height="34" rx="12" fill="var(--color-surface-strong)" />
+        <rect x="122" y="69" width="68" height="8" rx="4" fill="var(--color-text-muted)" opacity="0.5" />
+        <rect x="136" y="102" width="70" height="28" rx="14" fill="var(--color-accent-soft)" />
+        <rect x="148" y="113" width="46" height="6" rx="3" fill="var(--color-accent)" opacity="0.65" />
+        <rect x="114" y="136" width="92" height="18" rx="9" fill="rgba(255,123,103,0.14)" stroke="rgba(255,123,103,0.28)" />
+      </svg>
+    </div>
+  );
+}
+
+function DeviceIllustration() {
+  return (
+    <div className={styles.sceneIllustration}>
+      <svg viewBox="0 0 320 180" className={styles.sceneIllustrationSvg} aria-hidden="true">
+        <rect x="28" y="34" width="124" height="84" rx="14" fill="var(--color-bg-soft)" stroke="var(--color-border)" />
+        <rect x="40" y="48" width="62" height="10" rx="5" fill="var(--color-accent-soft)" />
+        <rect x="40" y="66" width="88" height="8" rx="4" fill="var(--color-text-muted)" opacity="0.4" />
+        <rect x="40" y="82" width="72" height="8" rx="4" fill="var(--color-text-muted)" opacity="0.3" />
+        <rect x="190" y="16" width="90" height="148" rx="18" fill="var(--color-bg-soft)" stroke="var(--color-border)" />
+        <rect x="206" y="34" width="58" height="58" rx="14" fill="var(--color-accent-soft)" />
+        <rect x="214" y="112" width="42" height="10" rx="5" fill="var(--color-text-muted)" opacity="0.4" />
+        <rect x="206" y="128" width="58" height="10" rx="5" fill="rgba(255,123,103,0.14)" />
+      </svg>
+    </div>
+  );
+}
+
+function PortalIllustration() {
+  return (
+    <div className={styles.sceneIllustration}>
+      <svg viewBox="0 0 320 180" className={styles.sceneIllustrationSvg} aria-hidden="true">
+        <rect x="24" y="24" width="272" height="132" rx="18" fill="var(--color-bg-soft)" stroke="var(--color-border)" />
+        <rect x="44" y="42" width="184" height="14" rx="7" fill="var(--color-surface-strong)" />
+        <rect x="44" y="72" width="232" height="18" rx="9" fill="var(--color-accent-soft)" />
+        <rect x="44" y="100" width="156" height="18" rx="9" fill="var(--color-surface-strong)" />
+        <rect x="44" y="128" width="92" height="12" rx="6" fill="rgba(255,123,103,0.16)" />
+      </svg>
+    </div>
+  );
+}
 
 function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
   const [view, setView] = useState<"inbox" | "email" | "portal" | "chat" | "recovery">(
@@ -408,6 +464,7 @@ function OfficeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
                 <MessageCircle size={16} />
                 <span>Служебный чат</span>
               </div>
+              <SmsIllustration />
               <div className={styles.chatMessageMine}>Проверяю письмо от ИТ, разбираюсь с доступом.</div>
               <div className={styles.chatMessageIncoming}>Скиньте код из SMS прямо сейчас, иначе сорвётся вход перед созвоном.</div>
               <div className={styles.mailFooterLine}>Запрос выглядит срочным, но просит одноразовый код через сторонний канал. Такие действия нельзя выполнять без независимого подтверждения.</div>
@@ -532,6 +589,7 @@ function HomeEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
           {view === "incident" ? (
             <div className={styles.sidePaneCard}>
               <p className={styles.portalTitle}>Детали нового входа</p>
+              <DeviceIllustration />
               <div className={styles.securityChecklist}>
                 <span>Локация: другой город</span>
                 <span>Устройство: неизвестный браузер</span>
@@ -619,6 +677,7 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
         <div className={styles.wifiStage}>
           <section className={styles.wifiListCard}>
             <p className={styles.portalTitle}>Доступные сети</p>
+            <PortalIllustration />
             <div className="mt-4 space-y-3">
               <div className={styles.wifiRow}>
                 <span>COFFEE_GUEST</span>
@@ -852,13 +911,13 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
     }
 
     setCriticalPhase("breaking");
-    const impactTimer = window.setTimeout(() => setCriticalPhase("impact"), 720);
+    const impactTimer = window.setTimeout(() => setCriticalPhase("impact"), 900);
     const modalTimer = window.setTimeout(() => {
       setModalFeedback(pendingCriticalFeedback);
       setPendingCriticalFeedback(null);
       setAnimationType(null);
       setCriticalPhase("idle");
-    }, 2100);
+    }, 4100);
 
     return () => {
       window.clearTimeout(impactTimer);
@@ -951,7 +1010,6 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
             <ArrowLeft size={16} />
             Назад к миссиям
           </Link>
-          <div className={styles.routeBadge}>{meta.environment}</div>
         </div>
 
         <SectionTitle eyebrow={meta.eyebrow} title={scenarioTitle} description={meta.description} />
