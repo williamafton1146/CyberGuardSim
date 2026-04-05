@@ -126,17 +126,40 @@ export default function AdminPage() {
       return;
     }
 
-    Promise.all([getMe(token), getAdminUsers(token), getAdminScenarios(token)])
-      .then(([me, usersPayload, scenariosPayload]) => {
+    Promise.allSettled([getMe(token), getAdminUsers(token), getAdminScenarios(token)])
+      .then(([meResult, usersResult, scenariosResult]) => {
+        if (meResult.status !== "fulfilled") {
+          throw meResult.reason;
+        }
+
+        const me = meResult.value;
         if (me.role !== "admin") {
           router.replace("/dashboard");
           return;
         }
+
         setCurrentAdmin(me);
         saveAuthUser(me);
-        setUsers(usersPayload);
-        setScenarios(scenariosPayload);
-        setError(null);
+
+        const nextErrors: string[] = [];
+
+        if (usersResult.status === "fulfilled") {
+          setUsers(usersResult.value);
+        } else {
+          setUsers([]);
+          nextErrors.push(usersResult.reason instanceof Error ? `Пользователи: ${usersResult.reason.message}` : "Пользователи: не удалось загрузить");
+        }
+
+        if (scenariosResult.status === "fulfilled") {
+          setScenarios(scenariosResult.value);
+        } else {
+          setScenarios([]);
+          nextErrors.push(
+            scenariosResult.reason instanceof Error ? `Сценарии: ${scenariosResult.reason.message}` : "Сценарии: не удалось загрузить"
+          );
+        }
+
+        setError(nextErrors.length ? nextErrors.join(" | ") : null);
       })
       .catch((loadError) => {
         setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить админский раздел");

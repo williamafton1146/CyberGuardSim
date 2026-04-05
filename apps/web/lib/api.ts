@@ -55,12 +55,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    let message = "Ошибка запроса";
+    let message = `Ошибка запроса (${response.status})`;
     try {
       const payload = await response.json();
       message = payload.detail ?? message;
     } catch {
-      message = response.statusText || message;
+      message = response.statusText ? `${message}: ${response.statusText}` : message;
     }
     throw new Error(message);
   }

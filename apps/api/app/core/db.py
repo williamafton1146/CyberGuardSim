@@ -50,6 +50,11 @@ def migrate_legacy_schema() -> None:
             add_column("users", "username VARCHAR(120)")
         if not has_column("users", "role"):
             add_column("users", "role VARCHAR(30) DEFAULT 'user'")
+        if not has_column("users", "created_at"):
+            if dialect == "postgresql":
+                add_column("users", "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()")
+            else:
+                add_column("users", "created_at TIMESTAMP")
         with engine.begin() as connection:
             connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username)"))
 
