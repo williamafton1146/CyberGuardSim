@@ -188,7 +188,7 @@ ensure_env_file() {
     ADMIN_BOOTSTRAP_PASSWORD_VALUE="$(generate_admin_password)"
     set_env_var ADMIN_BOOTSTRAP_PASSWORD "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
   else
-    ADMIN_BOOTSTRAP_PASSWORD_VALUE=""
+    ADMIN_BOOTSTRAP_PASSWORD_VALUE="${current_admin_bootstrap}"
   fi
   validate_env_file
 }

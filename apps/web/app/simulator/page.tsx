@@ -116,7 +116,7 @@ export default function SimulatorHubPage() {
         <SectionTitle
           eyebrow="Симулятор"
           title="Каталог интерактивных сред"
-          description="Каждая миссия запускается в знакомом цифровом интерфейсе: почта, домашняя панель устройств или public Wi‑Fi. Откройте среду и разберите атаку в привычном контексте."
+          description="Каждая миссия открывается в знакомом цифровом интерфейсе: почта, домашняя панель устройств или public Wi‑Fi. Выберите среду и разберите атаку в контексте реального действия."
         />
 
         {error ? (
@@ -125,34 +125,28 @@ export default function SimulatorHubPage() {
           </p>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
           <section className="glass-card p-6 md:p-7">
             <p className="eyebrow">Среды</p>
             <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--color-text-primary)]">Выберите миссию и откройте нужную среду</h2>
             <p className="body-copy mt-4 max-w-3xl">
-              Внутри каждой ветки пользователь видит бытовой интерфейс и один считываемый активный объект на шаг. Остальные элементы формируют привычный контекст, но не превращают прохождение в слепой квест.
+              Каждая карточка ведёт в отдельную цифровую среду. Внутри миссии остаётся один читаемый активный объект на шаг, без слепых кликов и лишнего шума.
             </p>
 
-            <div className="mt-8 grid gap-5 xl:grid-cols-3">
+            <div className="mt-8 grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
               {loading ? (
-                <div className="soft-tile xl:col-span-3 text-sm text-[var(--color-text-muted)]">
+                <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
                   Загружаем миссии, их статус публикации и маршруты запуска.
                 </div>
               ) : enrichedScenarios.length ? (
                 enrichedScenarios.map((scenario) => (
-                  <div key={scenario.slug} className="space-y-4">
-                    <div className="soft-tile flex items-start gap-3">
-                      <div className="feature-icon shrink-0">
-                        <scenario.visual.icon size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)]">{scenario.visual.environment}</p>
-                        <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">{scenario.visual.description}</p>
-                      </div>
-                    </div>
+                  <div key={scenario.slug} className="h-full">
                     <ScenarioCard
                       scenario={scenario}
                       actionHref={scenario.perfectRun ? undefined : scenario.visual.route}
+                      visualIcon={scenario.visual.icon}
+                      visualTitle={scenario.visual.environment}
+                      visualDescription={scenario.visual.description}
                       actionLabel={
                         !scenario.is_playable
                           ? "Скоро откроется"
@@ -181,7 +175,7 @@ export default function SimulatorHubPage() {
                   </div>
                 ))
               ) : (
-                <div className="soft-tile xl:col-span-3 text-sm text-[var(--color-text-muted)]">
+                <div className="soft-tile col-span-full text-sm text-[var(--color-text-muted)]">
                   Сейчас нет доступных миссий. Когда администратор опубликует новую ветку, она появится в этом каталоге.
                 </div>
               )}
@@ -194,7 +188,7 @@ export default function SimulatorHubPage() {
               <div className="soft-tile">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">1. Вход в привычную среду</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  Миссия открывается как знакомый интерфейс: почта, домашняя панель безопасности или страница подключения к сети.
+                  Миссия открывается как обычный интерфейс: почта, домашняя панель безопасности или страница подключения к сети.
                 </p>
               </div>
               <div className="soft-tile">
@@ -206,7 +200,7 @@ export default function SimulatorHubPage() {
               <div className="soft-tile">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">3. Разбор последствий без потери контекста</p>
                 <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                  После выбора решение, ошибки и финальный результат показываются прямо внутри среды, чтобы безопасный паттерн запоминался через действие.
+                  После выбора последствия и правильный алгоритм показываются прямо внутри среды, чтобы безопасный паттерн закреплялся через действие.
                 </p>
               </div>
             </div>
@@ -226,7 +220,7 @@ export default function SimulatorHubPage() {
                 <div>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">Безопасная симуляция</p>
                   <p className="mt-2 text-sm leading-7 text-[var(--color-text-muted)]">
-                    Все среды и переходы работают только как локальные учебные макеты. Приложение не открывает реальные опасные ссылки и не использует настоящие внешние сервисы.
+                    Все среды и переходы работают только как учебные локальные макеты. Приложение не открывает реальные опасные ссылки и не использует настоящие внешние сервисы.
                   </p>
                 </div>
               </div>

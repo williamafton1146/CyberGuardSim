@@ -49,19 +49,19 @@ const missionMeta: Record<
   office: {
     eyebrow: "Офис",
     title: "Офисная почта и служебные сообщения",
-    description: "Рабочее письмо, подозрительный портал, срочный запрос кода и безопасное завершение инцидента — внутри одной привычной офисной среды.",
+    description: "Рабочее письмо, поддельный портал, запрос кода и корректное завершение инцидента в одном офисном маршруте.",
     environment: "Почта и служебные сообщения"
   },
   home: {
     eyebrow: "Дом",
     title: "Домашние аккаунты и смарт-устройства",
-    description: "Уведомление о входе, повторное использование пароля, фальшивое защитное приложение и восстановление контроля над домашней средой.",
+    description: "Уведомление о входе, повторный пароль, фальшивая защита и восстановление контроля над домашней средой.",
     environment: "Домашняя панель безопасности"
   },
   "public-wifi": {
     eyebrow: "Общественная сеть",
     title: "Public Wi‑Fi и поддельные маршруты входа",
-    description: "Точка доступа, captive portal, небезопасный браузерный маршрут и QR-ловушка собираются в один короткий сценарий из реальной цифровой рутины.",
+    description: "Точка доступа, captive portal, предупреждение браузера и QR-ловушка в одном коротком сценарии.",
     environment: "Сети, портал и браузер"
   }
 };
@@ -730,15 +730,26 @@ function PublicWifiEnvironment({ step, locked, onHotspot }: EnvironmentProps) {
 
       {view === "warning" && (
         <div className={styles.browserWarningFrame}>
-          <div className={styles.browserAddressBar}>http://login.workspace.example</div>
+          <div className={styles.browserAddressBar}>https://login.workspace.example</div>
           <div className={styles.browserWarningCard}>
-            <AlertTriangle size={28} className="text-[var(--color-alert)]" />
-            <div>
-              <p className={styles.portalTitle}>Соединение не защищено</p>
-              <p className={styles.warningCopy}>Сертификат не подтверждён, а страница логина открывается по HTTP. Это выглядит как подмена маршрута.</p>
+            <div className={styles.browserWarningLead}>
+              <div className={styles.browserWarningIcon}>
+                <XCircle size={26} />
+              </div>
+              <div>
+                <p className={styles.portalTitle}>Подключение не защищено</p>
+                <p className={styles.warningCopy}>
+                  Злоумышленники могут пытаться похитить ваши пароли, сообщения или данные карты с сайта login.workspace.example.
+                </p>
+              </div>
+            </div>
+            <div className={styles.browserWarningCode}>NET::ERR_CERT_AUTHORITY_INVALID</div>
+            <div className={styles.browserWarningFacts}>
+              <span>Сертификат для этого сайта недействителен или выдан недоверенным центром.</span>
+              <span>Браузер не может подтвердить, что вы действительно открыли нужный портал входа.</span>
             </div>
             <button type="button" className={styles.sceneActionButton} onClick={() => activate("warning")} disabled={locked}>
-              Всё равно продолжить
+              Игнорировать предупреждение
             </button>
           </div>
         </div>
@@ -917,7 +928,7 @@ export function MissionExperience({ slug }: { slug: MissionSlug }) {
       setPendingCriticalFeedback(null);
       setAnimationType(null);
       setCriticalPhase("idle");
-    }, 4100);
+    }, 6100);
 
     return () => {
       window.clearTimeout(impactTimer);

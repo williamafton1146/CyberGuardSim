@@ -719,6 +719,59 @@
   margin-top: 1rem;
 }
 
+.browserWarningLead {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.95rem;
+  align-items: start;
+}
+
+.browserWarningIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 123, 103, 0.28);
+  background: rgba(255, 123, 103, 0.14);
+  color: var(--color-alert);
+}
+
+.browserWarningCode {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 186, 73, 0.3);
+  background: rgba(255, 186, 73, 0.14);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffba49;
+}
+
+.browserWarningFacts {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.browserWarningFacts span {
+  display: flex;
+  align-items: center;
+  min-height: 2.9rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.8rem 0.95rem;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
 .qrCard,
 .paymentPanel {
   padding: 1.2rem;
@@ -870,11 +923,11 @@
 }
 
 .consequenceContent {
-  max-width: 28rem;
+  max-width: 31rem;
   border-radius: 1.8rem;
   border: 1px solid var(--color-border);
   background: var(--color-bg-elevated);
-  padding: 2.4rem;
+  padding: 2.65rem;
   text-align: center;
   box-shadow: var(--shadow-card);
 }
@@ -894,7 +947,7 @@
   width: 0;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--color-alert), #ffba49);
-  animation: criticalHold 4.1s linear forwards;
+  animation: criticalHold 6.1s linear forwards;
 }
 
 @keyframes fadeInUp {
@@ -998,22 +1051,8 @@
     grid-template-columns: minmax(17rem, 0.94fr) minmax(0, 1.06fr);
   }
 
-  .environmentShell {
-    min-height: auto;
-  }
-
   .environmentToolbarMeta {
     gap: 0.5rem;
-  }
-
-  .mailSidebar {
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .mailList {
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
   }
 }
 
@@ -1032,6 +1071,20 @@
 
   .environmentToolbarMeta {
     justify-content: flex-start;
+  }
+
+  .environmentShell {
+    min-height: auto;
+  }
+
+  .mailSidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mailList {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
   }
 }
 

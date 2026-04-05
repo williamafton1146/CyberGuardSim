@@ -56,9 +56,46 @@ verify_deploy() {
   exit 1
 }
 
+admin_bootstrap_password_state() {
+  if [[ -z "${ADMIN_BOOTSTRAP_PASSWORD_VALUE:-}" ]]; then
+    printf 'missing'
+    return
+  fi
+
+  compose exec -T api python - <<'PY' 2>/dev/null || printf 'unknown'
+from app.core.config import settings
+from app.core.db import SessionLocal
+from app.core.passwords import password_weakness_reason
+from app.core.security import verify_password
+from app.models.user import User
+
+db = SessionLocal()
+try:
+    password = settings.admin_bootstrap_password or ""
+    admin = (
+        db.query(User)
+        .filter((User.role == "admin") | (User.username == settings.admin_username) | (User.email == "admin@cyberguardsim.local"))
+        .first()
+    )
+    if not password:
+        print("missing")
+    elif admin is None or not admin.password_hash:
+        print("missing_admin")
+    elif password_weakness_reason(password) is not None:
+        print("weak")
+    elif verify_password(password, admin.password_hash):
+        print("valid")
+    else:
+        print("mismatch")
+finally:
+    db.close()
+PY
+}
+
 open_site() {
   local domain="$1"
   local url="https://${domain}"
+  local password_state
 
   touch "${DEPLOY_STATE_FILE}"
 
@@ -67,13 +104,26 @@ open_site() {
   fi
 
   log "Deployment completed: ${url}"
-  if [[ -n "${ADMIN_BOOTSTRAP_PASSWORD_VALUE:-}" ]]; then
-    printf '\n[deploy] Admin login: Admin\n'
-    printf '[deploy] Admin password: %s\n' "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
-  else
-    printf '\n[deploy] Admin login: Admin\n'
-    printf '[deploy] Admin password: unchanged from existing deployment\n'
-  fi
+  password_state="$(admin_bootstrap_password_state)"
+  printf '\n[deploy] Admin login: Admin\n'
+  case "${password_state}" in
+    valid)
+      printf '[deploy] Admin password: %s\n' "${ADMIN_BOOTSTRAP_PASSWORD_VALUE}"
+      ;;
+    mismatch)
+      printf '[deploy] Admin password: configured bootstrap password no longer matches the current admin account\n'
+      printf '[deploy] Hint: sync ADMIN_BOOTSTRAP_PASSWORD in .env with the real admin password or reset the admin password explicitly.\n'
+      ;;
+    weak)
+      printf '[deploy] Admin password: configured value exists, but fails current password policy and was not shown\n'
+      ;;
+    missing|missing_admin)
+      printf '[deploy] Admin password: unavailable\n'
+      ;;
+    *)
+      printf '[deploy] Admin password: could not verify current bootstrap password state\n'
+      ;;
+  esac
 
   if require_command xdg-open; then
     xdg-open "${url}" >/dev/null 2>&1 || true

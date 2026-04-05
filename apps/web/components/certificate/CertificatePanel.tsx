@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Award, CheckCircle2, QrCode, ShieldCheck } from "lucide-react";
+import { Award, QrCode, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { CertificatePrintable } from "@/components/certificate/CertificatePrintable";
 import { downloadNodeAsPdf } from "@/lib/pdf";
 import type { CertificateStatus } from "@/types";
 
@@ -12,14 +13,6 @@ type CertificatePanelProps = {
   issuing: boolean;
   onIssue: () => void;
 };
-
-function formatIssuedAt(value: string) {
-  return new Date(value).toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
-}
 
 export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelProps) {
   const [qrSrc, setQrSrc] = useState<string | null>(null);
@@ -91,49 +84,20 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
     }
 
     return (
-      <div className="glass-card certificate-card certificate-card-issued">
+      <div className="glass-card certificate-card">
         <div ref={exportRef} className="certificate-export-surface">
-          <p className="eyebrow">Сертификат</p>
-          <h2 className="mt-4 text-2xl font-semibold text-[var(--color-text-primary)]">Сертификат программы уже выпущен</h2>
-          <p className="body-copy mt-4 max-w-2xl text-sm">
-            Сертификат подтверждает завершение текущей обучающей программы и открывается по публичной ссылке с QR-верификацией.
-          </p>
-
-          <div className="certificate-meta-list">
-            <div className="soft-tile">
-              <p className="certificate-meta-label">Статус</p>
-              <p className="certificate-meta-value">
-                <CheckCircle2 size={16} />
-                Выдан
-              </p>
-            </div>
-            <div className="soft-tile">
-              <p className="certificate-meta-label">Дата выпуска</p>
-              <p className="certificate-meta-value">{formatIssuedAt(certificate.issued_at)}</p>
-            </div>
-            <div className="soft-tile">
-              <p className="certificate-meta-label">Рейтинг на момент выпуска</p>
-              <p className="certificate-meta-value">{certificate.security_rating}</p>
-            </div>
-            <div className="soft-tile">
-              <p className="certificate-meta-label">Лига</p>
-              <p className="certificate-meta-value">{certificate.league}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="certificate-qr-card">
-          <div className="certificate-qr-frame">
-            {qrSrc ? (
-              <img src={qrSrc} alt="QR-код для верификации сертификата" className="certificate-qr-image" />
-            ) : (
-              <div className="certificate-qr-fallback">
-                <QrCode size={22} />
-                <span>QR генерируется</span>
-              </div>
-            )}
-          </div>
-          <p className="certificate-code">ID: {certificate.code}</p>
+          <CertificatePrintable
+            title="Сертификат программы уже выпущен"
+            subtitle="Сертификат подтверждает завершение текущей программы обучения и проверяется по публичной ссылке с QR-верификацией."
+            displayName={certificate.display_name}
+            league={certificate.league}
+            securityRating={certificate.security_rating}
+            issuedAt={certificate.issued_at}
+            code={certificate.code}
+            verifyUrl={certificate.verify_url}
+            qrSrc={qrSrc}
+            statusLabel="Выдан"
+          />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-4 no-print">
@@ -159,7 +123,7 @@ export function CertificatePanel({ status, issuing, onIssue }: CertificatePanelP
         <p className="eyebrow">Сертификат</p>
         <h2 className="mt-4 text-2xl font-semibold text-[var(--color-text-primary)]">Программа завершена, сертификат доступен</h2>
         <p className="body-copy mt-4 max-w-2xl text-sm">
-          Все доступные сценарии пройдены. Можно выпустить публично верифицируемый сертификат и использовать его в рабочем пользовательском потоке.
+          Все доступные сценарии пройдены. Теперь можно выпустить верифицируемый сертификат и сохранить его в чистом печатном формате.
         </p>
 
         <div className="certificate-progress">

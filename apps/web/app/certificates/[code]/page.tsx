@@ -1,27 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, ShieldCheck, ShieldX } from "lucide-react";
+import { ShieldCheck, ShieldX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { CertificatePrintable } from "@/components/certificate/CertificatePrintable";
 import { downloadNodeAsPdf } from "@/lib/pdf";
 import { verifyCertificate } from "@/lib/api";
 import type { CertificateVerification } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-function formatIssuedAt(value: string) {
-  return new Date(value).toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
-}
-
 export default function CertificatePage({ params }: { params: { code: string } }) {
   const [certificate, setCertificate] = useState<CertificateVerification | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [qrSrc, setQrSrc] = useState<string | null>(null);
   const exportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,6 +28,42 @@ export default function CertificatePage({ params }: { params: { code: string } }
         setError(loadError instanceof Error ? loadError.message : "Не удалось проверить сертификат");
       });
   }, [params.code]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function renderQrCode() {
+      if (!certificate?.verify_url) {
+        setQrSrc(null);
+        return;
+      }
+
+      try {
+        const { default: QRCode } = await import("qrcode");
+        const encoded = await QRCode.toDataURL(certificate.verify_url, {
+          width: 180,
+          margin: 1,
+          color: {
+            dark: "#0c1724",
+            light: "#f4fbff"
+          }
+        });
+        if (active) {
+          setQrSrc(encoded);
+        }
+      } catch {
+        if (active) {
+          setQrSrc(null);
+        }
+      }
+    }
+
+    renderQrCode();
+
+    return () => {
+      active = false;
+    };
+  }, [certificate?.verify_url]);
 
   return (
     <div className="shell py-12">
@@ -55,44 +85,18 @@ export default function CertificatePage({ params }: { params: { code: string } }
         ) : certificate ? (
           <>
             <div ref={exportRef} className="certificate-export-surface">
-              <div className="certificate-verify-icon">
-                <CheckCircle2 size={28} />
-              </div>
-              <p className="eyebrow">Проверка сертификата</p>
-              <h1 className="mt-4 text-3xl font-semibold text-[var(--color-text-primary)]">Сертификат действителен</h1>
-              <p className="body-copy mt-4 max-w-2xl">
-                Этот сертификат подтверждает, что пользователь завершил текущую программу сценарного обучения цифровой устойчивости в CyberGuardSim.
-              </p>
-
-              <div className="certificate-verify-grid">
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Владелец</p>
-                  <p className="certificate-meta-value">{certificate.display_name}</p>
-                </div>
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Лига</p>
-                  <p className="certificate-meta-value">{certificate.league}</p>
-                </div>
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Рейтинг</p>
-                  <p className="certificate-meta-value">{certificate.security_rating}</p>
-                </div>
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Дата выпуска</p>
-                  <p className="certificate-meta-value">{formatIssuedAt(certificate.issued_at)}</p>
-                </div>
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Код сертификата</p>
-                  <p className="certificate-meta-value">{certificate.code}</p>
-                </div>
-                <div className="soft-tile">
-                  <p className="certificate-meta-label">Статус</p>
-                  <p className="certificate-meta-value">
-                    <ShieldCheck size={16} />
-                    {certificate.status}
-                  </p>
-                </div>
-              </div>
+              <CertificatePrintable
+                title="Сертификат действителен"
+                subtitle="Документ подтверждает завершение программы сценарного обучения цифровой устойчивости в CyberGuardSim."
+                displayName={certificate.display_name}
+                league={certificate.league}
+                securityRating={certificate.security_rating}
+                issuedAt={certificate.issued_at}
+                code={certificate.code}
+                verifyUrl={certificate.verify_url}
+                qrSrc={qrSrc}
+                statusLabel={certificate.status}
+              />
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4 no-print">
