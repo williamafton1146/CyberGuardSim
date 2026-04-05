@@ -16,6 +16,16 @@ location /users/ {
   include /etc/nginx/templates/includes/proxy-common.inc;
 }
 
+location /admin/users {
+  proxy_pass $cyberguardsim_api;
+  include /etc/nginx/templates/includes/proxy-common.inc;
+}
+
+location /admin/scenarios {
+  proxy_pass $cyberguardsim_api;
+  include /etc/nginx/templates/includes/proxy-common.inc;
+}
+
 location /scenarios {
   proxy_pass $cyberguardsim_api;
   include /etc/nginx/templates/includes/proxy-common.inc;
