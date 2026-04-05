@@ -57,7 +57,6 @@ export function SiteHeader() {
   const navItems = useMemo(() => {
     if (isAuthed) {
       return [
-        ...(isAdmin ? [{ href: "/admin", label: "Админка" }] : []),
         { href: "/simulator", label: "Симулятор" },
         { href: "/leaderboard", label: "Лидерборд" },
         { href: "/for-users", label: "Для пользователей" }
@@ -65,7 +64,7 @@ export function SiteHeader() {
     }
 
     return [{ href: "/for-users", label: "Для пользователей" }];
-  }, [isAdmin, isAuthed]);
+  }, [isAuthed]);
 
   function handleLogout() {
     clearToken();
